@@ -13,23 +13,21 @@ using ComponentFactory.Krypton.Toolkit;
 using Mald37045cMata37044c;
 using QsfpDigitalDiagnosticMonitoring;
 using Rt145Rt146Config;
-
-
+using System.Threading;
+using System.Runtime.Remoting.Channels;
 
 namespace IntegratedGuiV2
 {
     public partial class MainForm : KryptonForm
     {
         private I2cMaster i2cMaster = new I2cMaster();
-        UCDigitalDiagnosticsMonitoring UcDigitalDiagnosticsMonitoring1 = new UCDigitalDiagnosticsMonitoring();
-        UcInformation UcInformation1 = new UcInformation();
-        UCMemoryDump UcMemoryDump1 = new UCMemoryDump();
+        private AdapterSelector adapterSelector = new AdapterSelector();
 
-        UcMald37045cConfig UcMald37045cConfig1 = new UcMald37045cConfig();
-        UcMata37044cConfig UcMata37044cConfig1 = new UcMata37044cConfig();
-
-        UcRt146Config UcRt146Config1 = new UcRt146Config();
-        UcRt145Config UcRt145Config1 = new UcRt145Config();
+        private int iHandler = -1;
+        private short iBitrate = 100; //kbps
+        private short TriggerDelay = 100; //ms
+        private int Channel = 0;
+        private bool StopContinuousMode = false;
 
         private int _SetQsfpMode(byte mode)
         {
@@ -84,7 +82,7 @@ namespace IntegratedGuiV2
             rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
             if (rv < 0)
             {
-                MessageBox.Show("QSFP+ module no response!!");
+                MessageBox.Show("TRx module no response!! for read");
                 _I2cMasterDisconnect();
             }
             else if (rv != length)
@@ -109,7 +107,7 @@ namespace IntegratedGuiV2
             rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
             if (rv < 0)
             {
-                MessageBox.Show("QSFP+ module no response!!");
+                MessageBox.Show("TRx module no response!!");
                 _I2cMasterDisconnect();
             }
 
@@ -135,17 +133,89 @@ namespace IntegratedGuiV2
                 if (_I2cMasterConnect() < 0)
                     return;
                 _WriteModulePassword();
+                i2cMaster.ChannelSet(1);
+                gbChannelSwitcher.Enabled = true;
+                Channel = 1;
+                UpdateButtonState();
             }
             else
+            {
                 _I2cMasterDisconnect();
+                gbChannelSwitcher.Enabled = false;
+            }
+
         }
+
+        private int _GetPassword(int length, byte[] data)
+        {
+            byte[] tmp = new byte[4];
+
+            if (length < 4)
+                return -1;
+
+            if (data == null)
+                return -1;
+
+            data = Encoding.Default.GetBytes(tbPassword.Text);
+            return 4;
+        }
+
 
         public MainForm()
         {
             InitializeComponent();
             this.Size = new System.Drawing.Size(1080, 850);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            //UcDigitalDiagnosticsMonitoring1.SetI2cReadCBApi(_I2cRead);
+            //UcDigitalDiagnosticsMonitoring1.SetI2cWriteCBApi(_I2cWrite);
 
+            if (ucInformation.SetI2cReadCBApi(_I2cRead) < 0)
+            {
+                MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucInformation.SetI2cWriteCBApi(_I2cWrite) < 0)
+            {
+                MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucInformation.SetGetPasswordCBApi(_GetPassword) < 0)
+            {
+                MessageBox.Show("ucInformation.SetGetPasswordCBApi() faile Error!!");
+                return;
+            }
+
+            if (ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi(_I2cRead) < 0)
+            {
+                MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucDigitalDiagnosticsMonitoring.SetI2cWriteCBApi(_I2cWrite) < 0)
+            {
+                MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi(ucInformation.WritePassword) < 0)
+            {
+                MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi() faile Error!!");
+                return;
+            }
+
+            if (ucMemoryDump.SetI2cReadCBApi(_I2cRead) < 0)
+            {
+                MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucMemoryDump.SetI2cWriteCBApi(_I2cWrite) < 0)
+            {
+                MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucMemoryDump.SetWritePasswordCBApi(ucInformation.WritePassword) < 0)
+            {
+                MessageBox.Show("ucMemoryDump.SetWritePasswordCBApi() faile Error!!");
+                return;
+            }
 
 
             if (ucMald37045cConfig.SetI2cReadCBApi(_I2cRead) < 0)
@@ -194,9 +264,9 @@ namespace IntegratedGuiV2
         private void btReadOverAll_Click(object sender, EventArgs e)
         {
 
-            UcDigitalDiagnosticsMonitoring1.bRead_Click(sender, e);
-            UcInformation1._bRead_Click(sender, e);
-            UcMemoryDump1.bRead_Click(sender, e);
+            ucDigitalDiagnosticsMonitoring.bRead_Click(sender, e);
+            ucInformation._bRead_Click(sender, e);
+            ucMemoryDump.bRead_Click(sender, e);
 
             UcMald37045cConfig1.bReadAll_Click(sender, e);
             UcMata37044cConfig1.bReadAll_Click(sender, e);
@@ -288,13 +358,61 @@ namespace IntegratedGuiV2
 
             return controls;
         }
+   
+        private void btSwitch_Click(object sender, EventArgs e)
+        {
+            if (btSwitch.Enabled == true)
+                btSwitch.Enabled = false;
 
+            Channel = (Channel == 1) ? 2 : 1;
 
+            i2cMaster.ChannelSet(Channel);
+            UpdateButtonState();
+            StopContinuousMode = !StopContinuousMode;
+
+            if (btSwitch.Enabled == false)
+                btSwitch.Enabled = true;
+            
+            return;
+        }
+        
+
+        private void UpdateButtonState()
+        {
+           
+            if (Channel == 1)
+            {
+                rbCh1.Checked = true;
+                rbCh2.Checked = false;
+            }
+
+            if (Channel == 2)
+            {
+                rbCh2.Checked = true;
+                rbCh1.Checked = false;
+            }
+
+            System.Windows.Forms.Application.DoEvents();
+        }
 
         private void button1_Click(object sender, EventArgs e)
         {
-            GenerateXmlSettings();
+            //GenerateXmlSettings();
+            //i2cMaster.ConnectApi();
+            //
+            /*
+            i2cMaster.ChannelSet(1);
+            Thread.Sleep(3000);
+            i2cMaster.ChannelSet(0);
+            Thread.Sleep(3000);
+            i2cMaster.ChannelSet(2);
+            Thread.Sleep(3000);
+            i2cMaster.ChannelSet(0);
+            */
         }
+
+
+
     }
 
     public class ComboBoxItem

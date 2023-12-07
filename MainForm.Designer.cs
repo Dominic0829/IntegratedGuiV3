@@ -34,8 +34,11 @@ namespace IntegratedGuiV2
             this.components = new System.ComponentModel.Container();
             this.ucInformation = new QsfpDigitalDiagnosticMonitoring.UcInformation();
             this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
-            this.ucNuvotonIcpTool = new NuvotonIcpTool.UcNuvotonIcpTool();
             this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
+            this.ucGn1190Corrector = new Gn1190Corrector.UcGn1190Corrector();
+            this.ucNuvotonIcpTool = new NuvotonIcpTool.UcNuvotonIcpTool();
+            this.ucMald37045cConfig = new Mald37045cMata37044c.UcMald37045cConfig();
+            this.ucMata37044cConfig = new Mald37045cMata37044c.UcMata37044cConfig();
             this.tcDdmi = new System.Windows.Forms.TabControl();
             this.tpInformation = new System.Windows.Forms.TabPage();
             this.tpDdm = new System.Windows.Forms.TabPage();
@@ -44,9 +47,7 @@ namespace IntegratedGuiV2
             this.tabPage41 = new System.Windows.Forms.TabPage();
             this.tcSas40 = new System.Windows.Forms.TabControl();
             this.tabPage411 = new System.Windows.Forms.TabPage();
-            this.ucMald37045cConfig = new Mald37045cMata37044c.UcMald37045cConfig();
             this.tabPage412 = new System.Windows.Forms.TabPage();
-            this.ucMata37044cConfig = new Mald37045cMata37044c.UcMata37044cConfig();
             this.tabPage42 = new System.Windows.Forms.TabPage();
             this.tcPcie4 = new System.Windows.Forms.TabControl();
             this.tabPage421 = new System.Windows.Forms.TabPage();
@@ -57,7 +58,6 @@ namespace IntegratedGuiV2
             this.tcMain = new System.Windows.Forms.TabControl();
             this.tpDdmi = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
-            this.ucGn1190Corrector = new Gn1190Corrector.UcGn1190Corrector();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.tabPage4 = new System.Windows.Forms.TabPage();
             this.tabPage5 = new System.Windows.Forms.TabPage();
@@ -77,6 +77,10 @@ namespace IntegratedGuiV2
             this.label1 = new System.Windows.Forms.Label();
             this.tbPassword = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
+            this.gbChannelSwitcher = new System.Windows.Forms.GroupBox();
+            this.rbCh2 = new System.Windows.Forms.RadioButton();
+            this.btSwitch = new System.Windows.Forms.Button();
+            this.rbCh1 = new System.Windows.Forms.RadioButton();
             this.tcDdmi.SuspendLayout();
             this.tpInformation.SuspendLayout();
             this.tpDdm.SuspendLayout();
@@ -97,38 +101,39 @@ namespace IntegratedGuiV2
             this.tabPage4.SuspendLayout();
             this.panel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
+            this.gbChannelSwitcher.SuspendLayout();
             this.SuspendLayout();
             // 
             // ucInformation
             // 
             this.ucInformation.Location = new System.Drawing.Point(0, 0);
-            this.ucInformation.Margin = new System.Windows.Forms.Padding(5);
+            this.ucInformation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.ucInformation.Name = "ucInformation";
-            this.ucInformation.Size = new System.Drawing.Size(1209, 892);
+            this.ucInformation.Size = new System.Drawing.Size(907, 714);
             this.ucInformation.TabIndex = 1;
             // 
             // ucMemoryDump
             // 
             this.ucMemoryDump.Location = new System.Drawing.Point(0, 0);
-            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(5);
+            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.ucMemoryDump.Name = "ucMemoryDump";
-            this.ucMemoryDump.Size = new System.Drawing.Size(1202, 885);
+            this.ucMemoryDump.Size = new System.Drawing.Size(902, 708);
             this.ucMemoryDump.TabIndex = 0;
             // 
             // ucNuvotonIcpTool
             // 
             this.ucNuvotonIcpTool.Location = new System.Drawing.Point(0, 0);
-            this.ucNuvotonIcpTool.Margin = new System.Windows.Forms.Padding(5);
+            this.ucNuvotonIcpTool.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.ucNuvotonIcpTool.Name = "ucNuvotonIcpTool";
-            this.ucNuvotonIcpTool.Size = new System.Drawing.Size(577, 310);
+            this.ucNuvotonIcpTool.Size = new System.Drawing.Size(433, 248);
             this.ucNuvotonIcpTool.TabIndex = 0;
             // 
             // ucDigitalDiagnosticsMonitoring
             // 
             this.ucDigitalDiagnosticsMonitoring.Location = new System.Drawing.Point(0, 0);
-            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(5);
+            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.ucDigitalDiagnosticsMonitoring.Name = "ucDigitalDiagnosticsMonitoring";
-            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(1097, 823);
+            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(823, 658);
             this.ucDigitalDiagnosticsMonitoring.TabIndex = 1;
             // 
             // tcDdmi
@@ -136,22 +141,22 @@ namespace IntegratedGuiV2
             this.tcDdmi.Controls.Add(this.tpInformation);
             this.tcDdmi.Controls.Add(this.tpDdm);
             this.tcDdmi.Controls.Add(this.tpMemoryDump);
-            this.tcDdmi.Location = new System.Drawing.Point(9, 8);
-            this.tcDdmi.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tcDdmi.Location = new System.Drawing.Point(7, 6);
+            this.tcDdmi.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tcDdmi.Name = "tcDdmi";
             this.tcDdmi.RightToLeft = System.Windows.Forms.RightToLeft.No;
             this.tcDdmi.SelectedIndex = 0;
-            this.tcDdmi.Size = new System.Drawing.Size(1228, 932);
+            this.tcDdmi.Size = new System.Drawing.Size(921, 746);
             this.tcDdmi.TabIndex = 5;
             // 
             // tpInformation
             // 
             this.tpInformation.Controls.Add(this.ucInformation);
-            this.tpInformation.Location = new System.Drawing.Point(4, 25);
-            this.tpInformation.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tpInformation.Location = new System.Drawing.Point(4, 22);
+            this.tpInformation.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tpInformation.Name = "tpInformation";
-            this.tpInformation.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tpInformation.Size = new System.Drawing.Size(1220, 903);
+            this.tpInformation.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tpInformation.Size = new System.Drawing.Size(913, 720);
             this.tpInformation.TabIndex = 0;
             this.tpInformation.Text = "Information";
             this.tpInformation.UseVisualStyleBackColor = true;
@@ -159,11 +164,11 @@ namespace IntegratedGuiV2
             // tpDdm
             // 
             this.tpDdm.Controls.Add(this.ucDigitalDiagnosticsMonitoring);
-            this.tpDdm.Location = new System.Drawing.Point(4, 25);
-            this.tpDdm.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tpDdm.Location = new System.Drawing.Point(4, 22);
+            this.tpDdm.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tpDdm.Name = "tpDdm";
-            this.tpDdm.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tpDdm.Size = new System.Drawing.Size(1220, 903);
+            this.tpDdm.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tpDdm.Size = new System.Drawing.Size(913, 720);
             this.tpDdm.TabIndex = 1;
             this.tpDdm.Text = "DDM";
             this.tpDdm.UseVisualStyleBackColor = true;
@@ -171,11 +176,11 @@ namespace IntegratedGuiV2
             // tpMemoryDump
             // 
             this.tpMemoryDump.Controls.Add(this.ucMemoryDump);
-            this.tpMemoryDump.Location = new System.Drawing.Point(4, 25);
-            this.tpMemoryDump.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tpMemoryDump.Location = new System.Drawing.Point(4, 22);
+            this.tpMemoryDump.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tpMemoryDump.Name = "tpMemoryDump";
-            this.tpMemoryDump.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tpMemoryDump.Size = new System.Drawing.Size(1220, 903);
+            this.tpMemoryDump.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tpMemoryDump.Size = new System.Drawing.Size(913, 720);
             this.tpMemoryDump.TabIndex = 2;
             this.tpMemoryDump.Text = "MemDump";
             this.tpMemoryDump.UseVisualStyleBackColor = true;
@@ -185,21 +190,21 @@ namespace IntegratedGuiV2
             this.tcIcConfig.Controls.Add(this.tabPage41);
             this.tcIcConfig.Controls.Add(this.tabPage42);
             this.tcIcConfig.Controls.Add(this.tabPage43);
-            this.tcIcConfig.Location = new System.Drawing.Point(6, 6);
-            this.tcIcConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tcIcConfig.Location = new System.Drawing.Point(4, 5);
+            this.tcIcConfig.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tcIcConfig.Name = "tcIcConfig";
             this.tcIcConfig.SelectedIndex = 0;
-            this.tcIcConfig.Size = new System.Drawing.Size(1319, 835);
+            this.tcIcConfig.Size = new System.Drawing.Size(989, 668);
             this.tcIcConfig.TabIndex = 0;
             // 
             // tabPage41
             // 
             this.tabPage41.Controls.Add(this.tcSas40);
-            this.tabPage41.Location = new System.Drawing.Point(4, 25);
-            this.tabPage41.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage41.Location = new System.Drawing.Point(4, 22);
+            this.tabPage41.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage41.Name = "tabPage41";
-            this.tabPage41.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage41.Size = new System.Drawing.Size(1311, 806);
+            this.tabPage41.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage41.Size = new System.Drawing.Size(981, 642);
             this.tabPage41.TabIndex = 0;
             this.tabPage41.Text = "SAS4.0";
             this.tabPage41.UseVisualStyleBackColor = true;
@@ -208,21 +213,21 @@ namespace IntegratedGuiV2
             // 
             this.tcSas40.Controls.Add(this.tabPage411);
             this.tcSas40.Controls.Add(this.tabPage412);
-            this.tcSas40.Location = new System.Drawing.Point(9, 8);
-            this.tcSas40.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tcSas40.Location = new System.Drawing.Point(7, 6);
+            this.tcSas40.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tcSas40.Name = "tcSas40";
             this.tcSas40.SelectedIndex = 0;
-            this.tcSas40.Size = new System.Drawing.Size(863, 761);
+            this.tcSas40.Size = new System.Drawing.Size(647, 609);
             this.tcSas40.TabIndex = 0;
             // 
             // tabPage411
             // 
             this.tabPage411.Controls.Add(this.ucMald37045cConfig);
-            this.tabPage411.Location = new System.Drawing.Point(4, 25);
-            this.tabPage411.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage411.Location = new System.Drawing.Point(4, 22);
+            this.tabPage411.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage411.Name = "tabPage411";
-            this.tabPage411.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage411.Size = new System.Drawing.Size(855, 732);
+            this.tabPage411.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage411.Size = new System.Drawing.Size(639, 583);
             this.tabPage411.TabIndex = 0;
             this.tabPage411.Text = "MALD37045C";
             this.tabPage411.UseVisualStyleBackColor = true;
@@ -230,19 +235,19 @@ namespace IntegratedGuiV2
             // ucMald37045cConfig
             // 
             this.ucMald37045cConfig.Location = new System.Drawing.Point(0, 0);
-            this.ucMald37045cConfig.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.ucMald37045cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.ucMald37045cConfig.Name = "ucMald37045cConfig";
-            this.ucMald37045cConfig.Size = new System.Drawing.Size(853, 687);
+            this.ucMald37045cConfig.Size = new System.Drawing.Size(640, 550);
             this.ucMald37045cConfig.TabIndex = 0;
             // 
             // tabPage412
             // 
             this.tabPage412.Controls.Add(this.ucMata37044cConfig);
-            this.tabPage412.Location = new System.Drawing.Point(4, 25);
-            this.tabPage412.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage412.Location = new System.Drawing.Point(4, 22);
+            this.tabPage412.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage412.Name = "tabPage412";
-            this.tabPage412.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage412.Size = new System.Drawing.Size(855, 732);
+            this.tabPage412.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage412.Size = new System.Drawing.Size(639, 583);
             this.tabPage412.TabIndex = 1;
             this.tabPage412.Text = "MATA37044C";
             this.tabPage412.UseVisualStyleBackColor = true;
@@ -250,19 +255,19 @@ namespace IntegratedGuiV2
             // ucMata37044cConfig
             // 
             this.ucMata37044cConfig.Location = new System.Drawing.Point(0, 0);
-            this.ucMata37044cConfig.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.ucMata37044cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.ucMata37044cConfig.Name = "ucMata37044cConfig";
-            this.ucMata37044cConfig.Size = new System.Drawing.Size(853, 728);
+            this.ucMata37044cConfig.Size = new System.Drawing.Size(640, 582);
             this.ucMata37044cConfig.TabIndex = 0;
             // 
             // tabPage42
             // 
             this.tabPage42.Controls.Add(this.tcPcie4);
-            this.tabPage42.Location = new System.Drawing.Point(4, 25);
-            this.tabPage42.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage42.Location = new System.Drawing.Point(4, 22);
+            this.tabPage42.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage42.Name = "tabPage42";
-            this.tabPage42.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage42.Size = new System.Drawing.Size(1311, 806);
+            this.tabPage42.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage42.Size = new System.Drawing.Size(981, 642);
             this.tabPage42.TabIndex = 1;
             this.tabPage42.Text = "PCIe4.0";
             this.tabPage42.UseVisualStyleBackColor = true;
@@ -271,21 +276,21 @@ namespace IntegratedGuiV2
             // 
             this.tcPcie4.Controls.Add(this.tabPage421);
             this.tcPcie4.Controls.Add(this.tabPage422);
-            this.tcPcie4.Location = new System.Drawing.Point(9, 8);
-            this.tcPcie4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tcPcie4.Location = new System.Drawing.Point(7, 6);
+            this.tcPcie4.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tcPcie4.Name = "tcPcie4";
             this.tcPcie4.SelectedIndex = 0;
-            this.tcPcie4.Size = new System.Drawing.Size(1298, 635);
+            this.tcPcie4.Size = new System.Drawing.Size(974, 508);
             this.tcPcie4.TabIndex = 0;
             // 
             // tabPage421
             // 
             this.tabPage421.Controls.Add(this.ucRt146Config);
-            this.tabPage421.Location = new System.Drawing.Point(4, 25);
-            this.tabPage421.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage421.Location = new System.Drawing.Point(4, 22);
+            this.tabPage421.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage421.Name = "tabPage421";
-            this.tabPage421.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage421.Size = new System.Drawing.Size(1290, 606);
+            this.tabPage421.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage421.Size = new System.Drawing.Size(966, 482);
             this.tabPage421.TabIndex = 0;
             this.tabPage421.Text = "RT146";
             this.tabPage421.UseVisualStyleBackColor = true;
@@ -293,19 +298,19 @@ namespace IntegratedGuiV2
             // ucRt146Config
             // 
             this.ucRt146Config.Location = new System.Drawing.Point(0, 0);
-            this.ucRt146Config.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.ucRt146Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.ucRt146Config.Name = "ucRt146Config";
-            this.ucRt146Config.Size = new System.Drawing.Size(1292, 605);
+            this.ucRt146Config.Size = new System.Drawing.Size(969, 484);
             this.ucRt146Config.TabIndex = 0;
             // 
             // tabPage422
             // 
             this.tabPage422.Controls.Add(this.ucRt145Config);
-            this.tabPage422.Location = new System.Drawing.Point(4, 25);
-            this.tabPage422.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage422.Location = new System.Drawing.Point(4, 22);
+            this.tabPage422.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage422.Name = "tabPage422";
-            this.tabPage422.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage422.Size = new System.Drawing.Size(1290, 606);
+            this.tabPage422.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage422.Size = new System.Drawing.Size(966, 482);
             this.tabPage422.TabIndex = 1;
             this.tabPage422.Text = "RT145";
             this.tabPage422.UseVisualStyleBackColor = true;
@@ -314,18 +319,18 @@ namespace IntegratedGuiV2
             // 
             this.ucRt145Config.BackColor = System.Drawing.Color.Transparent;
             this.ucRt145Config.Location = new System.Drawing.Point(0, 0);
-            this.ucRt145Config.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.ucRt145Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.ucRt145Config.Name = "ucRt145Config";
-            this.ucRt145Config.Size = new System.Drawing.Size(1292, 606);
+            this.ucRt145Config.Size = new System.Drawing.Size(969, 485);
             this.ucRt145Config.TabIndex = 0;
             // 
             // tabPage43
             // 
-            this.tabPage43.Location = new System.Drawing.Point(4, 25);
-            this.tabPage43.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage43.Location = new System.Drawing.Point(4, 22);
+            this.tabPage43.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tabPage43.Name = "tabPage43";
-            this.tabPage43.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage43.Size = new System.Drawing.Size(1311, 806);
+            this.tabPage43.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tabPage43.Size = new System.Drawing.Size(981, 642);
             this.tabPage43.TabIndex = 2;
             this.tabPage43.Text = "PCIe5.0";
             this.tabPage43.UseVisualStyleBackColor = true;
@@ -337,33 +342,33 @@ namespace IntegratedGuiV2
             this.tcMain.Controls.Add(this.tabPage3);
             this.tcMain.Controls.Add(this.tabPage4);
             this.tcMain.Controls.Add(this.tabPage5);
-            this.tcMain.Location = new System.Drawing.Point(4, 25);
-            this.tcMain.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tcMain.Location = new System.Drawing.Point(3, 20);
+            this.tcMain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tcMain.Name = "tcMain";
             this.tcMain.SelectedIndex = 0;
-            this.tcMain.Size = new System.Drawing.Size(1435, 982);
+            this.tcMain.Size = new System.Drawing.Size(1076, 786);
             this.tcMain.TabIndex = 0;
             // 
             // tpDdmi
             // 
             this.tpDdmi.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
             this.tpDdmi.Controls.Add(this.tcDdmi);
-            this.tpDdmi.Location = new System.Drawing.Point(4, 25);
-            this.tpDdmi.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tpDdmi.Location = new System.Drawing.Point(4, 22);
+            this.tpDdmi.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tpDdmi.Name = "tpDdmi";
-            this.tpDdmi.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tpDdmi.Size = new System.Drawing.Size(1427, 953);
+            this.tpDdmi.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tpDdmi.Size = new System.Drawing.Size(1068, 760);
             this.tpDdmi.TabIndex = 0;
             this.tpDdmi.Text = "DDMI";
             // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.ucGn1190Corrector);
-            this.tabPage2.Location = new System.Drawing.Point(4, 25);
-            this.tabPage2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tabPage2.Size = new System.Drawing.Size(1427, 953);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage2.Size = new System.Drawing.Size(1068, 760);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Corrector";
             this.tabPage2.UseVisualStyleBackColor = true;
@@ -372,19 +377,19 @@ namespace IntegratedGuiV2
             // 
             this.ucGn1190Corrector.BackColor = System.Drawing.SystemColors.Control;
             this.ucGn1190Corrector.Location = new System.Drawing.Point(0, 0);
-            this.ucGn1190Corrector.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.ucGn1190Corrector.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.ucGn1190Corrector.Name = "ucGn1190Corrector";
-            this.ucGn1190Corrector.Size = new System.Drawing.Size(1429, 892);
+            this.ucGn1190Corrector.Size = new System.Drawing.Size(1072, 714);
             this.ucGn1190Corrector.TabIndex = 0;
             // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.ucNuvotonIcpTool);
-            this.tabPage3.Location = new System.Drawing.Point(4, 25);
-            this.tabPage3.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tabPage3.Location = new System.Drawing.Point(4, 22);
+            this.tabPage3.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tabPage3.Size = new System.Drawing.Size(1427, 953);
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage3.Size = new System.Drawing.Size(1068, 760);
             this.tabPage3.TabIndex = 2;
             this.tabPage3.Text = "ICP Tool";
             this.tabPage3.UseVisualStyleBackColor = true;
@@ -392,22 +397,22 @@ namespace IntegratedGuiV2
             // tabPage4
             // 
             this.tabPage4.Controls.Add(this.tcIcConfig);
-            this.tabPage4.Location = new System.Drawing.Point(4, 25);
-            this.tabPage4.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tabPage4.Location = new System.Drawing.Point(4, 22);
+            this.tabPage4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tabPage4.Size = new System.Drawing.Size(1427, 953);
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage4.Size = new System.Drawing.Size(1068, 760);
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "IC Config";
             this.tabPage4.UseVisualStyleBackColor = true;
             // 
             // tabPage5
             // 
-            this.tabPage5.Location = new System.Drawing.Point(4, 25);
-            this.tabPage5.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.tabPage5.Location = new System.Drawing.Point(4, 22);
+            this.tabPage5.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.tabPage5.Size = new System.Drawing.Size(1427, 953);
+            this.tabPage5.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage5.Size = new System.Drawing.Size(1068, 760);
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "tabPage5";
             this.tabPage5.UseVisualStyleBackColor = true;
@@ -416,10 +421,10 @@ namespace IntegratedGuiV2
             // 
             this.panel1.BackColor = System.Drawing.Color.White;
             this.panel1.Controls.Add(this.groupBox1);
-            this.panel1.Location = new System.Drawing.Point(1458, 48);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.panel1.Location = new System.Drawing.Point(1094, 38);
+            this.panel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(937, 542);
+            this.panel1.Size = new System.Drawing.Size(703, 434);
             this.panel1.TabIndex = 4;
             // 
             // groupBox1
@@ -433,19 +438,19 @@ namespace IntegratedGuiV2
             this.groupBox1.Controls.Add(this.radioButton3);
             this.groupBox1.Controls.Add(this.radioButton2);
             this.groupBox1.Controls.Add(this.radioButton1);
-            this.groupBox1.Location = new System.Drawing.Point(115, 50);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.groupBox1.Location = new System.Drawing.Point(86, 40);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 3, 4, 3);
-            this.groupBox1.Size = new System.Drawing.Size(708, 440);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.groupBox1.Size = new System.Drawing.Size(531, 352);
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "groupBox1";
             // 
             // kryptonButton3
             // 
-            this.kryptonButton3.Location = new System.Drawing.Point(85, 339);
-            this.kryptonButton3.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.kryptonButton3.Location = new System.Drawing.Point(64, 271);
+            this.kryptonButton3.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.kryptonButton3.Name = "kryptonButton3";
             this.kryptonButton3.OverrideDefault.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
             this.kryptonButton3.OverrideDefault.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
@@ -460,7 +465,7 @@ namespace IntegratedGuiV2
             this.kryptonButton3.OverrideDefault.Border.Rounding = 20;
             this.kryptonButton3.OverrideDefault.Border.Width = 1;
             this.kryptonButton3.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.ProfessionalSystem;
-            this.kryptonButton3.Size = new System.Drawing.Size(125, 44);
+            this.kryptonButton3.Size = new System.Drawing.Size(94, 35);
             this.kryptonButton3.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
             this.kryptonButton3.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
             this.kryptonButton3.StateCommon.Back.ColorAngle = 45F;
@@ -504,8 +509,8 @@ namespace IntegratedGuiV2
             // 
             // kryptonButton2
             // 
-            this.kryptonButton2.Location = new System.Drawing.Point(85, 232);
-            this.kryptonButton2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.kryptonButton2.Location = new System.Drawing.Point(64, 186);
+            this.kryptonButton2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.kryptonButton2.Name = "kryptonButton2";
             this.kryptonButton2.OverrideDefault.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
             this.kryptonButton2.OverrideDefault.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
@@ -520,7 +525,7 @@ namespace IntegratedGuiV2
             this.kryptonButton2.OverrideDefault.Border.Rounding = 20;
             this.kryptonButton2.OverrideDefault.Border.Width = 1;
             this.kryptonButton2.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.ProfessionalSystem;
-            this.kryptonButton2.Size = new System.Drawing.Size(125, 48);
+            this.kryptonButton2.Size = new System.Drawing.Size(94, 38);
             this.kryptonButton2.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
             this.kryptonButton2.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
             this.kryptonButton2.StateCommon.Back.ColorAngle = 45F;
@@ -564,8 +569,8 @@ namespace IntegratedGuiV2
             // 
             // kryptonButton1
             // 
-            this.kryptonButton1.Location = new System.Drawing.Point(85, 180);
-            this.kryptonButton1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.kryptonButton1.Location = new System.Drawing.Point(64, 144);
+            this.kryptonButton1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.kryptonButton1.Name = "kryptonButton1";
             this.kryptonButton1.OverrideDefault.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
             this.kryptonButton1.OverrideDefault.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
@@ -580,7 +585,7 @@ namespace IntegratedGuiV2
             this.kryptonButton1.OverrideDefault.Border.Rounding = 20;
             this.kryptonButton1.OverrideDefault.Border.Width = 1;
             this.kryptonButton1.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.ProfessionalSystem;
-            this.kryptonButton1.Size = new System.Drawing.Size(125, 48);
+            this.kryptonButton1.Size = new System.Drawing.Size(94, 38);
             this.kryptonButton1.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
             this.kryptonButton1.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
             this.kryptonButton1.StateCommon.Back.ColorAngle = 45F;
@@ -624,10 +629,10 @@ namespace IntegratedGuiV2
             // 
             // kryptonTextBox2
             // 
-            this.kryptonTextBox2.Location = new System.Drawing.Point(57, 117);
-            this.kryptonTextBox2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.kryptonTextBox2.Location = new System.Drawing.Point(43, 94);
+            this.kryptonTextBox2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.kryptonTextBox2.Name = "kryptonTextBox2";
-            this.kryptonTextBox2.Size = new System.Drawing.Size(180, 49);
+            this.kryptonTextBox2.Size = new System.Drawing.Size(135, 44);
             this.kryptonTextBox2.StateCommon.Back.Color1 = System.Drawing.Color.White;
             this.kryptonTextBox2.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.kryptonTextBox2.StateCommon.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
@@ -645,10 +650,10 @@ namespace IntegratedGuiV2
             // 
             // kryptonTextBox1
             // 
-            this.kryptonTextBox1.Location = new System.Drawing.Point(57, 52);
-            this.kryptonTextBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.kryptonTextBox1.Location = new System.Drawing.Point(43, 42);
+            this.kryptonTextBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.kryptonTextBox1.Name = "kryptonTextBox1";
-            this.kryptonTextBox1.Size = new System.Drawing.Size(180, 49);
+            this.kryptonTextBox1.Size = new System.Drawing.Size(135, 44);
             this.kryptonTextBox1.StateCommon.Back.Color1 = System.Drawing.Color.White;
             this.kryptonTextBox1.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.kryptonTextBox1.StateCommon.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
@@ -667,10 +672,10 @@ namespace IntegratedGuiV2
             // radioButton4
             // 
             this.radioButton4.AutoSize = true;
-            this.radioButton4.Location = new System.Drawing.Point(263, 148);
-            this.radioButton4.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.radioButton4.Location = new System.Drawing.Point(197, 118);
+            this.radioButton4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.radioButton4.Name = "radioButton4";
-            this.radioButton4.Size = new System.Drawing.Size(102, 19);
+            this.radioButton4.Size = new System.Drawing.Size(85, 16);
             this.radioButton4.TabIndex = 12;
             this.radioButton4.Text = "radioButton4";
             this.radioButton4.UseVisualStyleBackColor = true;
@@ -678,10 +683,10 @@ namespace IntegratedGuiV2
             // radioButton3
             // 
             this.radioButton3.AutoSize = true;
-            this.radioButton3.Location = new System.Drawing.Point(263, 120);
-            this.radioButton3.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.radioButton3.Location = new System.Drawing.Point(197, 96);
+            this.radioButton3.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.radioButton3.Name = "radioButton3";
-            this.radioButton3.Size = new System.Drawing.Size(102, 19);
+            this.radioButton3.Size = new System.Drawing.Size(85, 16);
             this.radioButton3.TabIndex = 11;
             this.radioButton3.Text = "radioButton3";
             this.radioButton3.UseVisualStyleBackColor = true;
@@ -689,10 +694,10 @@ namespace IntegratedGuiV2
             // radioButton2
             // 
             this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point(263, 92);
-            this.radioButton2.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.radioButton2.Location = new System.Drawing.Point(197, 74);
+            this.radioButton2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(102, 19);
+            this.radioButton2.Size = new System.Drawing.Size(85, 16);
             this.radioButton2.TabIndex = 10;
             this.radioButton2.Text = "radioButton2";
             this.radioButton2.UseVisualStyleBackColor = true;
@@ -701,10 +706,10 @@ namespace IntegratedGuiV2
             // 
             this.radioButton1.AutoSize = true;
             this.radioButton1.Checked = true;
-            this.radioButton1.Location = new System.Drawing.Point(263, 65);
-            this.radioButton1.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.radioButton1.Location = new System.Drawing.Point(197, 52);
+            this.radioButton1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(102, 19);
+            this.radioButton1.Size = new System.Drawing.Size(85, 16);
             this.radioButton1.TabIndex = 9;
             this.radioButton1.TabStop = true;
             this.radioButton1.Text = "radioButton1";
@@ -743,10 +748,10 @@ namespace IntegratedGuiV2
             // 
             // cbConnected
             // 
-            this.cbConnected.Location = new System.Drawing.Point(1324, 10);
-            this.cbConnected.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbConnected.Location = new System.Drawing.Point(1000, 7);
+            this.cbConnected.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.cbConnected.Name = "cbConnected";
-            this.cbConnected.Size = new System.Drawing.Size(105, 24);
+            this.cbConnected.Size = new System.Drawing.Size(88, 20);
             this.cbConnected.TabIndex = 5;
             this.cbConnected.Values.Text = "I2c Connect";
             this.cbConnected.CheckedChanged += new System.EventHandler(this.cbConnected_CheckedChanged);
@@ -754,20 +759,21 @@ namespace IntegratedGuiV2
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(1084, 12);
+            this.label1.Location = new System.Drawing.Point(4, 3);
+            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(75, 15);
+            this.label1.Size = new System.Drawing.Size(60, 12);
             this.label1.TabIndex = 6;
             this.label1.Text = "Password：";
             // 
             // tbPassword
             // 
             this.tbPassword.Font = new System.Drawing.Font("PMingLiU", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.tbPassword.Location = new System.Drawing.Point(1168, 8);
-            this.tbPassword.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tbPassword.Location = new System.Drawing.Point(67, 0);
+            this.tbPassword.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.tbPassword.Name = "tbPassword";
             this.tbPassword.ShortcutsEnabled = false;
-            this.tbPassword.Size = new System.Drawing.Size(94, 25);
+            this.tbPassword.Size = new System.Drawing.Size(72, 22);
             this.tbPassword.TabIndex = 7;
             this.tbPassword.Text = "3234";
             this.tbPassword.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -775,27 +781,81 @@ namespace IntegratedGuiV2
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(905, 12);
+            this.button1.Location = new System.Drawing.Point(801, 5);
+            this.button1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.Size = new System.Drawing.Size(56, 18);
             this.button1.TabIndex = 8;
-            this.button1.Text = "button1";
+            this.button1.Text = "ReadAll";
             this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button1.Click += new System.EventHandler(this.btReadOverAll_Click);
+            // 
+            // gbChannelSwitcher
+            // 
+            this.gbChannelSwitcher.Controls.Add(this.rbCh2);
+            this.gbChannelSwitcher.Controls.Add(this.btSwitch);
+            this.gbChannelSwitcher.Controls.Add(this.rbCh1);
+            this.gbChannelSwitcher.Enabled = false;
+            this.gbChannelSwitcher.Font = new System.Drawing.Font("PMingLiU", 6F);
+            this.gbChannelSwitcher.Location = new System.Drawing.Point(873, 1);
+            this.gbChannelSwitcher.Margin = new System.Windows.Forms.Padding(1);
+            this.gbChannelSwitcher.Name = "gbChannelSwitcher";
+            this.gbChannelSwitcher.Padding = new System.Windows.Forms.Padding(1);
+            this.gbChannelSwitcher.Size = new System.Drawing.Size(112, 26);
+            this.gbChannelSwitcher.TabIndex = 1007;
+            this.gbChannelSwitcher.TabStop = false;
+            // 
+            // rbCh2
+            // 
+            this.rbCh2.AutoSize = true;
+            this.rbCh2.Enabled = false;
+            this.rbCh2.Location = new System.Drawing.Point(73, 8);
+            this.rbCh2.Margin = new System.Windows.Forms.Padding(1);
+            this.rbCh2.Name = "rbCh2";
+            this.rbCh2.Size = new System.Drawing.Size(35, 13);
+            this.rbCh2.TabIndex = 1009;
+            this.rbCh2.TabStop = true;
+            this.rbCh2.Text = "Ch2";
+            this.rbCh2.UseVisualStyleBackColor = true;
+            // 
+            // btSwitch
+            // 
+            this.btSwitch.Location = new System.Drawing.Point(3, 7);
+            this.btSwitch.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btSwitch.Name = "btSwitch";
+            this.btSwitch.Size = new System.Drawing.Size(34, 14);
+            this.btSwitch.TabIndex = 1007;
+            this.btSwitch.Text = "SW";
+            this.btSwitch.UseVisualStyleBackColor = true;
+            this.btSwitch.Click += new System.EventHandler(this.btSwitch_Click);
+            // 
+            // rbCh1
+            // 
+            this.rbCh1.AutoSize = true;
+            this.rbCh1.Enabled = false;
+            this.rbCh1.Location = new System.Drawing.Point(40, 8);
+            this.rbCh1.Margin = new System.Windows.Forms.Padding(1);
+            this.rbCh1.Name = "rbCh1";
+            this.rbCh1.Size = new System.Drawing.Size(35, 13);
+            this.rbCh1.TabIndex = 1008;
+            this.rbCh1.TabStop = true;
+            this.rbCh1.Text = "Ch1";
+            this.rbCh1.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
-            this.ClientSize = new System.Drawing.Size(2406, 1040);
+            this.ClientSize = new System.Drawing.Size(1443, 832);
+            this.Controls.Add(this.gbChannelSwitcher);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.tbPassword);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.cbConnected);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.tcMain);
-            this.Margin = new System.Windows.Forms.Padding(4, 3, 4, 3);
+            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "MainForm";
             this.Palette = this.kryptonPalette1;
             this.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.Custom;
@@ -824,6 +884,8 @@ namespace IntegratedGuiV2
             this.panel1.ResumeLayout(false);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            this.gbChannelSwitcher.ResumeLayout(false);
+            this.gbChannelSwitcher.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -876,6 +938,10 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Label label1;
         protected internal System.Windows.Forms.TextBox tbPassword;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.GroupBox gbChannelSwitcher;
+        private System.Windows.Forms.RadioButton rbCh2;
+        private System.Windows.Forms.Button btSwitch;
+        private System.Windows.Forms.RadioButton rbCh1;
     }
 }
 
