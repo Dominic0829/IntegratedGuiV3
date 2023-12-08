@@ -59,6 +59,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\UI\Krypton-master\Bin\ComponentFactory.Krypton.Workspace.dll</HintPath>
     </Reference>
+    <Reference Include="ExfoIqs1600ScpiInterface, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>bin\Debug\ExfoIqs1600ScpiInterface.dll</HintPath>
+    </Reference>
     <Reference Include="Gn1190Corrector, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\SourceCode by project\c_sharp_application_server\project\Gn1190Corrector\bin\Debug\Gn1190Corrector.dll</HintPath>

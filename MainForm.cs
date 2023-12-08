@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using I2cMasterInterface;
+using ExfoIqs1600ScpiInterface;
 using System.Xml;
 
 using ComponentFactory.Krypton.Toolkit;
@@ -15,6 +16,7 @@ using QsfpDigitalDiagnosticMonitoring;
 using Rt145Rt146Config;
 using System.Threading;
 using System.Runtime.Remoting.Channels;
+using Gn1190Corrector;
 
 namespace IntegratedGuiV2
 {
@@ -22,6 +24,7 @@ namespace IntegratedGuiV2
     {
         private I2cMaster i2cMaster = new I2cMaster();
         private AdapterSelector adapterSelector = new AdapterSelector();
+        private ExfoIqs1600Scpi powerMeter = new ExfoIqs1600Scpi();
 
         private int iHandler = -1;
         private short iBitrate = 100; //kbps
@@ -160,14 +163,11 @@ namespace IntegratedGuiV2
             return 4;
         }
 
-
         public MainForm()
         {
             InitializeComponent();
             this.Size = new System.Drawing.Size(1080, 850);
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            //UcDigitalDiagnosticsMonitoring1.SetI2cReadCBApi(_I2cRead);
-            //UcDigitalDiagnosticsMonitoring1.SetI2cWriteCBApi(_I2cWrite);
 
             if (ucInformation.SetI2cReadCBApi(_I2cRead) < 0)
             {
@@ -217,6 +217,16 @@ namespace IntegratedGuiV2
                 return;
             }
 
+            if (ucGn1190Corrector.SetQsfpI2cReadCBApi(_I2cRead) < 0)
+            {
+                MessageBox.Show("ucQsfpCorrector.SetQsfpI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucGn1190Corrector.SetQsfpI2cWriteCBApi(_I2cWrite) < 0)
+            {
+                MessageBox.Show("ucQsfpCorrector.SetQsfpI2cWriteCBApi() faile Error!!");
+                return;
+            }
 
             if (ucMald37045cConfig.SetI2cReadCBApi(_I2cRead) < 0)
             {
@@ -264,15 +274,31 @@ namespace IntegratedGuiV2
         private void btReadOverAll_Click(object sender, EventArgs e)
         {
 
+            if ( true)
+            {
+                tbInformationReadState.BackColor = Color.YellowGreen;
+            }
+
+            else
+            {
+                tbInformationReadState.BackColor = Color.Red;
+            }
+
             ucDigitalDiagnosticsMonitoring.bRead_Click(sender, e);
             ucInformation._bRead_Click(sender, e);
             ucMemoryDump.bRead_Click(sender, e);
 
-            UcMald37045cConfig1.bReadAll_Click(sender, e);
-            UcMata37044cConfig1.bReadAll_Click(sender, e);
 
-            UcRt146Config1.bReadAll_Click(sender, e);
-            UcRt145Config1.bReadAll_Click(sender, e);
+            if (ucGn1190Corrector.ReadAll() < 0)
+                tbInformationReadState.BackColor = Color.YellowGreen;
+            else
+                tbInformationReadState.BackColor = Color.Red;
+
+            ucMald37045cConfig.bReadAll_Click(sender, e);
+            ucMata37044cConfig.bReadAll_Click(sender, e);
+
+            ucRt146Config.bReadAll_Click(sender, e);
+            ucRt145Config.bReadAll_Click(sender, e);
 
         }
 
