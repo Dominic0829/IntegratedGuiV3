@@ -16,7 +16,7 @@ using QsfpDigitalDiagnosticMonitoring;
 using Rt145Rt146Config;
 using System.Threading;
 using System.Runtime.Remoting.Channels;
-using Gn1190Corrector;
+using System.Web.UI.Design;
 
 namespace IntegratedGuiV2
 {
@@ -27,10 +27,11 @@ namespace IntegratedGuiV2
         private ExfoIqs1600Scpi powerMeter = new ExfoIqs1600Scpi();
 
         private int iHandler = -1;
-        private short iBitrate = 100; //kbps
+        private short iBitrate = 400; //kbps
         private short TriggerDelay = 100; //ms
         private int Channel = 0;
         private bool StopContinuousMode = false;
+        private bool AutoSelectIcConfig = false;
 
         private int _SetQsfpMode(byte mode)
         {
@@ -47,15 +48,18 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _I2cMasterConnect()
+        private int _I2cMasterConnect(bool setMode)
         {
-            if (i2cMaster.ConnectApi(100) < 0)
+            if (i2cMaster.ConnectApi(iBitrate) < 0)
                 return -1;
 
             cbConnected.Checked = true;
 
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
+            if (setMode)
+            {
+                if (_SetQsfpMode(0x4D) < 0)
+                    return -1;
+            }
 
             return 0;
         }
@@ -75,17 +79,62 @@ namespace IntegratedGuiV2
             int rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(true) < 0)
+                    return -1;
+            }
+            
+            if (_SetQsfpMode(0x4D) < 0)
+                return -1;
+            
+            rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
+            if (rv < 0)
+            {
+                MessageBox.Show("TRx module no response!!");
+                _I2cMasterDisconnect();
+            }
+            else if (rv != length)
+                MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+
+            return rv;
+        }
+
+        private int _I2cRead2(byte devAddr, byte regAddr, byte length, byte[] data)
+        {
+            int rv;
+            if (i2cMaster.connected == false)
+            {
+                if (_I2cMasterConnect(false) < 0)
+                    return -1;
+            }
+
+            rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
+            if (rv < 0)
+            {
+                MessageBox.Show("TRx module no response!!");
+                _I2cMasterDisconnect();
+            }
+            else if (rv != length)
+                MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+
+            return rv;
+        }
+
+        private int _I2cRead16(byte devAddr, byte[] regAddr, byte length, byte[] data)
+        {
+            int rv;
+            if (i2cMaster.connected == false)
+            {
+                if (_I2cMasterConnect(true) < 0)
                     return -1;
             }
 
             if (_SetQsfpMode(0x4D) < 0)
                 return -1;
 
-            rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
+            rv = i2cMaster.Read16Api(devAddr, regAddr, length, data);
             if (rv < 0)
             {
-                MessageBox.Show("TRx module no response!! for read");
+                MessageBox.Show("TRx module no response!!");
                 _I2cMasterDisconnect();
             }
             else if (rv != length)
@@ -100,14 +149,57 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(true) < 0)
+                    return -1;
+            }
+            
+            if (_SetQsfpMode(0x4D) < 0)
+                return -1;
+            
+            rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
+            if (rv < 0)
+            {
+                MessageBox.Show("TRx module no response!!");
+                _I2cMasterDisconnect();
+            }
+
+            return rv;
+        }
+
+        private int _I2cWrite2(byte devAddr, byte regAddr, byte length, byte[] data)
+        {
+            int rv;
+
+            if (i2cMaster.connected == false)
+            {
+                if (_I2cMasterConnect(false) < 0)
+                    return -1;
+            }
+
+            rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
+            if (rv < 0)
+            {
+                MessageBox.Show("TRx module no response!!");
+                _I2cMasterDisconnect();
+            }
+
+            return rv;
+        }
+
+        private int _I2cWrite16(byte devAddr, byte[] regAddr, byte length, byte[] data)
+        {
+            int rv;
+
+            if (i2cMaster.connected == false)
+            {
+                if (_I2cMasterConnect(true) < 0)
                     return -1;
             }
 
             if (_SetQsfpMode(0x4D) < 0)
                 return -1;
 
-            rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
+            rv = i2cMaster.Write16Api(devAddr, regAddr, length, data);
             if (rv < 0)
             {
                 MessageBox.Show("TRx module no response!!");
@@ -129,26 +221,6 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private void cbConnected_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbConnected.Checked == true)
-            {
-                if (_I2cMasterConnect() < 0)
-                    return;
-                _WriteModulePassword();
-                i2cMaster.ChannelSet(1);
-                gbChannelSwitcher.Enabled = true;
-                Channel = 1;
-                UpdateButtonState();
-            }
-            else
-            {
-                _I2cMasterDisconnect();
-                gbChannelSwitcher.Enabled = false;
-            }
-
-        }
-
         private int _GetPassword(int length, byte[] data)
         {
             byte[] tmp = new byte[4];
@@ -159,22 +231,55 @@ namespace IntegratedGuiV2
             if (data == null)
                 return -1;
 
-            data = Encoding.Default.GetBytes(tbPassword.Text);
+            if ((tbPasswordB0.Text.Length != 2) || (tbPasswordB1.Text.Length != 2) ||
+                (tbPasswordB2.Text.Length != 2) || (tbPasswordB3.Text.Length != 2))
+            {
+                MessageBox.Show("Please inpurt password before operate!!");
+                return -1;
+            }
+
+            data[0] = Convert.ToByte(tbPasswordB0.Text, 16);
+            data[1] = Convert.ToByte(tbPasswordB1.Text, 16);
+            data[2] = Convert.ToByte(tbPasswordB2.Text, 16);
+            data[3] = Convert.ToByte(tbPasswordB3.Text, 16);
+
             return 4;
+        }
+
+        private void cbConnected_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbConnected.Checked == true)
+            {
+                if (_I2cMasterConnect(true) < 0)
+                    return;
+                _WriteModulePassword();
+                i2cMaster.ChannelSet(1);
+                gbChannelSwitcher.Enabled = true;
+                Channel = 1;
+                _UpdateButtonState();
+            }
+            else
+            {
+                _I2cMasterDisconnect();
+                gbChannelSwitcher.Enabled = false;
+            }
+
         }
 
         public MainForm()
         {
             InitializeComponent();
-            this.Size = new System.Drawing.Size(1080, 850);
+            this.Size = new System.Drawing.Size(1150, 850);
+            _InitialStateBar();
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
+            cbProductSelect.SelectedIndex = 0;
 
-            if (ucInformation.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucInformation.SetI2cReadCBApi(_I2cRead2) < 0)
             {
                 MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucInformation.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucInformation.SetI2cWriteCBApi(_I2cWrite2) < 0)
             {
                 MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
                 return;
@@ -185,12 +290,12 @@ namespace IntegratedGuiV2
                 return;
             }
 
-            if (ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi(_I2cRead2) < 0)
             {
                 MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucDigitalDiagnosticsMonitoring.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucDigitalDiagnosticsMonitoring.SetI2cWriteCBApi(_I2cWrite2) < 0)
             {
                 MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
                 return;
@@ -201,12 +306,12 @@ namespace IntegratedGuiV2
                 return;
             }
 
-            if (ucMemoryDump.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucMemoryDump.SetI2cReadCBApi(_I2cRead2) < 0)
             {
                 MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucMemoryDump.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucMemoryDump.SetI2cWriteCBApi(_I2cWrite2) < 0)
             {
                 MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
                 return;
@@ -217,12 +322,12 @@ namespace IntegratedGuiV2
                 return;
             }
 
-            if (ucGn1190Corrector.SetQsfpI2cReadCBApi(_I2cRead) < 0)
+            if (ucGn1190Corrector.SetQsfpI2cReadCBApi(_I2cRead2) < 0)
             {
                 MessageBox.Show("ucQsfpCorrector.SetQsfpI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucGn1190Corrector.SetQsfpI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucGn1190Corrector.SetQsfpI2cWriteCBApi(_I2cWrite2) < 0)
             {
                 MessageBox.Show("ucQsfpCorrector.SetQsfpI2cWriteCBApi() faile Error!!");
                 return;
@@ -269,57 +374,222 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucRt145Config.SetI2cWriteCBApi() faile Error!!");
                 return;
             }
+
+            if (ucGn2108Config.SetI2cReadCBApi(_I2cRead) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucGn2108Config.SetI2cWriteCBApi(_I2cWrite) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
+                return;
+            }
+            if (ucGn2108Config.SetI2cRead16CBApi(_I2cRead16) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cRead16CBApi() faile Error!!");
+                return;
+            }
+            if (ucGn2108Config.SetI2cWrite16CBApi(_I2cWrite16) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cWrite16CBApi() faile Error!!");
+                return;
+            }
+
+            if (ucGn2109Config.SetI2cReadCBApi(_I2cRead) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucGn2109Config.SetI2cWriteCBApi(_I2cWrite) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
+                return;
+            }
+            if (ucGn2109Config.SetI2cRead16CBApi(_I2cRead16) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cRead16CBApi() faile Error!!");
+                return;
+            }
+            if (ucGn2109Config.SetI2cWrite16CBApi(_I2cWrite16) < 0)
+            {
+                MessageBox.Show("ucGn1190Config.SetI2cWrite16CBApi() faile Error!!");
+                return;
+            }
+
         }
 
-        private void btReadOverAll_Click(object sender, EventArgs e)
+        
+
+        private void bReadOverAll_Click(object sender, EventArgs e)
         {
+            btReadAll.Enabled = false;
+            _InitialStateBar();
 
-            if ( true)
+            if (cbInfomation.Checked)
             {
+                ucInformation.bRead_Click(sender, e);
                 tbInformationReadState.BackColor = Color.YellowGreen;
+                Application.DoEvents();
             }
 
-            else
+            if (cbDdm.Checked)
             {
-                tbInformationReadState.BackColor = Color.Red;
+                ucDigitalDiagnosticsMonitoring.bRead_Click(sender, e);
+                tbDdmReadState.BackColor = Color.YellowGreen;
+                Application.DoEvents();
             }
 
-            ucDigitalDiagnosticsMonitoring.bRead_Click(sender, e);
-            ucInformation._bRead_Click(sender, e);
-            ucMemoryDump.bRead_Click(sender, e);
+            if (cbMemDump.Checked)
+            {
+                ucMemoryDump.bRead_Click(sender, e);
+                tbMemDumpReadState.BackColor = Color.YellowGreen;
+                Application.DoEvents();
+            }
+
+            if (cbCorrector.Checked)
+            {
+                if (ucGn1190Corrector.ReadAll() < 0)
+                    tbCorrectorReadState.BackColor = Color.Red;
+                else
+                    tbCorrectorReadState.BackColor = Color.YellowGreen;
+
+                Application.DoEvents();
+            }
+
+            if (cbProductSelect.SelectedIndex != 0)
+            {
+                if (cbTxIcConfig.Checked)
+                {
+                    switch (cbProductSelect.SelectedIndex)
+                    {
+                        case 1: // SAS4.0
+                            ucMald37045cConfig.bReadAll_Click(sender, e);
+                            break;
+                        case 2: // PCIe4
+                            ucRt146Config.bReadAll_Click(sender, e);
+                            break;
+                        case 3: // QSFP28
+                            ucGn2108Config.bReadAll_Click(sender, e);
+                            break;
+                    }
+
+                    tbTxConfigReadState.BackColor = Color.YellowGreen;
+                    Application.DoEvents();
+                }
+
+                if (cbRxIcConfig.Checked)
+                {
+                    switch (cbProductSelect.SelectedIndex)
+                    {
+                        case 1: // SAS4.0
+                            ucMata37044cConfig.bReadAll_Click(sender, e);
+                            break;
+                        case 2: // PCIe4
+                            ucRt145Config.bReadAll_Click(sender, e);
+                            break;
+                        case 3: // QSFP28
+                            ucGn2109Config.bReadAll_Click(sender, e);
+                            break;
+                    }
+
+                    tbRxConfigReadState.BackColor = Color.YellowGreen;
+                    Application.DoEvents();
+                }
+            }
+
+            
+            /*
+            //ucMald37045cConfig.bReadAll_Click(sender, e);
+            //ucMata37044cConfig.bReadAll_Click(sender, e);
+            if (cbTxIcConfig.Checked)
+            {
+                ucRt146Config.bReadAll_Click(sender, e);
+                tbTxConfigReadState.BackColor = Color.YellowGreen;
+                Application.DoEvents();
+            }
 
 
-            if (ucGn1190Corrector.ReadAll() < 0)
-                tbInformationReadState.BackColor = Color.YellowGreen;
-            else
-                tbInformationReadState.BackColor = Color.Red;
+            if (cbRxIcConfig.Checked)
+            {
+                ucRt145Config.bReadAll_Click(sender,e);
+                tbRxConfigReadState.BackColor = (Color)Color.YellowGreen;
+                Application.DoEvents();
+            }
 
-            ucMald37045cConfig.bReadAll_Click(sender, e);
-            ucMata37044cConfig.bReadAll_Click(sender, e);
-
-            ucRt146Config.bReadAll_Click(sender, e);
-            ucRt145Config.bReadAll_Click(sender, e);
-
+            //ucGn2108Config.bReadAll_Click(sender, e);
+            //ucGn2109Config.bReadAll_Click(sender, e);
+            */
+            btReadAll.Enabled = true;
         }
 
-        private void GenerateXmlSettings()
+        private void bWriteAll_Click(object sender, EventArgs e)
+        {
+            btWriteAll.Enabled = false;
+            _InitialStateBar();
+
+            if (cbInfomation.Checked)
+            {
+                ucInformation._bWrite_Click(sender, e);
+                tbInformationReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+            }
+
+            if (cbDdm.Checked)
+            {
+                ucDigitalDiagnosticsMonitoring.bWrite_Click(sender, e);
+                tbDdmReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+            }
+
+            if (cbMemDump.Checked)
+            {
+                ucMemoryDump.bRead_Click(sender, e);
+                tbMemDumpReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+            }
+
+            if (cbCorrector.Checked)
+            {
+                if (ucGn1190Corrector.ReadAll() < 0)
+                    tbCorrectorReadState.BackColor = Color.Red;
+                else
+                    tbCorrectorReadState.BackColor = Color.YellowGreen;
+
+                Application.DoEvents();
+            }
+
+
+
+            btWriteAll.Enabled = true;
+        }
+
+        private void _InitialStateBar()
+        {
+            tbInformationReadState.BackColor= Color.White;
+            tbDdmReadState.BackColor = Color.White;
+            tbMemDumpReadState.BackColor = Color.White;
+            tbCorrectorReadState.BackColor = Color.White;
+            tbTxConfigReadState.BackColor = Color.White;
+            tbRxConfigReadState.BackColor = Color.White;
+        }
+
+        private void _GenerateXmlSettings()
         {
             XmlDocument xmlDoc = new XmlDocument();
-            
-            XmlElement root = xmlDoc.CreateElement("Settings"); // XML Root node
+            XmlElement root = xmlDoc.CreateElement("Settings");
             xmlDoc.AppendChild(root);
-            XmlElement permissionsNode = xmlDoc.CreateElement("Permissions"); // Permissions node
+            XmlElement permissionsNode = xmlDoc.CreateElement("Permissions");
             root.AppendChild(permissionsNode);
-
-            string[] roles = { "Admin", "Engineer", "Operator" }; //Permission conditions
+            string[] roles = { "Admin", "Engineer", "Operator" };
 
             foreach (string role in roles)
             {
                 XmlElement permissionNode = xmlDoc.CreateElement("Permission");
                 permissionNode.SetAttribute("role", role);
                 permissionsNode.AppendChild(permissionNode);
-
-                List<UserControl> userControls = GetAllUserControls(this); // Get all user control from MainForm
+                                
+                List<UserControl> userControls = GetAllUserControls(this); // get MainForm all UserControl
 
                 foreach (UserControl userControl in userControls)
                 {
@@ -327,15 +597,25 @@ namespace IntegratedGuiV2
                     userControlNode.SetAttribute("name", userControl.Name);
                     permissionNode.AppendChild(userControlNode);
 
-                    // Go through all the components in the User Control and create nodes for each
-                    List<Control> userControlComponents = GetAllControls(userControl); 
+                    List<Control> userControlComponents = GetAllControls(userControl); // search all components from UserControl and set xml node
+                    userControlComponents.Sort(new ControlComparer());
+
                     XmlElement componentsNode = xmlDoc.CreateElement("Components");
 
                     foreach (Control control in userControlComponents)
                     {
                         XmlElement componentNode = xmlDoc.CreateElement("Component");
+
                         componentNode.SetAttribute("name", control.Name);
-                        componentNode.SetAttribute("visible", "true"); // Default value
+                        componentNode.SetAttribute("object", control.GetType().Name);
+                        componentNode.SetAttribute("visible", control.Visible.ToString());
+                        componentNode.SetAttribute("enabled", control.Enabled.ToString());
+
+                        if (control is TextBox textBox)
+                        {
+                            componentNode.SetAttribute("ReadOnly", textBox.ReadOnly.ToString());
+                        }
+
                         componentsNode.AppendChild(componentNode);
                     }
 
@@ -343,11 +623,10 @@ namespace IntegratedGuiV2
                 }
             }
 
-            xmlDoc.Save("Settings.xml"); // Save XML file
+            xmlDoc.Save("Settings.xml");
         }
-
-        // Go through the MainForm and get all the UserControls.
-        private List<UserControl> GetAllUserControls(Control control)
+        
+        private List<UserControl> GetAllUserControls(Control control) // 遞迴取得 MainForm 中的所有 User Control
         {
             List<UserControl> userControls = new List<UserControl>();
 
@@ -364,8 +643,106 @@ namespace IntegratedGuiV2
             return userControls;
         }
 
+        private List<Control> GetAllControls(Control control) // 遞迴取得 User Control 中的所有 Control
+        {
+            List<Control> controls = new List<Control>();
+
+            foreach (Control childControl in control.Controls)
+            {
+                controls.Add(childControl);
+
+                if (childControl is UserControl userControl) // If UserControl，遞迴取得其內部的所有元件
+                {
+                    controls.AddRange(GetAllControls(userControl));
+                }
+
+                controls.AddRange(GetAllControls(childControl));
+            }
+
+            return controls;
+        }
+        
+        private class ControlComparer : IComparer<Control> //比較器，用於排序
+        {
+            public int Compare(Control x, Control y)
+            {
+                return string.Compare(x.Name, y.Name, StringComparison.Ordinal); // 依components name進行排序
+            }
+        }
+
+        /*
+        private void _GenerateXmlSettings()
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            
+            XmlElement root = xmlDoc.CreateElement("Settings"); // XML Root node
+            xmlDoc.AppendChild(root);
+            XmlElement permissionsNode = xmlDoc.CreateElement("Permissions"); // Permissions node
+            root.AppendChild(permissionsNode);
+
+            string[] roles = { "Admin", "Engineer", "Operator" }; //Permission conditions
+
+            foreach (string role in roles)
+            {
+                XmlElement permissionNode = xmlDoc.CreateElement("Permission");
+                permissionNode.SetAttribute("role", role);
+                permissionsNode.AppendChild(permissionNode);
+
+                List<UserControl> userControls = _GetAllUserControls(this); // Get all user control from MainForm
+
+                foreach (UserControl userControl in userControls)
+                {
+                    XmlElement userControlNode = xmlDoc.CreateElement("UserControl");
+                    userControlNode.SetAttribute("name", userControl.Name);
+                    permissionNode.AppendChild(userControlNode);
+
+                    // Go through all the components in the User Control and create nodes for each
+                    List<Control> userControlComponents = _GetAllControls(userControl); 
+                    XmlElement componentsNode = xmlDoc.CreateElement("Components");
+
+                    foreach (Control control in userControlComponents)
+                    {
+                        XmlElement componentNode = xmlDoc.CreateElement("Component");
+                        componentNode.SetAttribute("name", control.Name);
+                        componentNode.SetAttribute("object", control.GetType().Name); // 
+                        componentNode.SetAttribute("visible", "true"); // Default value
+                        componentNode.SetAttribute("enabled", control.Enabled.ToString()); // added "enabled" 屬性
+
+                        if (control is TextBox textBox)
+                        {
+                            componentNode.SetAttribute("ReadOnly", textBox.ReadOnly.ToString());
+                        }
+
+                        componentsNode.AppendChild(componentNode);
+                    }
+
+                    userControlNode.AppendChild(componentsNode);
+                }
+            }
+
+            xmlDoc.Save("Settings.xml"); // Save XML file
+        }
+
+        // Go through the MainForm and get all the UserControls.
+        private List<UserControl> _GetAllUserControls(Control control)
+        {
+            List<UserControl> userControls = new List<UserControl>();
+
+            foreach (Control childControl in control.Controls)
+            {
+                if (childControl is UserControl userControl)
+                {
+                    userControls.Add(userControl);
+                }
+
+                userControls.AddRange(_GetAllUserControls(childControl));
+            }
+
+            return userControls;
+        }
+
         // Go through the UserControls and get all the components
-        private List<Control> GetAllControls(Control control)
+        private List<Control> _GetAllControls(Control control)
         {
             List<Control> controls = new List<Control>();
 
@@ -376,69 +753,190 @@ namespace IntegratedGuiV2
                 //  Get all the components from each UserControl
                 if (childControl is UserControl userControl)
                 {
-                    controls.AddRange(GetAllControls(userControl));
+                    controls.AddRange(_GetAllControls(userControl));
                 }
 
-                controls.AddRange(GetAllControls(childControl));
+                controls.AddRange(_GetAllControls(childControl));
             }
 
             return controls;
         }
-   
-        private void btSwitch_Click(object sender, EventArgs e)
-        {
-            if (btSwitch.Enabled == true)
-                btSwitch.Enabled = false;
+        */
 
+        private void bOutterSwitch_Click(object sender, EventArgs e)
+        {
+            if (bOutterSwitch.Enabled == true)
+            {
+                bOutterSwitch.Enabled = false;
+                bInnerSwitch.Enabled = false;
+            }
+                
+
+            _channelSwitch();
+
+            if (bOutterSwitch.Enabled == false)
+            {
+                bOutterSwitch.Enabled = true;
+                bInnerSwitch.Enabled = true;
+            }
+                
+        }
+
+        private void bInnerSwitch_Click(object sender, EventArgs e)
+        {
+            if (bInnerSwitch.Enabled == true)
+            {
+                bInnerSwitch.Enabled = false;
+                bOutterSwitch.Enabled = false;
+            }
+
+            _channelSwitch();
+
+            if (bInnerSwitch.Enabled == false)
+            {
+                bInnerSwitch.Enabled = true;
+                bOutterSwitch.Enabled = true;
+            }
+        }
+
+        private void _channelSwitch()
+        {
             Channel = (Channel == 1) ? 2 : 1;
 
             i2cMaster.ChannelSet(Channel);
-            UpdateButtonState();
-            StopContinuousMode = !StopContinuousMode;
+            _UpdateButtonState();
 
-            if (btSwitch.Enabled == false)
-                btSwitch.Enabled = true;
-            
             return;
         }
         
-
-        private void UpdateButtonState()
+        private void _UpdateButtonState()
         {
            
             if (Channel == 1)
             {
                 rbCh1.Checked = true;
                 rbCh2.Checked = false;
+                tbInnerStateCh1.BackColor = Color.YellowGreen;
+                tbInnerStateCh2.BackColor = Color.White;
             }
 
             if (Channel == 2)
             {
                 rbCh2.Checked = true;
                 rbCh1.Checked = false;
+                tbInnerStateCh1.BackColor = Color.White;
+                tbInnerStateCh2.BackColor = Color.YellowGreen;
             }
 
             System.Windows.Forms.Application.DoEvents();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void _ContinuousMode()
         {
-            //GenerateXmlSettings();
-            //i2cMaster.ConnectApi();
-            //
-            /*
-            i2cMaster.ChannelSet(1);
-            Thread.Sleep(3000);
-            i2cMaster.ChannelSet(0);
-            Thread.Sleep(3000);
-            i2cMaster.ChannelSet(2);
-            Thread.Sleep(3000);
-            i2cMaster.ChannelSet(0);
-            */
+            while(cbContinuousMode.Checked){ 
+            ucNuvotonIcpTool.bLink_Click(null, null);
+            ucNuvotonIcpTool.bStart_Click(null, null);
+            bInnerSwitch_Click(null, null);
+            }
         }
 
+        
 
+        private void _EnableIcConfig()
+        {
+            if (cbProductSelect.SelectedIndex != 0)
+            {
+                cbTxIcConfig.Enabled = true;
+                cbTxIcConfig.Checked = true;
+                cbRxIcConfig.Enabled = true;
+                cbRxIcConfig.Checked = true;
+                tbTxConfigReadState.Enabled = true;
+                tbRxConfigReadState.Enabled = true;
+                AutoSelectIcConfig = true;
+            }
+            else
+            {
+                cbTxIcConfig.Enabled = false;
+                cbTxIcConfig.Checked = false;
+                cbRxIcConfig.Enabled = false;
+                cbRxIcConfig.Checked = false;
+                tbTxConfigReadState.Enabled = false;
+                tbRxConfigReadState.Enabled = false;
+                AutoSelectIcConfig = false;
+            }
+        }
 
+        private void _UpdateTabPageVisibility()
+        {
+            int variable;
+
+            variable = cbProductSelect.SelectedIndex;
+
+            if (variable == 1)
+            {
+                tcIcConfig.TabPages.Remove(tabPage32);
+                tcIcConfig.TabPages.Remove(tabPage33);
+
+                if (!tcIcConfig.TabPages.Contains(tabPage31))
+                {
+                    tcIcConfig.TabPages.Add(tabPage31);
+                }
+            }
+
+            else if (variable == 2)
+            {
+                tcIcConfig.TabPages.Remove(tabPage31);
+                tcIcConfig.TabPages.Remove(tabPage33);
+
+                if (!tcIcConfig.TabPages.Contains(tabPage32))
+                {
+                    tcIcConfig.TabPages.Add(tabPage32);
+                }
+            }
+            else if (variable == 3)
+            {
+                tcIcConfig.TabPages.Remove(tabPage31);
+                tcIcConfig.TabPages.Remove(tabPage32);
+
+                if (!tcIcConfig.TabPages.Contains(tabPage33))
+                {
+                    tcIcConfig.TabPages.Add(tabPage33);
+                }
+            }
+
+            else
+            {
+                if (!tcIcConfig.TabPages.Contains(tabPage31))
+                {
+                    tcIcConfig.TabPages.Add(tabPage31);
+                }
+                if (!tcIcConfig.TabPages.Contains(tabPage32))
+                {
+                    tcIcConfig.TabPages.Add(tabPage32);
+                }
+                if (!tcIcConfig.TabPages.Contains(tabPage33))
+                {
+                    tcIcConfig.TabPages.Add(tabPage33);
+                }
+            }
+        }
+        private void bFunctionTest_Click(object sender, EventArgs e)
+        {
+            _GenerateXmlSettings();
+            //InitializeComponentsVisibility();
+           
+        }
+
+        private void cbProductSelect_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _EnableIcConfig();
+            _UpdateTabPageVisibility();
+        }
+
+        private void cbContinuousMode_CheckedChanged(object sender, EventArgs e)
+        {
+            _ContinuousMode();
+        }
     }
 
     public class ComboBoxItem
@@ -451,4 +949,6 @@ namespace IntegratedGuiV2
         }
 
     }
+
+
 }

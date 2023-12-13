@@ -32,684 +32,552 @@ namespace IntegratedGuiV2
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.ucInformation = new QsfpDigitalDiagnosticMonitoring.UcInformation();
-            this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
-            this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
-            this.ucNuvotonIcpTool = new NuvotonIcpTool.UcNuvotonIcpTool();
             this.ucMald37045cConfig = new Mald37045cMata37044c.UcMald37045cConfig();
             this.ucMata37044cConfig = new Mald37045cMata37044c.UcMata37044cConfig();
-            this.ucRt146Config = new Rt145Rt146Config.UcRt146Config();
-            this.ucRt145Config = new Rt145Rt146Config.UcRt145Config();
             this.tcDdmi = new System.Windows.Forms.TabControl();
-            this.tpInformation = new System.Windows.Forms.TabPage();
-            this.tpDdm = new System.Windows.Forms.TabPage();
-            this.tpMemoryDump = new System.Windows.Forms.TabPage();
+            this.tabPage11 = new System.Windows.Forms.TabPage();
+            this.ucInformation = new QsfpDigitalDiagnosticMonitoring.UcInformation();
+            this.tabPage12 = new System.Windows.Forms.TabPage();
+            this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
+            this.tabPage13 = new System.Windows.Forms.TabPage();
+            this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
             this.tcIcConfig = new System.Windows.Forms.TabControl();
-            this.tabPage41 = new System.Windows.Forms.TabPage();
+            this.tabPage31 = new System.Windows.Forms.TabPage();
             this.tcSas40 = new System.Windows.Forms.TabControl();
-            this.tabPage411 = new System.Windows.Forms.TabPage();
-            this.tabPage412 = new System.Windows.Forms.TabPage();
-            this.tabPage42 = new System.Windows.Forms.TabPage();
+            this.tabPage311 = new System.Windows.Forms.TabPage();
+            this.tabPage312 = new System.Windows.Forms.TabPage();
+            this.tabPage32 = new System.Windows.Forms.TabPage();
             this.tcPcie4 = new System.Windows.Forms.TabControl();
-            this.tabPage421 = new System.Windows.Forms.TabPage();
-            this.tabPage422 = new System.Windows.Forms.TabPage();
-            this.tabPage43 = new System.Windows.Forms.TabPage();
+            this.tabPage321 = new System.Windows.Forms.TabPage();
+            this.ucRt146Config = new Rt145Rt146Config.UcRt146Config();
+            this.tabPage322 = new System.Windows.Forms.TabPage();
+            this.ucRt145Config = new Rt145Rt146Config.UcRt145Config();
+            this.tabPage33 = new System.Windows.Forms.TabPage();
+            this.tcQsfp28 = new System.Windows.Forms.TabControl();
+            this.tabPage331 = new System.Windows.Forms.TabPage();
+            this.ucGn2108Config = new Gn2108Gn2109Config.UcGn2108Config();
+            this.tabPage332 = new System.Windows.Forms.TabPage();
+            this.ucGn2109Config = new Gn2108Gn2109Config.UcGn2109Config();
             this.tcMain = new System.Windows.Forms.TabControl();
-            this.tpDdmi = new System.Windows.Forms.TabPage();
+            this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.ucGn1190Corrector = new Gn1190Corrector.UcGn1190CorrectorLite();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.lContinuousMode = new System.Windows.Forms.Label();
+            this.cbContinuousMode = new System.Windows.Forms.CheckBox();
+            this.lCh2 = new System.Windows.Forms.Label();
+            this.lCh1 = new System.Windows.Forms.Label();
+            this.tbInnerStateCh2 = new System.Windows.Forms.TextBox();
+            this.tbInnerStateCh1 = new System.Windows.Forms.TextBox();
+            this.bInnerSwitch = new System.Windows.Forms.Button();
+            this.ucNuvotonIcpTool = new NuvotonIcpTool.UcNuvotonIcpTool();
             this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.kryptonButton3 = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kryptonButton2 = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kryptonButton1 = new ComponentFactory.Krypton.Toolkit.KryptonButton();
-            this.kryptonTextBox2 = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-            this.kryptonTextBox1 = new ComponentFactory.Krypton.Toolkit.KryptonTextBox();
-            this.radioButton4 = new System.Windows.Forms.RadioButton();
-            this.radioButton3 = new System.Windows.Forms.RadioButton();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
-            this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.kryptonPalette1 = new ComponentFactory.Krypton.Toolkit.KryptonPalette(this.components);
             this.cbConnected = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.lPassword = new System.Windows.Forms.Label();
             this.tbPassword = new System.Windows.Forms.TextBox();
             this.btReadAll = new System.Windows.Forms.Button();
             this.gbChannelSwitcher = new System.Windows.Forms.GroupBox();
             this.rbCh2 = new System.Windows.Forms.RadioButton();
-            this.btSwitch = new System.Windows.Forms.Button();
+            this.bOutterSwitch = new System.Windows.Forms.Button();
             this.rbCh1 = new System.Windows.Forms.RadioButton();
             this.tbInformationReadState = new System.Windows.Forms.TextBox();
-            this.ucGn1190Corrector = new Gn1190Corrector.UcGn1190Corrector();
             this.tbDdmReadState = new System.Windows.Forms.TextBox();
             this.tbMemDumpReadState = new System.Windows.Forms.TextBox();
             this.tbCorrectorReadState = new System.Windows.Forms.TextBox();
-            this.tbIcConfigReadState = new System.Windows.Forms.TextBox();
+            this.tbTxConfigReadState = new System.Windows.Forms.TextBox();
+            this.tbRxConfigReadState = new System.Windows.Forms.TextBox();
+            this.cbInfomation = new System.Windows.Forms.CheckBox();
+            this.gbScope = new System.Windows.Forms.GroupBox();
+            this.cbProductSelect = new System.Windows.Forms.ComboBox();
+            this.cbRxIcConfig = new System.Windows.Forms.CheckBox();
+            this.cbTxIcConfig = new System.Windows.Forms.CheckBox();
+            this.cbCorrector = new System.Windows.Forms.CheckBox();
+            this.cbMemDump = new System.Windows.Forms.CheckBox();
+            this.cbDdm = new System.Windows.Forms.CheckBox();
+            this.btWriteAll = new System.Windows.Forms.Button();
+            this.bFunctionTest = new System.Windows.Forms.Button();
+            this.cbPermission = new System.Windows.Forms.ComboBox();
+            this.tbPasswordB3 = new System.Windows.Forms.TextBox();
+            this.tbPasswordB2 = new System.Windows.Forms.TextBox();
+            this.tbPasswordB1 = new System.Windows.Forms.TextBox();
+            this.tbPasswordB0 = new System.Windows.Forms.TextBox();
             this.tcDdmi.SuspendLayout();
-            this.tpInformation.SuspendLayout();
-            this.tpDdm.SuspendLayout();
-            this.tpMemoryDump.SuspendLayout();
+            this.tabPage11.SuspendLayout();
+            this.tabPage12.SuspendLayout();
+            this.tabPage13.SuspendLayout();
             this.tcIcConfig.SuspendLayout();
-            this.tabPage41.SuspendLayout();
+            this.tabPage31.SuspendLayout();
             this.tcSas40.SuspendLayout();
-            this.tabPage411.SuspendLayout();
-            this.tabPage412.SuspendLayout();
-            this.tabPage42.SuspendLayout();
+            this.tabPage311.SuspendLayout();
+            this.tabPage312.SuspendLayout();
+            this.tabPage32.SuspendLayout();
             this.tcPcie4.SuspendLayout();
-            this.tabPage421.SuspendLayout();
-            this.tabPage422.SuspendLayout();
+            this.tabPage321.SuspendLayout();
+            this.tabPage322.SuspendLayout();
+            this.tabPage33.SuspendLayout();
+            this.tcQsfp28.SuspendLayout();
+            this.tabPage331.SuspendLayout();
+            this.tabPage332.SuspendLayout();
             this.tcMain.SuspendLayout();
-            this.tpDdmi.SuspendLayout();
+            this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
-            this.panel1.SuspendLayout();
-            this.groupBox1.SuspendLayout();
             this.gbChannelSwitcher.SuspendLayout();
+            this.gbScope.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // ucInformation
-            // 
-            this.ucInformation.Location = new System.Drawing.Point(0, 0);
-            this.ucInformation.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.ucInformation.Name = "ucInformation";
-            this.ucInformation.Size = new System.Drawing.Size(907, 714);
-            this.ucInformation.TabIndex = 1;
-            // 
-            // ucMemoryDump
-            // 
-            this.ucMemoryDump.Location = new System.Drawing.Point(0, 0);
-            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.ucMemoryDump.Name = "ucMemoryDump";
-            this.ucMemoryDump.Size = new System.Drawing.Size(902, 708);
-            this.ucMemoryDump.TabIndex = 0;
-            // 
-            // ucDigitalDiagnosticsMonitoring
-            // 
-            this.ucDigitalDiagnosticsMonitoring.Location = new System.Drawing.Point(0, 0);
-            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.ucDigitalDiagnosticsMonitoring.Name = "ucDigitalDiagnosticsMonitoring";
-            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(823, 658);
-            this.ucDigitalDiagnosticsMonitoring.TabIndex = 1;
-            // 
-            // ucNuvotonIcpTool
-            // 
-            this.ucNuvotonIcpTool.Location = new System.Drawing.Point(0, 0);
-            this.ucNuvotonIcpTool.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-            this.ucNuvotonIcpTool.Name = "ucNuvotonIcpTool";
-            this.ucNuvotonIcpTool.Size = new System.Drawing.Size(433, 248);
-            this.ucNuvotonIcpTool.TabIndex = 0;
             // 
             // ucMald37045cConfig
             // 
-            this.ucMald37045cConfig.Location = new System.Drawing.Point(0, 0);
-            this.ucMald37045cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucMald37045cConfig.Location = new System.Drawing.Point(7, 6);
+            this.ucMald37045cConfig.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.ucMald37045cConfig.Name = "ucMald37045cConfig";
-            this.ucMald37045cConfig.Size = new System.Drawing.Size(640, 550);
+            this.ucMald37045cConfig.Size = new System.Drawing.Size(1253, 925);
             this.ucMald37045cConfig.TabIndex = 0;
             // 
             // ucMata37044cConfig
             // 
-            this.ucMata37044cConfig.Location = new System.Drawing.Point(0, 0);
-            this.ucMata37044cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucMata37044cConfig.Location = new System.Drawing.Point(7, 6);
+            this.ucMata37044cConfig.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.ucMata37044cConfig.Name = "ucMata37044cConfig";
-            this.ucMata37044cConfig.Size = new System.Drawing.Size(640, 582);
+            this.ucMata37044cConfig.Size = new System.Drawing.Size(1253, 925);
             this.ucMata37044cConfig.TabIndex = 0;
+            // 
+            // tcDdmi
+            // 
+            this.tcDdmi.Controls.Add(this.tabPage11);
+            this.tcDdmi.Controls.Add(this.tabPage12);
+            this.tcDdmi.Controls.Add(this.tabPage13);
+            this.tcDdmi.Location = new System.Drawing.Point(7, 6);
+            this.tcDdmi.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tcDdmi.Name = "tcDdmi";
+            this.tcDdmi.RightToLeft = System.Windows.Forms.RightToLeft.No;
+            this.tcDdmi.SelectedIndex = 0;
+            this.tcDdmi.Size = new System.Drawing.Size(1307, 975);
+            this.tcDdmi.TabIndex = 5;
+            // 
+            // tabPage11
+            // 
+            this.tabPage11.Controls.Add(this.ucInformation);
+            this.tabPage11.Location = new System.Drawing.Point(4, 25);
+            this.tabPage11.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage11.Name = "tabPage11";
+            this.tabPage11.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage11.Size = new System.Drawing.Size(1299, 946);
+            this.tabPage11.TabIndex = 0;
+            this.tabPage11.Text = "Information";
+            this.tabPage11.UseVisualStyleBackColor = true;
+            // 
+            // ucInformation
+            // 
+            this.ucInformation.Location = new System.Drawing.Point(7, 6);
+            this.ucInformation.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ucInformation.Name = "ucInformation";
+            this.ucInformation.Size = new System.Drawing.Size(1280, 950);
+            this.ucInformation.TabIndex = 1;
+            // 
+            // tabPage12
+            // 
+            this.tabPage12.Controls.Add(this.ucDigitalDiagnosticsMonitoring);
+            this.tabPage12.Location = new System.Drawing.Point(4, 25);
+            this.tabPage12.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage12.Name = "tabPage12";
+            this.tabPage12.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage12.Size = new System.Drawing.Size(1299, 946);
+            this.tabPage12.TabIndex = 1;
+            this.tabPage12.Text = "DDM";
+            this.tabPage12.UseVisualStyleBackColor = true;
+            // 
+            // ucDigitalDiagnosticsMonitoring
+            // 
+            this.ucDigitalDiagnosticsMonitoring.Location = new System.Drawing.Point(7, 6);
+            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ucDigitalDiagnosticsMonitoring.Name = "ucDigitalDiagnosticsMonitoring";
+            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(1280, 950);
+            this.ucDigitalDiagnosticsMonitoring.TabIndex = 1;
+            // 
+            // tabPage13
+            // 
+            this.tabPage13.Controls.Add(this.ucMemoryDump);
+            this.tabPage13.Location = new System.Drawing.Point(4, 25);
+            this.tabPage13.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage13.Name = "tabPage13";
+            this.tabPage13.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage13.Size = new System.Drawing.Size(1299, 946);
+            this.tabPage13.TabIndex = 2;
+            this.tabPage13.Text = "MemDump";
+            this.tabPage13.UseVisualStyleBackColor = true;
+            // 
+            // ucMemoryDump
+            // 
+            this.ucMemoryDump.Location = new System.Drawing.Point(7, 6);
+            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ucMemoryDump.Name = "ucMemoryDump";
+            this.ucMemoryDump.Size = new System.Drawing.Size(1280, 950);
+            this.ucMemoryDump.TabIndex = 0;
+            // 
+            // tcIcConfig
+            // 
+            this.tcIcConfig.Controls.Add(this.tabPage31);
+            this.tcIcConfig.Controls.Add(this.tabPage32);
+            this.tcIcConfig.Controls.Add(this.tabPage33);
+            this.tcIcConfig.Location = new System.Drawing.Point(7, 6);
+            this.tcIcConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tcIcConfig.Name = "tcIcConfig";
+            this.tcIcConfig.SelectedIndex = 0;
+            this.tcIcConfig.Size = new System.Drawing.Size(1307, 975);
+            this.tcIcConfig.TabIndex = 0;
+            // 
+            // tabPage31
+            // 
+            this.tabPage31.Controls.Add(this.tcSas40);
+            this.tabPage31.Location = new System.Drawing.Point(4, 25);
+            this.tabPage31.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage31.Name = "tabPage31";
+            this.tabPage31.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage31.Size = new System.Drawing.Size(1299, 946);
+            this.tabPage31.TabIndex = 0;
+            this.tabPage31.Text = "SAS4.0";
+            this.tabPage31.UseVisualStyleBackColor = true;
+            // 
+            // tcSas40
+            // 
+            this.tcSas40.Controls.Add(this.tabPage311);
+            this.tcSas40.Controls.Add(this.tabPage312);
+            this.tcSas40.Location = new System.Drawing.Point(7, 6);
+            this.tcSas40.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tcSas40.Name = "tcSas40";
+            this.tcSas40.SelectedIndex = 0;
+            this.tcSas40.Size = new System.Drawing.Size(1280, 950);
+            this.tcSas40.TabIndex = 0;
+            // 
+            // tabPage311
+            // 
+            this.tabPage311.Controls.Add(this.ucMald37045cConfig);
+            this.tabPage311.Location = new System.Drawing.Point(4, 25);
+            this.tabPage311.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage311.Name = "tabPage311";
+            this.tabPage311.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage311.Size = new System.Drawing.Size(1272, 921);
+            this.tabPage311.TabIndex = 0;
+            this.tabPage311.Text = "MALD37045C";
+            this.tabPage311.UseVisualStyleBackColor = true;
+            // 
+            // tabPage312
+            // 
+            this.tabPage312.Controls.Add(this.ucMata37044cConfig);
+            this.tabPage312.Location = new System.Drawing.Point(4, 25);
+            this.tabPage312.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage312.Name = "tabPage312";
+            this.tabPage312.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage312.Size = new System.Drawing.Size(1272, 921);
+            this.tabPage312.TabIndex = 1;
+            this.tabPage312.Text = "MATA37044C";
+            this.tabPage312.UseVisualStyleBackColor = true;
+            // 
+            // tabPage32
+            // 
+            this.tabPage32.Controls.Add(this.tcPcie4);
+            this.tabPage32.Location = new System.Drawing.Point(4, 25);
+            this.tabPage32.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage32.Name = "tabPage32";
+            this.tabPage32.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage32.Size = new System.Drawing.Size(1299, 946);
+            this.tabPage32.TabIndex = 1;
+            this.tabPage32.Text = "PCIe4.0";
+            this.tabPage32.UseVisualStyleBackColor = true;
+            // 
+            // tcPcie4
+            // 
+            this.tcPcie4.Controls.Add(this.tabPage321);
+            this.tcPcie4.Controls.Add(this.tabPage322);
+            this.tcPcie4.Location = new System.Drawing.Point(7, 6);
+            this.tcPcie4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tcPcie4.Name = "tcPcie4";
+            this.tcPcie4.SelectedIndex = 0;
+            this.tcPcie4.Size = new System.Drawing.Size(1280, 950);
+            this.tcPcie4.TabIndex = 0;
+            // 
+            // tabPage321
+            // 
+            this.tabPage321.Controls.Add(this.ucRt146Config);
+            this.tabPage321.Location = new System.Drawing.Point(4, 25);
+            this.tabPage321.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage321.Name = "tabPage321";
+            this.tabPage321.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage321.Size = new System.Drawing.Size(1272, 921);
+            this.tabPage321.TabIndex = 0;
+            this.tabPage321.Text = "RT146";
+            this.tabPage321.UseVisualStyleBackColor = true;
             // 
             // ucRt146Config
             // 
-            this.ucRt146Config.Location = new System.Drawing.Point(0, 0);
-            this.ucRt146Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucRt146Config.BackColor = System.Drawing.Color.White;
+            this.ucRt146Config.Location = new System.Drawing.Point(7, 6);
+            this.ucRt146Config.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.ucRt146Config.Name = "ucRt146Config";
-            this.ucRt146Config.Size = new System.Drawing.Size(969, 484);
+            this.ucRt146Config.Size = new System.Drawing.Size(1253, 925);
             this.ucRt146Config.TabIndex = 0;
+            // 
+            // tabPage322
+            // 
+            this.tabPage322.Controls.Add(this.ucRt145Config);
+            this.tabPage322.Location = new System.Drawing.Point(4, 25);
+            this.tabPage322.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage322.Name = "tabPage322";
+            this.tabPage322.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage322.Size = new System.Drawing.Size(1272, 921);
+            this.tabPage322.TabIndex = 1;
+            this.tabPage322.Text = "RT145";
+            this.tabPage322.UseVisualStyleBackColor = true;
             // 
             // ucRt145Config
             // 
             this.ucRt145Config.BackColor = System.Drawing.Color.Transparent;
-            this.ucRt145Config.Location = new System.Drawing.Point(0, 0);
-            this.ucRt145Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucRt145Config.Location = new System.Drawing.Point(7, 6);
+            this.ucRt145Config.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.ucRt145Config.Name = "ucRt145Config";
-            this.ucRt145Config.Size = new System.Drawing.Size(969, 485);
+            this.ucRt145Config.Size = new System.Drawing.Size(1253, 925);
             this.ucRt145Config.TabIndex = 0;
             // 
-            // tcDdmi
+            // tabPage33
             // 
-            this.tcDdmi.Controls.Add(this.tpInformation);
-            this.tcDdmi.Controls.Add(this.tpDdm);
-            this.tcDdmi.Controls.Add(this.tpMemoryDump);
-            this.tcDdmi.Location = new System.Drawing.Point(7, 6);
-            this.tcDdmi.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tcDdmi.Name = "tcDdmi";
-            this.tcDdmi.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.tcDdmi.SelectedIndex = 0;
-            this.tcDdmi.Size = new System.Drawing.Size(921, 746);
-            this.tcDdmi.TabIndex = 5;
+            this.tabPage33.Controls.Add(this.tcQsfp28);
+            this.tabPage33.Location = new System.Drawing.Point(4, 25);
+            this.tabPage33.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage33.Name = "tabPage33";
+            this.tabPage33.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage33.Size = new System.Drawing.Size(1299, 946);
+            this.tabPage33.TabIndex = 2;
+            this.tabPage33.Text = "QSFP28";
+            this.tabPage33.UseVisualStyleBackColor = true;
             // 
-            // tpInformation
+            // tcQsfp28
             // 
-            this.tpInformation.Controls.Add(this.ucInformation);
-            this.tpInformation.Location = new System.Drawing.Point(4, 22);
-            this.tpInformation.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpInformation.Name = "tpInformation";
-            this.tpInformation.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpInformation.Size = new System.Drawing.Size(913, 720);
-            this.tpInformation.TabIndex = 0;
-            this.tpInformation.Text = "Information";
-            this.tpInformation.UseVisualStyleBackColor = true;
+            this.tcQsfp28.Controls.Add(this.tabPage331);
+            this.tcQsfp28.Controls.Add(this.tabPage332);
+            this.tcQsfp28.Location = new System.Drawing.Point(7, 6);
+            this.tcQsfp28.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tcQsfp28.Name = "tcQsfp28";
+            this.tcQsfp28.SelectedIndex = 0;
+            this.tcQsfp28.Size = new System.Drawing.Size(1280, 950);
+            this.tcQsfp28.TabIndex = 0;
             // 
-            // tpDdm
+            // tabPage331
             // 
-            this.tpDdm.Controls.Add(this.ucDigitalDiagnosticsMonitoring);
-            this.tpDdm.Location = new System.Drawing.Point(4, 22);
-            this.tpDdm.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpDdm.Name = "tpDdm";
-            this.tpDdm.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpDdm.Size = new System.Drawing.Size(913, 720);
-            this.tpDdm.TabIndex = 1;
-            this.tpDdm.Text = "DDM";
-            this.tpDdm.UseVisualStyleBackColor = true;
+            this.tabPage331.Controls.Add(this.ucGn2108Config);
+            this.tabPage331.Location = new System.Drawing.Point(4, 25);
+            this.tabPage331.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage331.Name = "tabPage331";
+            this.tabPage331.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage331.Size = new System.Drawing.Size(1272, 921);
+            this.tabPage331.TabIndex = 0;
+            this.tabPage331.Text = "Gn2108";
+            this.tabPage331.UseVisualStyleBackColor = true;
             // 
-            // tpMemoryDump
+            // ucGn2108Config
             // 
-            this.tpMemoryDump.Controls.Add(this.ucMemoryDump);
-            this.tpMemoryDump.Location = new System.Drawing.Point(4, 22);
-            this.tpMemoryDump.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpMemoryDump.Name = "tpMemoryDump";
-            this.tpMemoryDump.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpMemoryDump.Size = new System.Drawing.Size(913, 720);
-            this.tpMemoryDump.TabIndex = 2;
-            this.tpMemoryDump.Text = "MemDump";
-            this.tpMemoryDump.UseVisualStyleBackColor = true;
+            this.ucGn2108Config.Location = new System.Drawing.Point(7, 6);
+            this.ucGn2108Config.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ucGn2108Config.Name = "ucGn2108Config";
+            this.ucGn2108Config.Size = new System.Drawing.Size(1253, 925);
+            this.ucGn2108Config.TabIndex = 0;
             // 
-            // tcIcConfig
+            // tabPage332
             // 
-            this.tcIcConfig.Controls.Add(this.tabPage41);
-            this.tcIcConfig.Controls.Add(this.tabPage42);
-            this.tcIcConfig.Controls.Add(this.tabPage43);
-            this.tcIcConfig.Location = new System.Drawing.Point(4, 5);
-            this.tcIcConfig.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tcIcConfig.Name = "tcIcConfig";
-            this.tcIcConfig.SelectedIndex = 0;
-            this.tcIcConfig.Size = new System.Drawing.Size(989, 668);
-            this.tcIcConfig.TabIndex = 0;
+            this.tabPage332.Controls.Add(this.ucGn2109Config);
+            this.tabPage332.Location = new System.Drawing.Point(4, 25);
+            this.tabPage332.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage332.Name = "tabPage332";
+            this.tabPage332.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tabPage332.Size = new System.Drawing.Size(1272, 921);
+            this.tabPage332.TabIndex = 1;
+            this.tabPage332.Text = "Gn2109";
+            this.tabPage332.UseVisualStyleBackColor = true;
             // 
-            // tabPage41
+            // ucGn2109Config
             // 
-            this.tabPage41.Controls.Add(this.tcSas40);
-            this.tabPage41.Location = new System.Drawing.Point(4, 22);
-            this.tabPage41.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage41.Name = "tabPage41";
-            this.tabPage41.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage41.Size = new System.Drawing.Size(981, 642);
-            this.tabPage41.TabIndex = 0;
-            this.tabPage41.Text = "SAS4.0";
-            this.tabPage41.UseVisualStyleBackColor = true;
-            // 
-            // tcSas40
-            // 
-            this.tcSas40.Controls.Add(this.tabPage411);
-            this.tcSas40.Controls.Add(this.tabPage412);
-            this.tcSas40.Location = new System.Drawing.Point(7, 6);
-            this.tcSas40.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tcSas40.Name = "tcSas40";
-            this.tcSas40.SelectedIndex = 0;
-            this.tcSas40.Size = new System.Drawing.Size(647, 609);
-            this.tcSas40.TabIndex = 0;
-            // 
-            // tabPage411
-            // 
-            this.tabPage411.Controls.Add(this.ucMald37045cConfig);
-            this.tabPage411.Location = new System.Drawing.Point(4, 22);
-            this.tabPage411.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage411.Name = "tabPage411";
-            this.tabPage411.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage411.Size = new System.Drawing.Size(639, 583);
-            this.tabPage411.TabIndex = 0;
-            this.tabPage411.Text = "MALD37045C";
-            this.tabPage411.UseVisualStyleBackColor = true;
-            // 
-            // tabPage412
-            // 
-            this.tabPage412.Controls.Add(this.ucMata37044cConfig);
-            this.tabPage412.Location = new System.Drawing.Point(4, 22);
-            this.tabPage412.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage412.Name = "tabPage412";
-            this.tabPage412.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage412.Size = new System.Drawing.Size(639, 583);
-            this.tabPage412.TabIndex = 1;
-            this.tabPage412.Text = "MATA37044C";
-            this.tabPage412.UseVisualStyleBackColor = true;
-            // 
-            // tabPage42
-            // 
-            this.tabPage42.Controls.Add(this.tcPcie4);
-            this.tabPage42.Location = new System.Drawing.Point(4, 22);
-            this.tabPage42.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage42.Name = "tabPage42";
-            this.tabPage42.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage42.Size = new System.Drawing.Size(981, 642);
-            this.tabPage42.TabIndex = 1;
-            this.tabPage42.Text = "PCIe4.0";
-            this.tabPage42.UseVisualStyleBackColor = true;
-            // 
-            // tcPcie4
-            // 
-            this.tcPcie4.Controls.Add(this.tabPage421);
-            this.tcPcie4.Controls.Add(this.tabPage422);
-            this.tcPcie4.Location = new System.Drawing.Point(7, 6);
-            this.tcPcie4.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tcPcie4.Name = "tcPcie4";
-            this.tcPcie4.SelectedIndex = 0;
-            this.tcPcie4.Size = new System.Drawing.Size(974, 508);
-            this.tcPcie4.TabIndex = 0;
-            // 
-            // tabPage421
-            // 
-            this.tabPage421.Controls.Add(this.ucRt146Config);
-            this.tabPage421.Location = new System.Drawing.Point(4, 22);
-            this.tabPage421.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage421.Name = "tabPage421";
-            this.tabPage421.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage421.Size = new System.Drawing.Size(966, 482);
-            this.tabPage421.TabIndex = 0;
-            this.tabPage421.Text = "RT146";
-            this.tabPage421.UseVisualStyleBackColor = true;
-            // 
-            // tabPage422
-            // 
-            this.tabPage422.Controls.Add(this.ucRt145Config);
-            this.tabPage422.Location = new System.Drawing.Point(4, 22);
-            this.tabPage422.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage422.Name = "tabPage422";
-            this.tabPage422.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage422.Size = new System.Drawing.Size(966, 482);
-            this.tabPage422.TabIndex = 1;
-            this.tabPage422.Text = "RT145";
-            this.tabPage422.UseVisualStyleBackColor = true;
-            // 
-            // tabPage43
-            // 
-            this.tabPage43.Location = new System.Drawing.Point(4, 22);
-            this.tabPage43.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage43.Name = "tabPage43";
-            this.tabPage43.Padding = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.tabPage43.Size = new System.Drawing.Size(981, 642);
-            this.tabPage43.TabIndex = 2;
-            this.tabPage43.Text = "PCIe5.0";
-            this.tabPage43.UseVisualStyleBackColor = true;
+            this.ucGn2109Config.Location = new System.Drawing.Point(7, 6);
+            this.ucGn2109Config.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ucGn2109Config.Name = "ucGn2109Config";
+            this.ucGn2109Config.Size = new System.Drawing.Size(1253, 925);
+            this.ucGn2109Config.TabIndex = 0;
             // 
             // tcMain
             // 
-            this.tcMain.Controls.Add(this.tpDdmi);
+            this.tcMain.Controls.Add(this.tabPage1);
             this.tcMain.Controls.Add(this.tabPage2);
             this.tcMain.Controls.Add(this.tabPage3);
             this.tcMain.Controls.Add(this.tabPage4);
             this.tcMain.Controls.Add(this.tabPage5);
-            this.tcMain.Location = new System.Drawing.Point(3, 32);
-            this.tcMain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tcMain.Location = new System.Drawing.Point(4, 40);
+            this.tcMain.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.tcMain.Name = "tcMain";
             this.tcMain.SelectedIndex = 0;
-            this.tcMain.Size = new System.Drawing.Size(1076, 786);
+            this.tcMain.Size = new System.Drawing.Size(1333, 1000);
             this.tcMain.TabIndex = 0;
             // 
-            // tpDdmi
+            // tabPage1
             // 
-            this.tpDdmi.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
-            this.tpDdmi.Controls.Add(this.tcDdmi);
-            this.tpDdmi.Location = new System.Drawing.Point(4, 22);
-            this.tpDdmi.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpDdmi.Name = "tpDdmi";
-            this.tpDdmi.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tpDdmi.Size = new System.Drawing.Size(1068, 760);
-            this.tpDdmi.TabIndex = 0;
-            this.tpDdmi.Text = "DDMI";
+            this.tabPage1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
+            this.tabPage1.Controls.Add(this.tcDdmi);
+            this.tabPage1.Location = new System.Drawing.Point(4, 25);
+            this.tabPage1.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage1.Name = "tabPage1";
+            this.tabPage1.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage1.Size = new System.Drawing.Size(1325, 971);
+            this.tabPage1.TabIndex = 0;
+            this.tabPage1.Text = "DDMI";
             // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.ucGn1190Corrector);
-            this.tabPage2.Location = new System.Drawing.Point(4, 22);
-            this.tabPage2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage2.Location = new System.Drawing.Point(4, 25);
+            this.tabPage2.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.tabPage2.Name = "tabPage2";
-            this.tabPage2.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage2.Size = new System.Drawing.Size(1068, 760);
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage2.Size = new System.Drawing.Size(1325, 971);
             this.tabPage2.TabIndex = 1;
             this.tabPage2.Text = "Corrector";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // ucGn1190Corrector
+            // 
+            this.ucGn1190Corrector.BackColor = System.Drawing.Color.Transparent;
+            this.ucGn1190Corrector.Location = new System.Drawing.Point(7, 6);
+            this.ucGn1190Corrector.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.ucGn1190Corrector.Name = "ucGn1190Corrector";
+            this.ucGn1190Corrector.Size = new System.Drawing.Size(1307, 975);
+            this.ucGn1190Corrector.TabIndex = 0;
+            // 
             // tabPage3
             // 
-            this.tabPage3.Controls.Add(this.ucNuvotonIcpTool);
-            this.tabPage3.Location = new System.Drawing.Point(4, 22);
-            this.tabPage3.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage3.Controls.Add(this.tcIcConfig);
+            this.tabPage3.Location = new System.Drawing.Point(4, 25);
+            this.tabPage3.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.tabPage3.Name = "tabPage3";
-            this.tabPage3.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage3.Size = new System.Drawing.Size(1068, 760);
+            this.tabPage3.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage3.Size = new System.Drawing.Size(1325, 971);
             this.tabPage3.TabIndex = 2;
-            this.tabPage3.Text = "ICP Tool";
+            this.tabPage3.Text = "IC Config";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
             // tabPage4
             // 
-            this.tabPage4.Controls.Add(this.tcIcConfig);
-            this.tabPage4.Location = new System.Drawing.Point(4, 22);
-            this.tabPage4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage4.Controls.Add(this.lContinuousMode);
+            this.tabPage4.Controls.Add(this.cbContinuousMode);
+            this.tabPage4.Controls.Add(this.lCh2);
+            this.tabPage4.Controls.Add(this.lCh1);
+            this.tabPage4.Controls.Add(this.tbInnerStateCh2);
+            this.tabPage4.Controls.Add(this.tbInnerStateCh1);
+            this.tabPage4.Controls.Add(this.bInnerSwitch);
+            this.tabPage4.Controls.Add(this.ucNuvotonIcpTool);
+            this.tabPage4.Location = new System.Drawing.Point(4, 25);
+            this.tabPage4.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.tabPage4.Name = "tabPage4";
-            this.tabPage4.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage4.Size = new System.Drawing.Size(1068, 760);
+            this.tabPage4.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage4.Size = new System.Drawing.Size(1325, 971);
             this.tabPage4.TabIndex = 3;
-            this.tabPage4.Text = "IC Config";
+            this.tabPage4.Text = "ICP Tool";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // lContinuousMode
+            // 
+            this.lContinuousMode.AutoSize = true;
+            this.lContinuousMode.Location = new System.Drawing.Point(651, 179);
+            this.lContinuousMode.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lContinuousMode.Name = "lContinuousMode";
+            this.lContinuousMode.Size = new System.Drawing.Size(350, 15);
+            this.lContinuousMode.TabIndex = 1018;
+            this.lContinuousMode.Text = "(The DUT will cross-flash firmware in a sequential pattern.)";
+            // 
+            // cbContinuousMode
+            // 
+            this.cbContinuousMode.AutoSize = true;
+            this.cbContinuousMode.Font = new System.Drawing.Font("PMingLiU", 16F);
+            this.cbContinuousMode.Location = new System.Drawing.Point(621, 142);
+            this.cbContinuousMode.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbContinuousMode.Name = "cbContinuousMode";
+            this.cbContinuousMode.Size = new System.Drawing.Size(217, 31);
+            this.cbContinuousMode.TabIndex = 1015;
+            this.cbContinuousMode.Text = "Continuous mode";
+            this.cbContinuousMode.UseVisualStyleBackColor = true;
+            this.cbContinuousMode.CheckedChanged += new System.EventHandler(this.cbContinuousMode_CheckedChanged);
+            // 
+            // lCh2
+            // 
+            this.lCh2.AutoSize = true;
+            this.lCh2.Font = new System.Drawing.Font("PMingLiU", 16F);
+            this.lCh2.Location = new System.Drawing.Point(853, 49);
+            this.lCh2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lCh2.Name = "lCh2";
+            this.lCh2.Size = new System.Drawing.Size(55, 27);
+            this.lCh2.TabIndex = 1014;
+            this.lCh2.Text = "Ch2";
+            // 
+            // lCh1
+            // 
+            this.lCh1.AutoSize = true;
+            this.lCh1.Font = new System.Drawing.Font("PMingLiU", 16F);
+            this.lCh1.Location = new System.Drawing.Point(780, 49);
+            this.lCh1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.lCh1.Name = "lCh1";
+            this.lCh1.Size = new System.Drawing.Size(55, 27);
+            this.lCh1.TabIndex = 1013;
+            this.lCh1.Text = "Ch1";
+            // 
+            // tbInnerStateCh2
+            // 
+            this.tbInnerStateCh2.BackColor = System.Drawing.Color.White;
+            this.tbInnerStateCh2.Font = new System.Drawing.Font("PMingLiU", 1F);
+            this.tbInnerStateCh2.Location = new System.Drawing.Point(847, 80);
+            this.tbInnerStateCh2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbInnerStateCh2.Name = "tbInnerStateCh2";
+            this.tbInnerStateCh2.Size = new System.Drawing.Size(65, 9);
+            this.tbInnerStateCh2.TabIndex = 1017;
+            // 
+            // tbInnerStateCh1
+            // 
+            this.tbInnerStateCh1.BackColor = System.Drawing.Color.White;
+            this.tbInnerStateCh1.Font = new System.Drawing.Font("PMingLiU", 1F);
+            this.tbInnerStateCh1.Location = new System.Drawing.Point(772, 80);
+            this.tbInnerStateCh1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbInnerStateCh1.Name = "tbInnerStateCh1";
+            this.tbInnerStateCh1.Size = new System.Drawing.Size(65, 9);
+            this.tbInnerStateCh1.TabIndex = 1016;
+            // 
+            // bInnerSwitch
+            // 
+            this.bInnerSwitch.Font = new System.Drawing.Font("PMingLiU", 16F);
+            this.bInnerSwitch.Location = new System.Drawing.Point(621, 42);
+            this.bInnerSwitch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.bInnerSwitch.Name = "bInnerSwitch";
+            this.bInnerSwitch.Size = new System.Drawing.Size(131, 71);
+            this.bInnerSwitch.TabIndex = 2;
+            this.bInnerSwitch.Text = "Channel Switch";
+            this.bInnerSwitch.UseVisualStyleBackColor = true;
+            this.bInnerSwitch.Click += new System.EventHandler(this.bInnerSwitch_Click);
+            // 
+            // ucNuvotonIcpTool
+            // 
+            this.ucNuvotonIcpTool.Location = new System.Drawing.Point(27, 24);
+            this.ucNuvotonIcpTool.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ucNuvotonIcpTool.Name = "ucNuvotonIcpTool";
+            this.ucNuvotonIcpTool.Size = new System.Drawing.Size(587, 375);
+            this.ucNuvotonIcpTool.TabIndex = 0;
             // 
             // tabPage5
             // 
-            this.tabPage5.Location = new System.Drawing.Point(4, 22);
-            this.tabPage5.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tabPage5.Location = new System.Drawing.Point(4, 25);
+            this.tabPage5.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.tabPage5.Name = "tabPage5";
-            this.tabPage5.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.tabPage5.Size = new System.Drawing.Size(1068, 760);
+            this.tabPage5.Padding = new System.Windows.Forms.Padding(4, 2, 4, 2);
+            this.tabPage5.Size = new System.Drawing.Size(1325, 971);
             this.tabPage5.TabIndex = 4;
-            this.tabPage5.Text = "tabPage5";
+            this.tabPage5.Text = "...";
             this.tabPage5.UseVisualStyleBackColor = true;
-            // 
-            // panel1
-            // 
-            this.panel1.BackColor = System.Drawing.Color.White;
-            this.panel1.Controls.Add(this.groupBox1);
-            this.panel1.Location = new System.Drawing.Point(1094, 38);
-            this.panel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(703, 434);
-            this.panel1.TabIndex = 4;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.kryptonButton3);
-            this.groupBox1.Controls.Add(this.kryptonButton2);
-            this.groupBox1.Controls.Add(this.kryptonButton1);
-            this.groupBox1.Controls.Add(this.kryptonTextBox2);
-            this.groupBox1.Controls.Add(this.kryptonTextBox1);
-            this.groupBox1.Controls.Add(this.radioButton4);
-            this.groupBox1.Controls.Add(this.radioButton3);
-            this.groupBox1.Controls.Add(this.radioButton2);
-            this.groupBox1.Controls.Add(this.radioButton1);
-            this.groupBox1.Location = new System.Drawing.Point(86, 40);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.groupBox1.Size = new System.Drawing.Size(531, 352);
-            this.groupBox1.TabIndex = 10;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "groupBox1";
-            // 
-            // kryptonButton3
-            // 
-            this.kryptonButton3.Location = new System.Drawing.Point(64, 271);
-            this.kryptonButton3.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.kryptonButton3.Name = "kryptonButton3";
-            this.kryptonButton3.OverrideDefault.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.OverrideDefault.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.OverrideDefault.Back.ColorAngle = 45F;
-            this.kryptonButton3.OverrideDefault.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.OverrideDefault.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.OverrideDefault.Border.ColorAngle = 45F;
-            this.kryptonButton3.OverrideDefault.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton3.OverrideDefault.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton3.OverrideDefault.Border.Rounding = 20;
-            this.kryptonButton3.OverrideDefault.Border.Width = 1;
-            this.kryptonButton3.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.ProfessionalSystem;
-            this.kryptonButton3.Size = new System.Drawing.Size(94, 35);
-            this.kryptonButton3.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.StateCommon.Back.ColorAngle = 45F;
-            this.kryptonButton3.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton3.StateCommon.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.StateCommon.Border.ColorAngle = 45F;
-            this.kryptonButton3.StateCommon.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton3.StateCommon.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton3.StateCommon.Border.Rounding = 15;
-            this.kryptonButton3.StateCommon.Border.Width = 1;
-            this.kryptonButton3.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton3.StateCommon.Content.ShortText.Color2 = System.Drawing.Color.White;
-            this.kryptonButton3.StateCommon.Content.ShortText.Font = new System.Drawing.Font("Bahnschrift SemiLight SemiConde", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.kryptonButton3.StatePressed.Back.Color1 = System.Drawing.Color.Silver;
-            this.kryptonButton3.StatePressed.Back.Color2 = System.Drawing.Color.Gray;
-            this.kryptonButton3.StatePressed.Back.ColorAngle = 135F;
-            this.kryptonButton3.StatePressed.Border.Color1 = System.Drawing.Color.Silver;
-            this.kryptonButton3.StatePressed.Border.Color2 = System.Drawing.Color.Gray;
-            this.kryptonButton3.StatePressed.Border.ColorAngle = 135F;
-            this.kryptonButton3.StatePressed.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton3.StatePressed.Border.Rounding = 15;
-            this.kryptonButton3.StatePressed.Border.Width = 3;
-            this.kryptonButton3.StateTracking.Back.Color1 = System.Drawing.Color.Silver;
-            this.kryptonButton3.StateTracking.Back.Color2 = System.Drawing.Color.Gray;
-            this.kryptonButton3.StateTracking.Back.ColorAngle = 45F;
-            this.kryptonButton3.StateTracking.Border.Color1 = System.Drawing.Color.Silver;
-            this.kryptonButton3.StateTracking.Border.Color2 = System.Drawing.Color.Gray;
-            this.kryptonButton3.StateTracking.Border.ColorAngle = 45F;
-            this.kryptonButton3.StateTracking.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton3.StateTracking.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton3.StateTracking.Border.Rounding = 15;
-            this.kryptonButton3.StateTracking.Border.Width = 1;
-            this.kryptonButton3.TabIndex = 17;
-            this.kryptonButton3.Values.Text = "Read all";
-            // 
-            // kryptonButton2
-            // 
-            this.kryptonButton2.Location = new System.Drawing.Point(64, 186);
-            this.kryptonButton2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.kryptonButton2.Name = "kryptonButton2";
-            this.kryptonButton2.OverrideDefault.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.OverrideDefault.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.OverrideDefault.Back.ColorAngle = 45F;
-            this.kryptonButton2.OverrideDefault.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.OverrideDefault.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.OverrideDefault.Border.ColorAngle = 45F;
-            this.kryptonButton2.OverrideDefault.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton2.OverrideDefault.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton2.OverrideDefault.Border.Rounding = 20;
-            this.kryptonButton2.OverrideDefault.Border.Width = 1;
-            this.kryptonButton2.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.ProfessionalSystem;
-            this.kryptonButton2.Size = new System.Drawing.Size(94, 38);
-            this.kryptonButton2.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(254)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.StateCommon.Back.ColorAngle = 45F;
-            this.kryptonButton2.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton2.StateCommon.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.StateCommon.Border.ColorAngle = 45F;
-            this.kryptonButton2.StateCommon.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton2.StateCommon.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton2.StateCommon.Border.Rounding = 20;
-            this.kryptonButton2.StateCommon.Border.Width = 1;
-            this.kryptonButton2.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.StateCommon.Content.ShortText.Color2 = System.Drawing.Color.White;
-            this.kryptonButton2.StateCommon.Content.ShortText.Font = new System.Drawing.Font("Bahnschrift SemiLight SemiConde", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.kryptonButton2.StatePressed.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(145)))), ((int)(((byte)(198)))));
-            this.kryptonButton2.StatePressed.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(121)))), ((int)(((byte)(206)))));
-            this.kryptonButton2.StatePressed.Back.ColorAngle = 135F;
-            this.kryptonButton2.StatePressed.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(145)))), ((int)(((byte)(198)))));
-            this.kryptonButton2.StatePressed.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(121)))), ((int)(((byte)(206)))));
-            this.kryptonButton2.StatePressed.Border.ColorAngle = 135F;
-            this.kryptonButton2.StatePressed.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton2.StatePressed.Border.Rounding = 20;
-            this.kryptonButton2.StatePressed.Border.Width = 1;
-            this.kryptonButton2.StateTracking.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.StateTracking.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton2.StateTracking.Back.ColorAngle = 45F;
-            this.kryptonButton2.StateTracking.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton2.StateTracking.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton2.StateTracking.Border.ColorAngle = 45F;
-            this.kryptonButton2.StateTracking.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton2.StateTracking.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton2.StateTracking.Border.Rounding = 20;
-            this.kryptonButton2.StateTracking.Border.Width = 1;
-            this.kryptonButton2.TabIndex = 16;
-            this.kryptonButton2.Values.Text = "Sign Up";
-            // 
-            // kryptonButton1
-            // 
-            this.kryptonButton1.Location = new System.Drawing.Point(64, 144);
-            this.kryptonButton1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.kryptonButton1.Name = "kryptonButton1";
-            this.kryptonButton1.OverrideDefault.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton1.OverrideDefault.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton1.OverrideDefault.Back.ColorAngle = 45F;
-            this.kryptonButton1.OverrideDefault.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton1.OverrideDefault.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton1.OverrideDefault.Border.ColorAngle = 45F;
-            this.kryptonButton1.OverrideDefault.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton1.OverrideDefault.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton1.OverrideDefault.Border.Rounding = 20;
-            this.kryptonButton1.OverrideDefault.Border.Width = 1;
-            this.kryptonButton1.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.ProfessionalSystem;
-            this.kryptonButton1.Size = new System.Drawing.Size(94, 38);
-            this.kryptonButton1.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton1.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton1.StateCommon.Back.ColorAngle = 45F;
-            this.kryptonButton1.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton1.StateCommon.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton1.StateCommon.Border.ColorAngle = 45F;
-            this.kryptonButton1.StateCommon.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton1.StateCommon.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton1.StateCommon.Border.Rounding = 20;
-            this.kryptonButton1.StateCommon.Border.Width = 1;
-            this.kryptonButton1.StateCommon.Content.ShortText.Color1 = System.Drawing.Color.White;
-            this.kryptonButton1.StateCommon.Content.ShortText.Color2 = System.Drawing.Color.White;
-            this.kryptonButton1.StateCommon.Content.ShortText.Font = new System.Drawing.Font("Bahnschrift SemiLight SemiConde", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.kryptonButton1.StatePressed.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(145)))), ((int)(((byte)(198)))));
-            this.kryptonButton1.StatePressed.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(121)))), ((int)(((byte)(206)))));
-            this.kryptonButton1.StatePressed.Back.ColorAngle = 135F;
-            this.kryptonButton1.StatePressed.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(20)))), ((int)(((byte)(145)))), ((int)(((byte)(198)))));
-            this.kryptonButton1.StatePressed.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(121)))), ((int)(((byte)(206)))));
-            this.kryptonButton1.StatePressed.Border.ColorAngle = 135F;
-            this.kryptonButton1.StatePressed.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton1.StatePressed.Border.Rounding = 20;
-            this.kryptonButton1.StatePressed.Border.Width = 1;
-            this.kryptonButton1.StateTracking.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton1.StateTracking.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton1.StateTracking.Back.ColorAngle = 45F;
-            this.kryptonButton1.StateTracking.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(6)))), ((int)(((byte)(174)))), ((int)(((byte)(244)))));
-            this.kryptonButton1.StateTracking.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(8)))), ((int)(((byte)(142)))), ((int)(((byte)(254)))));
-            this.kryptonButton1.StateTracking.Border.ColorAngle = 45F;
-            this.kryptonButton1.StateTracking.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonButton1.StateTracking.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonButton1.StateTracking.Border.Rounding = 20;
-            this.kryptonButton1.StateTracking.Border.Width = 1;
-            this.kryptonButton1.TabIndex = 15;
-            this.kryptonButton1.Values.Text = "Login";
-            // 
-            // kryptonTextBox2
-            // 
-            this.kryptonTextBox2.Location = new System.Drawing.Point(43, 94);
-            this.kryptonTextBox2.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.kryptonTextBox2.Name = "kryptonTextBox2";
-            this.kryptonTextBox2.Size = new System.Drawing.Size(135, 44);
-            this.kryptonTextBox2.StateCommon.Back.Color1 = System.Drawing.Color.White;
-            this.kryptonTextBox2.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.kryptonTextBox2.StateCommon.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.kryptonTextBox2.StateCommon.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonTextBox2.StateCommon.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonTextBox2.StateCommon.Border.Rounding = 20;
-            this.kryptonTextBox2.StateCommon.Border.Width = 1;
-            this.kryptonTextBox2.StateCommon.Content.Color1 = System.Drawing.Color.LightGray;
-            this.kryptonTextBox2.StateCommon.Content.Font = new System.Drawing.Font("Bahnschrift SemiLight SemiConde", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.kryptonTextBox2.StateCommon.Content.Padding = new System.Windows.Forms.Padding(10, 5, 5, 5);
-            this.kryptonTextBox2.TabIndex = 14;
-            this.kryptonTextBox2.Text = "Enter password";
-            // 
-            // kryptonTextBox1
-            // 
-            this.kryptonTextBox1.Location = new System.Drawing.Point(43, 42);
-            this.kryptonTextBox1.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.kryptonTextBox1.Name = "kryptonTextBox1";
-            this.kryptonTextBox1.Size = new System.Drawing.Size(135, 44);
-            this.kryptonTextBox1.StateCommon.Back.Color1 = System.Drawing.Color.White;
-            this.kryptonTextBox1.StateCommon.Border.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.kryptonTextBox1.StateCommon.Border.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
-            this.kryptonTextBox1.StateCommon.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Left) 
-            | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
-            this.kryptonTextBox1.StateCommon.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.AntiAlias;
-            this.kryptonTextBox1.StateCommon.Border.Rounding = 20;
-            this.kryptonTextBox1.StateCommon.Border.Width = 1;
-            this.kryptonTextBox1.StateCommon.Content.Color1 = System.Drawing.Color.LightGray;
-            this.kryptonTextBox1.StateCommon.Content.Font = new System.Drawing.Font("Bahnschrift SemiLight SemiConde", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.kryptonTextBox1.StateCommon.Content.Padding = new System.Windows.Forms.Padding(10, 5, 5, 5);
-            this.kryptonTextBox1.TabIndex = 13;
-            this.kryptonTextBox1.Text = "Enter your ID";
-            // 
-            // radioButton4
-            // 
-            this.radioButton4.AutoSize = true;
-            this.radioButton4.Location = new System.Drawing.Point(197, 118);
-            this.radioButton4.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.radioButton4.Name = "radioButton4";
-            this.radioButton4.Size = new System.Drawing.Size(85, 16);
-            this.radioButton4.TabIndex = 12;
-            this.radioButton4.Text = "radioButton4";
-            this.radioButton4.UseVisualStyleBackColor = true;
-            // 
-            // radioButton3
-            // 
-            this.radioButton3.AutoSize = true;
-            this.radioButton3.Location = new System.Drawing.Point(197, 96);
-            this.radioButton3.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.radioButton3.Name = "radioButton3";
-            this.radioButton3.Size = new System.Drawing.Size(85, 16);
-            this.radioButton3.TabIndex = 11;
-            this.radioButton3.Text = "radioButton3";
-            this.radioButton3.UseVisualStyleBackColor = true;
-            // 
-            // radioButton2
-            // 
-            this.radioButton2.AutoSize = true;
-            this.radioButton2.Location = new System.Drawing.Point(197, 74);
-            this.radioButton2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.radioButton2.Name = "radioButton2";
-            this.radioButton2.Size = new System.Drawing.Size(85, 16);
-            this.radioButton2.TabIndex = 10;
-            this.radioButton2.Text = "radioButton2";
-            this.radioButton2.UseVisualStyleBackColor = true;
-            // 
-            // radioButton1
-            // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Checked = true;
-            this.radioButton1.Location = new System.Drawing.Point(197, 52);
-            this.radioButton1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(85, 16);
-            this.radioButton1.TabIndex = 9;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "radioButton1";
-            this.radioButton1.UseVisualStyleBackColor = true;
             // 
             // kryptonPalette1
             // 
@@ -744,32 +612,34 @@ namespace IntegratedGuiV2
             // 
             // cbConnected
             // 
-            this.cbConnected.Location = new System.Drawing.Point(1000, 7);
-            this.cbConnected.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.cbConnected.Location = new System.Drawing.Point(1340, 36);
+            this.cbConnected.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbConnected.Name = "cbConnected";
-            this.cbConnected.Size = new System.Drawing.Size(88, 20);
+            this.cbConnected.Size = new System.Drawing.Size(126, 27);
+            this.cbConnected.StateCommon.ShortText.Color1 = System.Drawing.SystemColors.ControlText;
+            this.cbConnected.StateCommon.ShortText.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cbConnected.TabIndex = 5;
             this.cbConnected.Values.Text = "I2c Connect";
             this.cbConnected.CheckedChanged += new System.EventHandler(this.cbConnected_CheckedChanged);
             // 
-            // label1
+            // lPassword
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(4, 3);
-            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(60, 12);
-            this.label1.TabIndex = 6;
-            this.label1.Text = "Password：";
+            this.lPassword.AutoSize = true;
+            this.lPassword.Font = new System.Drawing.Font("Times New Roman", 9F);
+            this.lPassword.Location = new System.Drawing.Point(5, 4);
+            this.lPassword.Name = "lPassword";
+            this.lPassword.Size = new System.Drawing.Size(82, 17);
+            this.lPassword.TabIndex = 6;
+            this.lPassword.Text = "Password：";
             // 
             // tbPassword
             // 
             this.tbPassword.Font = new System.Drawing.Font("PMingLiU", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.tbPassword.Location = new System.Drawing.Point(67, 0);
-            this.tbPassword.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tbPassword.Location = new System.Drawing.Point(89, 0);
+            this.tbPassword.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tbPassword.Name = "tbPassword";
             this.tbPassword.ShortcutsEnabled = false;
-            this.tbPassword.Size = new System.Drawing.Size(72, 22);
+            this.tbPassword.Size = new System.Drawing.Size(95, 25);
             this.tbPassword.TabIndex = 7;
             this.tbPassword.Text = "3234";
             this.tbPassword.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -777,27 +647,28 @@ namespace IntegratedGuiV2
             // 
             // btReadAll
             // 
-            this.btReadAll.Location = new System.Drawing.Point(801, 5);
-            this.btReadAll.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.btReadAll.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.btReadAll.Location = new System.Drawing.Point(875, 12);
+            this.btReadAll.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btReadAll.Name = "btReadAll";
-            this.btReadAll.Size = new System.Drawing.Size(56, 18);
+            this.btReadAll.Size = new System.Drawing.Size(100, 35);
             this.btReadAll.TabIndex = 8;
-            this.btReadAll.Text = "ReadAll";
+            this.btReadAll.Text = "Read all";
             this.btReadAll.UseVisualStyleBackColor = true;
-            this.btReadAll.Click += new System.EventHandler(this.btReadOverAll_Click);
+            this.btReadAll.Click += new System.EventHandler(this.bReadOverAll_Click);
             // 
             // gbChannelSwitcher
             // 
             this.gbChannelSwitcher.Controls.Add(this.rbCh2);
-            this.gbChannelSwitcher.Controls.Add(this.btSwitch);
+            this.gbChannelSwitcher.Controls.Add(this.bOutterSwitch);
             this.gbChannelSwitcher.Controls.Add(this.rbCh1);
             this.gbChannelSwitcher.Enabled = false;
             this.gbChannelSwitcher.Font = new System.Drawing.Font("PMingLiU", 6F);
-            this.gbChannelSwitcher.Location = new System.Drawing.Point(873, 1);
+            this.gbChannelSwitcher.Location = new System.Drawing.Point(1109, 4);
             this.gbChannelSwitcher.Margin = new System.Windows.Forms.Padding(1);
             this.gbChannelSwitcher.Name = "gbChannelSwitcher";
             this.gbChannelSwitcher.Padding = new System.Windows.Forms.Padding(1);
-            this.gbChannelSwitcher.Size = new System.Drawing.Size(112, 26);
+            this.gbChannelSwitcher.Size = new System.Drawing.Size(191, 50);
             this.gbChannelSwitcher.TabIndex = 1007;
             this.gbChannelSwitcher.TabStop = false;
             // 
@@ -805,34 +676,37 @@ namespace IntegratedGuiV2
             // 
             this.rbCh2.AutoSize = true;
             this.rbCh2.Enabled = false;
-            this.rbCh2.Location = new System.Drawing.Point(73, 8);
+            this.rbCh2.Font = new System.Drawing.Font("Times New Roman", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rbCh2.Location = new System.Drawing.Point(128, 18);
             this.rbCh2.Margin = new System.Windows.Forms.Padding(1);
             this.rbCh2.Name = "rbCh2";
-            this.rbCh2.Size = new System.Drawing.Size(35, 13);
+            this.rbCh2.Size = new System.Drawing.Size(53, 21);
             this.rbCh2.TabIndex = 1009;
             this.rbCh2.TabStop = true;
             this.rbCh2.Text = "Ch2";
             this.rbCh2.UseVisualStyleBackColor = true;
             // 
-            // btSwitch
+            // bOutterSwitch
             // 
-            this.btSwitch.Location = new System.Drawing.Point(3, 7);
-            this.btSwitch.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.btSwitch.Name = "btSwitch";
-            this.btSwitch.Size = new System.Drawing.Size(34, 14);
-            this.btSwitch.TabIndex = 1007;
-            this.btSwitch.Text = "SW";
-            this.btSwitch.UseVisualStyleBackColor = true;
-            this.btSwitch.Click += new System.EventHandler(this.btSwitch_Click);
+            this.bOutterSwitch.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bOutterSwitch.Location = new System.Drawing.Point(4, 9);
+            this.bOutterSwitch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.bOutterSwitch.Name = "bOutterSwitch";
+            this.bOutterSwitch.Size = new System.Drawing.Size(60, 35);
+            this.bOutterSwitch.TabIndex = 1007;
+            this.bOutterSwitch.Text = "SW";
+            this.bOutterSwitch.UseVisualStyleBackColor = true;
+            this.bOutterSwitch.Click += new System.EventHandler(this.bOutterSwitch_Click);
             // 
             // rbCh1
             // 
             this.rbCh1.AutoSize = true;
             this.rbCh1.Enabled = false;
-            this.rbCh1.Location = new System.Drawing.Point(40, 8);
+            this.rbCh1.Font = new System.Drawing.Font("Times New Roman", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.rbCh1.Location = new System.Drawing.Point(71, 18);
             this.rbCh1.Margin = new System.Windows.Forms.Padding(1);
             this.rbCh1.Name = "rbCh1";
-            this.rbCh1.Size = new System.Drawing.Size(35, 13);
+            this.rbCh1.Size = new System.Drawing.Size(53, 21);
             this.rbCh1.TabIndex = 1008;
             this.rbCh1.TabStop = true;
             this.rbCh1.Text = "Ch1";
@@ -840,77 +714,302 @@ namespace IntegratedGuiV2
             // 
             // tbInformationReadState
             // 
-            this.tbInformationReadState.Font = new System.Drawing.Font("PMingLiU", 1F);
-            this.tbInformationReadState.Location = new System.Drawing.Point(365, 19);
-            this.tbInformationReadState.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.tbInformationReadState.Enabled = false;
+            this.tbInformationReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
+            this.tbInformationReadState.Location = new System.Drawing.Point(27, 44);
+            this.tbInformationReadState.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tbInformationReadState.Name = "tbInformationReadState";
-            this.tbInformationReadState.Size = new System.Drawing.Size(24, 9);
+            this.tbInformationReadState.ShortcutsEnabled = false;
+            this.tbInformationReadState.Size = new System.Drawing.Size(80, 8);
             this.tbInformationReadState.TabIndex = 1008;
-            // 
-            // ucGn1190Corrector
-            // 
-            this.ucGn1190Corrector.BackColor = System.Drawing.SystemColors.Control;
-            this.ucGn1190Corrector.Location = new System.Drawing.Point(0, 0);
-            this.ucGn1190Corrector.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.ucGn1190Corrector.Name = "ucGn1190Corrector";
-            this.ucGn1190Corrector.Size = new System.Drawing.Size(1072, 714);
-            this.ucGn1190Corrector.TabIndex = 0;
             // 
             // tbDdmReadState
             // 
-            this.tbDdmReadState.Font = new System.Drawing.Font("PMingLiU", 1F);
-            this.tbDdmReadState.Location = new System.Drawing.Point(393, 19);
-            this.tbDdmReadState.Margin = new System.Windows.Forms.Padding(2);
+            this.tbDdmReadState.Enabled = false;
+            this.tbDdmReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
+            this.tbDdmReadState.Location = new System.Drawing.Point(27, 78);
+            this.tbDdmReadState.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tbDdmReadState.Name = "tbDdmReadState";
-            this.tbDdmReadState.Size = new System.Drawing.Size(24, 9);
+            this.tbDdmReadState.ShortcutsEnabled = false;
+            this.tbDdmReadState.Size = new System.Drawing.Size(80, 8);
             this.tbDdmReadState.TabIndex = 1009;
             // 
             // tbMemDumpReadState
             // 
-            this.tbMemDumpReadState.Font = new System.Drawing.Font("PMingLiU", 1F);
-            this.tbMemDumpReadState.Location = new System.Drawing.Point(421, 19);
-            this.tbMemDumpReadState.Margin = new System.Windows.Forms.Padding(2);
+            this.tbMemDumpReadState.Enabled = false;
+            this.tbMemDumpReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
+            this.tbMemDumpReadState.Location = new System.Drawing.Point(27, 110);
+            this.tbMemDumpReadState.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tbMemDumpReadState.Name = "tbMemDumpReadState";
-            this.tbMemDumpReadState.Size = new System.Drawing.Size(24, 9);
+            this.tbMemDumpReadState.ShortcutsEnabled = false;
+            this.tbMemDumpReadState.Size = new System.Drawing.Size(80, 8);
             this.tbMemDumpReadState.TabIndex = 1010;
             // 
             // tbCorrectorReadState
             // 
-            this.tbCorrectorReadState.Font = new System.Drawing.Font("PMingLiU", 1F);
-            this.tbCorrectorReadState.Location = new System.Drawing.Point(449, 19);
-            this.tbCorrectorReadState.Margin = new System.Windows.Forms.Padding(2);
+            this.tbCorrectorReadState.Enabled = false;
+            this.tbCorrectorReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
+            this.tbCorrectorReadState.Location = new System.Drawing.Point(27, 142);
+            this.tbCorrectorReadState.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tbCorrectorReadState.Name = "tbCorrectorReadState";
-            this.tbCorrectorReadState.Size = new System.Drawing.Size(24, 9);
+            this.tbCorrectorReadState.ShortcutsEnabled = false;
+            this.tbCorrectorReadState.Size = new System.Drawing.Size(80, 8);
             this.tbCorrectorReadState.TabIndex = 1011;
             // 
-            // tbIcConfigReadState
+            // tbTxConfigReadState
             // 
-            this.tbIcConfigReadState.Font = new System.Drawing.Font("PMingLiU", 1F);
-            this.tbIcConfigReadState.Location = new System.Drawing.Point(477, 19);
-            this.tbIcConfigReadState.Margin = new System.Windows.Forms.Padding(2);
-            this.tbIcConfigReadState.Name = "tbIcConfigReadState";
-            this.tbIcConfigReadState.Size = new System.Drawing.Size(24, 9);
-            this.tbIcConfigReadState.TabIndex = 1012;
+            this.tbTxConfigReadState.Enabled = false;
+            this.tbTxConfigReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
+            this.tbTxConfigReadState.Location = new System.Drawing.Point(27, 221);
+            this.tbTxConfigReadState.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tbTxConfigReadState.Name = "tbTxConfigReadState";
+            this.tbTxConfigReadState.ShortcutsEnabled = false;
+            this.tbTxConfigReadState.Size = new System.Drawing.Size(80, 8);
+            this.tbTxConfigReadState.TabIndex = 1012;
+            // 
+            // tbRxConfigReadState
+            // 
+            this.tbRxConfigReadState.Enabled = false;
+            this.tbRxConfigReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
+            this.tbRxConfigReadState.Location = new System.Drawing.Point(27, 255);
+            this.tbRxConfigReadState.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.tbRxConfigReadState.Name = "tbRxConfigReadState";
+            this.tbRxConfigReadState.ShortcutsEnabled = false;
+            this.tbRxConfigReadState.Size = new System.Drawing.Size(80, 8);
+            this.tbRxConfigReadState.TabIndex = 1013;
+            // 
+            // cbInfomation
+            // 
+            this.cbInfomation.AutoSize = true;
+            this.cbInfomation.BackColor = System.Drawing.Color.Transparent;
+            this.cbInfomation.Checked = true;
+            this.cbInfomation.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbInfomation.Location = new System.Drawing.Point(5, 24);
+            this.cbInfomation.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbInfomation.Name = "cbInfomation";
+            this.cbInfomation.Size = new System.Drawing.Size(98, 21);
+            this.cbInfomation.TabIndex = 1014;
+            this.cbInfomation.Text = "Information";
+            this.cbInfomation.UseVisualStyleBackColor = false;
+            // 
+            // gbScope
+            // 
+            this.gbScope.Controls.Add(this.cbProductSelect);
+            this.gbScope.Controls.Add(this.tbDdmReadState);
+            this.gbScope.Controls.Add(this.tbInformationReadState);
+            this.gbScope.Controls.Add(this.tbMemDumpReadState);
+            this.gbScope.Controls.Add(this.tbCorrectorReadState);
+            this.gbScope.Controls.Add(this.tbRxConfigReadState);
+            this.gbScope.Controls.Add(this.tbTxConfigReadState);
+            this.gbScope.Controls.Add(this.cbRxIcConfig);
+            this.gbScope.Controls.Add(this.cbTxIcConfig);
+            this.gbScope.Controls.Add(this.cbCorrector);
+            this.gbScope.Controls.Add(this.cbMemDump);
+            this.gbScope.Controls.Add(this.cbDdm);
+            this.gbScope.Controls.Add(this.cbInfomation);
+            this.gbScope.Font = new System.Drawing.Font("Times New Roman", 9F);
+            this.gbScope.Location = new System.Drawing.Point(1340, 68);
+            this.gbScope.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.gbScope.Name = "gbScope";
+            this.gbScope.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.gbScope.Size = new System.Drawing.Size(141, 282);
+            this.gbScope.TabIndex = 1015;
+            this.gbScope.TabStop = false;
+            this.gbScope.Text = "Scope";
+            // 
+            // cbProductSelect
+            // 
+            this.cbProductSelect.FormattingEnabled = true;
+            this.cbProductSelect.Items.AddRange(new object[] {
+            "Products",
+            "SAS4.0",
+            "PCIe4.0",
+            "QSFP28"});
+            this.cbProductSelect.Location = new System.Drawing.Point(7, 170);
+            this.cbProductSelect.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbProductSelect.Name = "cbProductSelect";
+            this.cbProductSelect.Size = new System.Drawing.Size(108, 25);
+            this.cbProductSelect.TabIndex = 1018;
+            this.cbProductSelect.Text = "Product Sel...";
+            this.cbProductSelect.SelectedIndexChanged += new System.EventHandler(this.cbProductSelect_SelectedIndexChanged);
+            // 
+            // cbRxIcConfig
+            // 
+            this.cbRxIcConfig.AutoSize = true;
+            this.cbRxIcConfig.BackColor = System.Drawing.Color.Transparent;
+            this.cbRxIcConfig.Enabled = false;
+            this.cbRxIcConfig.Location = new System.Drawing.Point(5, 234);
+            this.cbRxIcConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbRxIcConfig.Name = "cbRxIcConfig";
+            this.cbRxIcConfig.Size = new System.Drawing.Size(98, 21);
+            this.cbRxIcConfig.TabIndex = 1019;
+            this.cbRxIcConfig.Text = "RxIcConfig";
+            this.cbRxIcConfig.UseVisualStyleBackColor = false;
+            // 
+            // cbTxIcConfig
+            // 
+            this.cbTxIcConfig.AutoSize = true;
+            this.cbTxIcConfig.BackColor = System.Drawing.Color.Transparent;
+            this.cbTxIcConfig.Enabled = false;
+            this.cbTxIcConfig.Location = new System.Drawing.Point(5, 201);
+            this.cbTxIcConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbTxIcConfig.Name = "cbTxIcConfig";
+            this.cbTxIcConfig.Size = new System.Drawing.Size(97, 21);
+            this.cbTxIcConfig.TabIndex = 1018;
+            this.cbTxIcConfig.Text = "TxIcConfig";
+            this.cbTxIcConfig.UseVisualStyleBackColor = false;
+            // 
+            // cbCorrector
+            // 
+            this.cbCorrector.AutoSize = true;
+            this.cbCorrector.BackColor = System.Drawing.Color.Transparent;
+            this.cbCorrector.Checked = true;
+            this.cbCorrector.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbCorrector.Location = new System.Drawing.Point(5, 122);
+            this.cbCorrector.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbCorrector.Name = "cbCorrector";
+            this.cbCorrector.Size = new System.Drawing.Size(87, 21);
+            this.cbCorrector.TabIndex = 1017;
+            this.cbCorrector.Text = "Corrector";
+            this.cbCorrector.UseVisualStyleBackColor = false;
+            // 
+            // cbMemDump
+            // 
+            this.cbMemDump.AutoSize = true;
+            this.cbMemDump.BackColor = System.Drawing.Color.Transparent;
+            this.cbMemDump.Checked = true;
+            this.cbMemDump.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbMemDump.Location = new System.Drawing.Point(5, 90);
+            this.cbMemDump.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbMemDump.Name = "cbMemDump";
+            this.cbMemDump.Size = new System.Drawing.Size(97, 21);
+            this.cbMemDump.TabIndex = 1016;
+            this.cbMemDump.Text = "MemDump";
+            this.cbMemDump.UseVisualStyleBackColor = false;
+            // 
+            // cbDdm
+            // 
+            this.cbDdm.AutoSize = true;
+            this.cbDdm.BackColor = System.Drawing.Color.Transparent;
+            this.cbDdm.Checked = true;
+            this.cbDdm.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbDdm.Location = new System.Drawing.Point(5, 58);
+            this.cbDdm.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.cbDdm.Name = "cbDdm";
+            this.cbDdm.Size = new System.Drawing.Size(65, 21);
+            this.cbDdm.TabIndex = 1015;
+            this.cbDdm.Text = "DDM";
+            this.cbDdm.UseVisualStyleBackColor = false;
+            // 
+            // btWriteAll
+            // 
+            this.btWriteAll.Enabled = false;
+            this.btWriteAll.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.btWriteAll.Location = new System.Drawing.Point(980, 12);
+            this.btWriteAll.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btWriteAll.Name = "btWriteAll";
+            this.btWriteAll.Size = new System.Drawing.Size(100, 35);
+            this.btWriteAll.TabIndex = 1016;
+            this.btWriteAll.Text = "Write all";
+            this.btWriteAll.UseVisualStyleBackColor = true;
+            this.btWriteAll.Click += new System.EventHandler(this.bWriteAll_Click);
+            // 
+            // bFunctionTest
+            // 
+            this.bFunctionTest.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bFunctionTest.Location = new System.Drawing.Point(1340, 402);
+            this.bFunctionTest.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.bFunctionTest.Name = "bFunctionTest";
+            this.bFunctionTest.Size = new System.Drawing.Size(141, 35);
+            this.bFunctionTest.TabIndex = 1017;
+            this.bFunctionTest.Text = "FunctionTest";
+            this.bFunctionTest.UseVisualStyleBackColor = true;
+            this.bFunctionTest.Click += new System.EventHandler(this.bFunctionTest_Click);
+            // 
+            // cbPermission
+            // 
+            this.cbPermission.AutoCompleteCustomSource.AddRange(new string[] {
+            "Admin",
+            "Engineer",
+            "Operator"});
+            this.cbPermission.Font = new System.Drawing.Font("Times New Roman", 9F);
+            this.cbPermission.FormattingEnabled = true;
+            this.cbPermission.Items.AddRange(new object[] {
+            "Admin",
+            "Engineer",
+            "Operator"});
+            this.cbPermission.Location = new System.Drawing.Point(1341, 452);
+            this.cbPermission.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.cbPermission.Name = "cbPermission";
+            this.cbPermission.Size = new System.Drawing.Size(140, 25);
+            this.cbPermission.TabIndex = 1019;
+            this.cbPermission.Text = "Permission Sel..";
+            // 
+            // tbPasswordB3
+            // 
+            this.tbPasswordB3.Location = new System.Drawing.Point(357, 0);
+            this.tbPasswordB3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbPasswordB3.Name = "tbPasswordB3";
+            this.tbPasswordB3.Size = new System.Drawing.Size(39, 25);
+            this.tbPasswordB3.TabIndex = 1023;
+            this.tbPasswordB3.Text = "34";
+            this.tbPasswordB3.UseSystemPasswordChar = true;
+            this.tbPasswordB3.Visible = false;
+            // 
+            // tbPasswordB2
+            // 
+            this.tbPasswordB2.Location = new System.Drawing.Point(309, 0);
+            this.tbPasswordB2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbPasswordB2.Name = "tbPasswordB2";
+            this.tbPasswordB2.Size = new System.Drawing.Size(39, 25);
+            this.tbPasswordB2.TabIndex = 1022;
+            this.tbPasswordB2.Text = "33";
+            this.tbPasswordB2.UseSystemPasswordChar = true;
+            this.tbPasswordB2.Visible = false;
+            // 
+            // tbPasswordB1
+            // 
+            this.tbPasswordB1.Location = new System.Drawing.Point(261, 0);
+            this.tbPasswordB1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbPasswordB1.Name = "tbPasswordB1";
+            this.tbPasswordB1.Size = new System.Drawing.Size(39, 25);
+            this.tbPasswordB1.TabIndex = 1021;
+            this.tbPasswordB1.Text = "32";
+            this.tbPasswordB1.UseSystemPasswordChar = true;
+            this.tbPasswordB1.Visible = false;
+            // 
+            // tbPasswordB0
+            // 
+            this.tbPasswordB0.Location = new System.Drawing.Point(213, 0);
+            this.tbPasswordB0.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.tbPasswordB0.Name = "tbPasswordB0";
+            this.tbPasswordB0.Size = new System.Drawing.Size(39, 25);
+            this.tbPasswordB0.TabIndex = 1020;
+            this.tbPasswordB0.Text = "33";
+            this.tbPasswordB0.UseSystemPasswordChar = true;
+            this.tbPasswordB0.Visible = false;
             // 
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
-            this.ClientSize = new System.Drawing.Size(1443, 832);
-            this.Controls.Add(this.tbIcConfigReadState);
-            this.Controls.Add(this.tbCorrectorReadState);
-            this.Controls.Add(this.tbMemDumpReadState);
-            this.Controls.Add(this.tbDdmReadState);
-            this.Controls.Add(this.tbInformationReadState);
+            this.ClientSize = new System.Drawing.Size(1579, 1061);
+            this.Controls.Add(this.tbPasswordB3);
+            this.Controls.Add(this.tbPasswordB2);
+            this.Controls.Add(this.tbPasswordB1);
+            this.Controls.Add(this.tbPasswordB0);
+            this.Controls.Add(this.cbPermission);
+            this.Controls.Add(this.bFunctionTest);
+            this.Controls.Add(this.btWriteAll);
+            this.Controls.Add(this.gbScope);
             this.Controls.Add(this.gbChannelSwitcher);
             this.Controls.Add(this.btReadAll);
             this.Controls.Add(this.tbPassword);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.lPassword);
             this.Controls.Add(this.cbConnected);
-            this.Controls.Add(this.panel1);
             this.Controls.Add(this.tcMain);
-            this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.Name = "MainForm";
             this.Palette = this.kryptonPalette1;
             this.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.Custom;
@@ -919,28 +1018,32 @@ namespace IntegratedGuiV2
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "AOC Integrated Firmware Master ";
             this.tcDdmi.ResumeLayout(false);
-            this.tpInformation.ResumeLayout(false);
-            this.tpDdm.ResumeLayout(false);
-            this.tpMemoryDump.ResumeLayout(false);
+            this.tabPage11.ResumeLayout(false);
+            this.tabPage12.ResumeLayout(false);
+            this.tabPage13.ResumeLayout(false);
             this.tcIcConfig.ResumeLayout(false);
-            this.tabPage41.ResumeLayout(false);
+            this.tabPage31.ResumeLayout(false);
             this.tcSas40.ResumeLayout(false);
-            this.tabPage411.ResumeLayout(false);
-            this.tabPage412.ResumeLayout(false);
-            this.tabPage42.ResumeLayout(false);
+            this.tabPage311.ResumeLayout(false);
+            this.tabPage312.ResumeLayout(false);
+            this.tabPage32.ResumeLayout(false);
             this.tcPcie4.ResumeLayout(false);
-            this.tabPage421.ResumeLayout(false);
-            this.tabPage422.ResumeLayout(false);
+            this.tabPage321.ResumeLayout(false);
+            this.tabPage322.ResumeLayout(false);
+            this.tabPage33.ResumeLayout(false);
+            this.tcQsfp28.ResumeLayout(false);
+            this.tabPage331.ResumeLayout(false);
+            this.tabPage332.ResumeLayout(false);
             this.tcMain.ResumeLayout(false);
-            this.tpDdmi.ResumeLayout(false);
+            this.tabPage1.ResumeLayout(false);
             this.tabPage2.ResumeLayout(false);
             this.tabPage3.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.tabPage4.PerformLayout();
             this.gbChannelSwitcher.ResumeLayout(false);
             this.gbChannelSwitcher.PerformLayout();
+            this.gbScope.ResumeLayout(false);
+            this.gbScope.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -949,59 +1052,76 @@ namespace IntegratedGuiV2
         #endregion
 
         private System.Windows.Forms.TabControl tcMain;
-        private System.Windows.Forms.TabPage tpDdmi;
-        private System.Windows.Forms.TabPage tpInformation;
-        private System.Windows.Forms.TabPage tpDdm;
-        private System.Windows.Forms.TabPage tpMemoryDump;
+        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TabPage tabPage11;
+        private System.Windows.Forms.TabPage tabPage12;
+        private System.Windows.Forms.TabPage tabPage13;
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.TabPage tabPage4;
-        private System.Windows.Forms.TabPage tabPage41;
-        private System.Windows.Forms.TabPage tabPage411;
-        private System.Windows.Forms.TabPage tabPage412;
-        private System.Windows.Forms.TabPage tabPage42;
-        private System.Windows.Forms.TabPage tabPage421;
-        private System.Windows.Forms.TabPage tabPage422;
-        private System.Windows.Forms.TabPage tabPage43;
+        private System.Windows.Forms.TabPage tabPage31;
+        private System.Windows.Forms.TabPage tabPage311;
+        private System.Windows.Forms.TabPage tabPage312;
+        private System.Windows.Forms.TabPage tabPage32;
+        private System.Windows.Forms.TabPage tabPage321;
+        private System.Windows.Forms.TabPage tabPage322;
+        private System.Windows.Forms.TabPage tabPage33;
+        private System.Windows.Forms.TabPage tabPage331;
+        private System.Windows.Forms.TabPage tabPage332;
         private System.Windows.Forms.TabPage tabPage5;
-        private NuvotonIcpTool.UcNuvotonIcpTool ucNuvotonIcpTool;
-        private ComponentFactory.Krypton.Toolkit.KryptonPalette kryptonPalette1;
-        private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kryptonButton2;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kryptonButton1;
-        private ComponentFactory.Krypton.Toolkit.KryptonTextBox kryptonTextBox2;
-        private ComponentFactory.Krypton.Toolkit.KryptonTextBox kryptonTextBox1;
-        private System.Windows.Forms.RadioButton radioButton4;
-        private System.Windows.Forms.RadioButton radioButton3;
-        private System.Windows.Forms.RadioButton radioButton2;
-        private System.Windows.Forms.RadioButton radioButton1;
         private System.Windows.Forms.TabControl tcDdmi;
         private QsfpDigitalDiagnosticMonitoring.UCMemoryDump ucMemoryDump;
         private QsfpDigitalDiagnosticMonitoring.UcInformation ucInformation;
         private QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring ucDigitalDiagnosticsMonitoring;
-        private Gn1190Corrector.UcGn1190Corrector ucGn1190Corrector;
-        private System.Windows.Forms.TabControl tcIcConfig;
-        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbConnected;
-        private System.Windows.Forms.TabControl tcSas40;
+        private Gn1190Corrector.UcGn1190CorrectorLite ucGn1190Corrector;
         private Mald37045cMata37044c.UcMald37045cConfig ucMald37045cConfig;
         private Mald37045cMata37044c.UcMata37044cConfig ucMata37044cConfig;
-        private System.Windows.Forms.TabControl tcPcie4;
         private Rt145Rt146Config.UcRt146Config ucRt146Config;
         private Rt145Rt146Config.UcRt145Config ucRt145Config;
-        private ComponentFactory.Krypton.Toolkit.KryptonButton kryptonButton3;
-        private System.Windows.Forms.Label label1;
+        private Gn2108Gn2109Config.UcGn2108Config ucGn2108Config;
+        private Gn2108Gn2109Config.UcGn2109Config ucGn2109Config;
+        private NuvotonIcpTool.UcNuvotonIcpTool ucNuvotonIcpTool;
+        private System.Windows.Forms.TabControl tcIcConfig;
+        private System.Windows.Forms.TabControl tcSas40;
+        private System.Windows.Forms.TabControl tcPcie4;
+        private System.Windows.Forms.TabControl tcQsfp28;
+        private System.Windows.Forms.Label lPassword;
         protected internal System.Windows.Forms.TextBox tbPassword;
-        private System.Windows.Forms.Button btReadAll;
+        private System.Windows.Forms.GroupBox gbScope;
         private System.Windows.Forms.GroupBox gbChannelSwitcher;
-        private System.Windows.Forms.RadioButton rbCh2;
-        private System.Windows.Forms.Button btSwitch;
-        private System.Windows.Forms.RadioButton rbCh1;
         private System.Windows.Forms.TextBox tbInformationReadState;
         private System.Windows.Forms.TextBox tbDdmReadState;
         private System.Windows.Forms.TextBox tbMemDumpReadState;
         private System.Windows.Forms.TextBox tbCorrectorReadState;
-        private System.Windows.Forms.TextBox tbIcConfigReadState;
+        private System.Windows.Forms.TextBox tbTxConfigReadState;
+        private System.Windows.Forms.TextBox tbRxConfigReadState;
+        private System.Windows.Forms.TextBox tbInnerStateCh2;
+        private System.Windows.Forms.TextBox tbInnerStateCh1;
+        private System.Windows.Forms.CheckBox cbInfomation;
+        private System.Windows.Forms.CheckBox cbRxIcConfig;
+        private System.Windows.Forms.CheckBox cbTxIcConfig;
+        private System.Windows.Forms.CheckBox cbCorrector;
+        private System.Windows.Forms.CheckBox cbMemDump;
+        private System.Windows.Forms.CheckBox cbDdm;
+        private System.Windows.Forms.CheckBox cbContinuousMode;
+        private System.Windows.Forms.Button btReadAll;
+        private System.Windows.Forms.Button bOutterSwitch;
+        private System.Windows.Forms.Button bInnerSwitch;
+        private System.Windows.Forms.Button btWriteAll;
+        private System.Windows.Forms.Button bFunctionTest;
+        private System.Windows.Forms.RadioButton rbCh1;
+        private System.Windows.Forms.RadioButton rbCh2;
+        private System.Windows.Forms.ComboBox cbProductSelect;
+        private System.Windows.Forms.Label lCh2;
+        private System.Windows.Forms.Label lCh1;
+        private System.Windows.Forms.Label lContinuousMode;
+        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbConnected;
+        private ComponentFactory.Krypton.Toolkit.KryptonPalette kryptonPalette1;
+        private System.Windows.Forms.ComboBox cbPermission;
+        private System.Windows.Forms.TextBox tbPasswordB3;
+        private System.Windows.Forms.TextBox tbPasswordB2;
+        private System.Windows.Forms.TextBox tbPasswordB1;
+        private System.Windows.Forms.TextBox tbPasswordB0;
     }
 }
 
