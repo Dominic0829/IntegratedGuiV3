@@ -17,6 +17,7 @@ using Rt145Rt146Config;
 using System.Threading;
 using System.Runtime.Remoting.Channels;
 using System.Web.UI.Design;
+using System.Security.Policy;
 
 namespace IntegratedGuiV2
 {
@@ -212,8 +213,11 @@ namespace IntegratedGuiV2
         private int _WriteModulePassword()
         {
             byte[] data;
+            string dataS;
 
             data = Encoding.Default.GetBytes(tbPassword.Text);
+            dataS = Encoding.Default.GetString(data);
+            //MessageBox.Show ("_WirteModulePassword parse： " + dataS);
 
             if (i2cMaster.WriteApi(80, 123, 4, data) < 0)
                 return -1;
@@ -221,9 +225,10 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _GetPassword(int length, byte[] data)
+        private int _GetPassword_(int length, byte[] data)
         {
             byte[] tmp = new byte[4];
+            string dataS;
 
             if (length < 4)
                 return -1;
@@ -231,8 +236,35 @@ namespace IntegratedGuiV2
             if (data == null)
                 return -1;
 
-            if ((tbPasswordB0.Text.Length != 2) || (tbPasswordB1.Text.Length != 2) ||
-                (tbPasswordB2.Text.Length != 2) || (tbPasswordB3.Text.Length != 2))
+            if (tbPassword.Text.Length != 4)
+            {
+                MessageBox.Show("Please input a 4-digit password before operating!!");
+                return -1;
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                data[i] = Convert.ToByte(tbPassword.Text[i].ToString(), 16);
+            }
+
+            dataS = Encoding.Default.GetString(data);
+            MessageBox.Show("GetPassword parsed: " + dataS);
+
+            return 4;
+        }
+
+        private int _GetPassword(int length, byte[] data)
+        {
+            byte[] tmp = new byte[4];
+            string dataS;
+
+            if (length < 4)
+                return -1;
+
+            if (data == null)
+                return -1;
+
+            if (tbPassword.Text.Length != 4)
             {
                 MessageBox.Show("Please inpurt password before operate!!");
                 return -1;
@@ -242,6 +274,9 @@ namespace IntegratedGuiV2
             data[1] = Convert.ToByte(tbPasswordB1.Text, 16);
             data[2] = Convert.ToByte(tbPasswordB2.Text, 16);
             data[3] = Convert.ToByte(tbPasswordB3.Text, 16);
+
+            dataS = Encoding.Default.GetString(data);
+            //MessageBox.Show("_GetPassword parse： " + dataS);
 
             return 4;
         }
@@ -423,7 +458,7 @@ namespace IntegratedGuiV2
 
         private void bReadOverAll_Click(object sender, EventArgs e)
         {
-            btReadAll.Enabled = false;
+            btGlobalRead.Enabled = false;
             _InitialStateBar();
 
             if (cbInfomation.Checked)
@@ -520,12 +555,12 @@ namespace IntegratedGuiV2
             //ucGn2108Config.bReadAll_Click(sender, e);
             //ucGn2109Config.bReadAll_Click(sender, e);
             */
-            btReadAll.Enabled = true;
+            btGlobalRead.Enabled = true;
         }
 
         private void bWriteAll_Click(object sender, EventArgs e)
         {
-            btWriteAll.Enabled = false;
+            btGlobalWrite.Enabled = false;
             _InitialStateBar();
 
             if (cbInfomation.Checked)
@@ -561,7 +596,7 @@ namespace IntegratedGuiV2
 
 
 
-            btWriteAll.Enabled = true;
+            btGlobalWrite.Enabled = true;
         }
 
         private void _InitialStateBar()
@@ -595,6 +630,20 @@ namespace IntegratedGuiV2
                 {
                     XmlElement userControlNode = xmlDoc.CreateElement("UserControl");
                     userControlNode.SetAttribute("name", userControl.Name);
+
+                    /*
+                    // 指定 UserControl ...所有 Components enabled = false
+                    if (userControl.Name == "ucMald37045cConfig" ||
+                        userControl.Name == "ucMata37044cConfig" ||
+                        userControl.Name == "ucRt146Config" ||
+                        userControl.Name == "ucRt145Config" ||
+                        userControl.Name == "ucGn2108Config" ||
+                        userControl.Name == "ucGn2109Config")
+                    {
+                        SetAllComponentsEnabled(userControl, false);
+                    }
+                    */
+
                     permissionNode.AppendChild(userControlNode);
 
                     List<Control> userControlComponents = GetAllControls(userControl); // search all components from UserControl and set xml node
@@ -608,8 +657,23 @@ namespace IntegratedGuiV2
 
                         componentNode.SetAttribute("name", control.Name);
                         componentNode.SetAttribute("object", control.GetType().Name);
-                        componentNode.SetAttribute("visible", control.Visible.ToString());
-                        componentNode.SetAttribute("enabled", control.Enabled.ToString());
+                        componentNode.SetAttribute("visible", "True");
+                        //componentNode.SetAttribute("enabled", control.Enabled.ToString());
+
+                        if (control.Name.Contains("Write") || control.Name.Contains("Flash"))
+                        {
+                            componentNode.SetAttribute("enabled", "False");
+                        }
+                        // 新增條件：如果 Component name 含有 "tp" 字串，則 enabled 設為 true
+                        else if (control.Name.Contains("tp"))
+                        {
+                            componentNode.SetAttribute("enabled", "True");
+                        }
+                        else
+                        {
+                            componentNode.SetAttribute("enabled", control.Enabled.ToString());
+                        }
+
 
                         if (control is TextBox textBox)
                         {
@@ -661,7 +725,17 @@ namespace IntegratedGuiV2
 
             return controls;
         }
-        
+
+        private void SetAllComponentsEnabled(Control control, bool enabled)
+        {
+            List<Control> controls = GetAllControls(control);
+
+            foreach (Control c in controls)
+            {
+                c.Enabled = enabled;
+            }
+        }
+
         private class ControlComparer : IComparer<Control> //比較器，用於排序
         {
             public int Compare(Control x, Control y)
@@ -762,6 +836,172 @@ namespace IntegratedGuiV2
             return controls;
         }
         */
+
+        public int ConfigUiByXmlApi(String configXml)
+        {
+            OpenFileDialog ofdSelectFile = new OpenFileDialog();
+            XmlReader xrConfig;
+
+            if (configXml.Length == 0)
+            {
+                ofdSelectFile.Title = "Select config file";
+                ofdSelectFile.Filter = "xml files (*.xml)|*.xml";
+                if (ofdSelectFile.ShowDialog() != DialogResult.OK)
+                    return -1;
+                xrConfig = XmlReader.Create(ofdSelectFile.FileName);
+            }
+            else
+            {
+                xrConfig = XmlReader.Create(configXml);
+            }
+
+            while (xrConfig.Read())
+            {
+                if (xrConfig.IsStartElement())
+                {
+                    switch (xrConfig.Name)
+                    {
+                        case "Settings":
+                            xrConfig.Read();
+                            _ParseSettingsXml(xrConfig);
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            return 0;
+        }
+
+        private void _ParseSettingsXml(XmlReader reader)
+        {
+            while (reader.Read())
+            {
+                if (reader.IsStartElement() && reader.Name == "Permission")
+                {
+                    string role = reader.GetAttribute("role");
+
+                    if (role == cbPermission.SelectedItem.ToString())
+                    {
+                        // The selected permission level matches the current Permission element
+
+                        reader.Read(); // Move to the first UserControl element
+
+                        while (reader.IsStartElement() && reader.Name == "UserControl")
+                        {
+                            string userControlName = reader.GetAttribute("name");
+
+                            reader.Read(); // Move to the Components element within the UserControl
+
+                            while (reader.IsStartElement() && reader.Name == "Components")
+                            {
+                                reader.Read(); // Move to the first Component element
+
+                                while (reader.IsStartElement() && reader.Name == "Component")
+                                {
+                                    _ParseComponentXml(reader, userControlName);
+                                }
+
+                                reader.ReadEndElement(); // Move out of the Components element
+                            }
+
+                            reader.ReadEndElement(); // Move out of the UserControl element
+                        }
+                    }
+                    else
+                    {
+                        reader.Skip(); // Skip the elements for other permission levels
+                    }
+                }
+            }
+        }
+
+        private void _ParseComponentXml(XmlReader reader, string userControlName)
+        {
+            string componentName = reader.GetAttribute("name");
+            string objectType = reader.GetAttribute("object");
+            string visible = reader.GetAttribute("visible");
+            string enabled = reader.GetAttribute("enabled");
+            string readOnly = reader.GetAttribute("ReadOnly");
+
+            UserControl targetUserControl = (UserControl)Controls.Find(userControlName, true).FirstOrDefault();
+
+            if (targetUserControl != null)
+            {
+                switch (objectType)
+                {
+                    case "TextBox":
+                        TextBox tbTmp = (TextBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
+                        
+                        if (tbTmp != null)
+                        {
+                            if (visible != null) tbTmp.Visible = visible.Equals("True");
+                            if (enabled != null) tbTmp.Enabled = enabled.Equals("True");
+                            if (readOnly != null) tbTmp.ReadOnly = readOnly.Equals("True");
+                        }
+                        break;
+
+                    case "Label":
+                        Label lTmp = (Label)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
+
+                        if (lTmp != null)
+                        {
+                            if (visible != null) lTmp.Visible = visible.Equals("True");
+                            if (enabled != null) lTmp.Enabled = enabled.Equals("True");
+                        }
+                        break;
+
+                    case "Button":
+                        Button bTmp = (Button)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
+
+                        if (bTmp != null)
+                        {
+                            if (visible != null) bTmp.Visible = visible.Equals("True", StringComparison.OrdinalIgnoreCase);
+                            if (enabled != null) bTmp.Enabled = enabled.Equals("True", StringComparison.OrdinalIgnoreCase);
+                        }
+                        break;
+
+                    case "GroupBox":
+                        GroupBox gbTmp = (GroupBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
+
+                        if (gbTmp != null)
+                        {
+                            if (visible != null) gbTmp.Visible = visible.Equals("True");
+                            if (enabled != null) gbTmp.Enabled = enabled.Equals("True");
+                        }
+                        break;
+
+                    case "CheckBox":
+                        CheckBox cbTmp = (CheckBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
+
+                        if (cbTmp != null)
+                        {
+                            if (visible != null) cbTmp.Visible = visible.Equals("True");
+                            if (enabled != null) cbTmp.Enabled = enabled.Equals("True");
+                        }
+                        break;
+
+                    case "ComboBox":
+                        ComboBox cobTmp = (ComboBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
+
+                        if (cobTmp != null)
+                        {
+                            if (visible != null) cobTmp.Visible = visible.Equals("True");
+                            if (enabled != null) cobTmp.Enabled = enabled.Equals("True");
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            reader.Read(); // Move to the next Component element
+        }
+
+
 
         private void bOutterSwitch_Click(object sender, EventArgs e)
         {
@@ -922,9 +1162,15 @@ namespace IntegratedGuiV2
         }
         private void bFunctionTest_Click(object sender, EventArgs e)
         {
-            _GenerateXmlSettings();
+            if (bFunctionTest.Enabled)
+                bFunctionTest.Enabled = false;
+            
             //InitializeComponentsVisibility();
-           
+            //_GenerateXmlSettings();
+            //ConfigUiByXmlApi("settings.xml");
+
+
+            bFunctionTest.Enabled = true;
         }
 
         private void cbProductSelect_SelectedIndexChanged(object sender, EventArgs e)
@@ -936,6 +1182,21 @@ namespace IntegratedGuiV2
         private void cbContinuousMode_CheckedChanged(object sender, EventArgs e)
         {
             _ContinuousMode();
+        }
+
+        private void cbPermission_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            ConfigUiByXmlApi("settings.xml");
+        }
+
+        private void bScanComponents_Click(object sender, EventArgs e)
+        {
+            if (bScanComponents.Enabled)
+                bScanComponents.Enabled = false;
+
+            _GenerateXmlSettings();
+
+            bScanComponents.Enabled = true;
         }
     }
 
