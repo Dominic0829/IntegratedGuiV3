@@ -31,8 +31,11 @@ namespace IntegratedGuiV2
         private short iBitrate = 400; //kbps
         private short TriggerDelay = 100; //ms
         private int Channel = 0;
+        private bool FirstRead = false;
         private bool StopContinuousMode = false;
         private bool AutoSelectIcConfig = false;
+        private string sAcConfig;
+
 
         private int _SetQsfpMode(byte mode)
         {
@@ -304,7 +307,7 @@ namespace IntegratedGuiV2
         public MainForm()
         {
             InitializeComponent();
-            this.Size = new System.Drawing.Size(1150, 850);
+            this.Size = new System.Drawing.Size(1170, 850);
             _InitialStateBar();
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             cbProductSelect.SelectedIndex = 0;
@@ -453,38 +456,59 @@ namespace IntegratedGuiV2
             }
 
         }
-
         
-
-        private void bReadOverAll_Click(object sender, EventArgs e)
+        private void bGlobalRead_Click(object sender, EventArgs e)
         {
-            btGlobalRead.Enabled = false;
+
+            bool readFail = false;
+            _DisableButtons();
             _InitialStateBar();
 
             if (cbInfomation.Checked)
             {
-                ucInformation.bRead_Click(sender, e);
-                tbInformationReadState.BackColor = Color.YellowGreen;
+                tbInformationReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucInformation.ReadAllApi() < 0)
+                    tbInformationReadState.BackColor = Color.Red;
+                else
+                    tbInformationReadState.BackColor = Color.YellowGreen;
+
                 Application.DoEvents();
             }
 
             if (cbDdm.Checked)
             {
-                ucDigitalDiagnosticsMonitoring.bRead_Click(sender, e);
-                tbDdmReadState.BackColor = Color.YellowGreen;
+                tbDdmReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucDigitalDiagnosticsMonitoring.ReadAllApi() < 0)
+                    tbDdmReadState.BackColor = Color.Red;
+                else
+                    tbDdmReadState.BackColor = Color.YellowGreen;
+
                 Application.DoEvents();
             }
 
             if (cbMemDump.Checked)
             {
-                ucMemoryDump.bRead_Click(sender, e);
-                tbMemDumpReadState.BackColor = Color.YellowGreen;
+                tbMemDumpReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucMemoryDump.ReadAllApi() < 0)
+                    tbMemDumpReadState.BackColor = Color.Red;
+                else
+                    tbMemDumpReadState.BackColor = Color.YellowGreen;
+
                 Application.DoEvents();
             }
 
             if (cbCorrector.Checked)
             {
-                if (ucGn1190Corrector.ReadAll() < 0)
+                tbCorrectorReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucGn1190Corrector.ReadAllApi() < 0)
                     tbCorrectorReadState.BackColor = Color.Red;
                 else
                     tbCorrectorReadState.BackColor = Color.YellowGreen;
@@ -496,97 +520,144 @@ namespace IntegratedGuiV2
             {
                 if (cbTxIcConfig.Checked)
                 {
+                    tbTxConfigReadState.BackColor = Color.SteelBlue;
+                    Application.DoEvents();
+
                     switch (cbProductSelect.SelectedIndex)
                     {
                         case 1: // SAS4.0
-                            ucMald37045cConfig.bReadAll_Click(sender, e);
+                            if (ucMald37045cConfig.ReadAllApi() < 0 )
+                                readFail = true;
+
                             break;
                         case 2: // PCIe4
-                            ucRt146Config.bReadAll_Click(sender, e);
+                            if (ucRt146Config.ReadAllApi() < 0 )
+                                readFail = true;
+
                             break;
                         case 3: // QSFP28
-                            ucGn2108Config.bReadAll_Click(sender, e);
+                            if (ucGn2108Config.ReadAllApi() < 0)
+                                readFail = true;
+
                             break;
                     }
 
-                    tbTxConfigReadState.BackColor = Color.YellowGreen;
+                    if (readFail)
+                        tbTxConfigReadState.BackColor = Color.Red;
+                    else
+                        tbTxConfigReadState.BackColor = Color.YellowGreen;
+
                     Application.DoEvents();
+                    readFail = false;
                 }
 
                 if (cbRxIcConfig.Checked)
                 {
+                    tbRxConfigReadState.BackColor = Color.SteelBlue;
+                    Application.DoEvents();
+
                     switch (cbProductSelect.SelectedIndex)
                     {
                         case 1: // SAS4.0
-                            ucMata37044cConfig.bReadAll_Click(sender, e);
+                            if (ucMata37044cConfig.ReadAllApi() < 0)
+                                readFail = true;
+
                             break;
                         case 2: // PCIe4
-                            ucRt145Config.bReadAll_Click(sender, e);
+                            if (ucRt145Config.ReadAllApi() < 0)
+                                readFail = true;
+
                             break;
                         case 3: // QSFP28
-                            ucGn2109Config.bReadAll_Click(sender, e);
+                            if (ucGn2109Config.ReadAllApi() < 0)
+                                readFail = true;
+
                             break;
                     }
 
-                    tbRxConfigReadState.BackColor = Color.YellowGreen;
+                    if (readFail)
+                        tbRxConfigReadState.BackColor = Color.Red;
+                    else
+                        tbRxConfigReadState.BackColor = Color.YellowGreen;
+
                     Application.DoEvents();
                 }
             }
-
-            
-            /*
-            //ucMald37045cConfig.bReadAll_Click(sender, e);
-            //ucMata37044cConfig.bReadAll_Click(sender, e);
-            if (cbTxIcConfig.Checked)
-            {
-                ucRt146Config.bReadAll_Click(sender, e);
-                tbTxConfigReadState.BackColor = Color.YellowGreen;
-                Application.DoEvents();
-            }
-
-
-            if (cbRxIcConfig.Checked)
-            {
-                ucRt145Config.bReadAll_Click(sender,e);
-                tbRxConfigReadState.BackColor = (Color)Color.YellowGreen;
-                Application.DoEvents();
-            }
-
-            //ucGn2108Config.bReadAll_Click(sender, e);
-            //ucGn2109Config.bReadAll_Click(sender, e);
-            */
-            btGlobalRead.Enabled = true;
+           
+            FirstRead = true;
+            _EnableButtons();
         }
 
-        private void bWriteAll_Click(object sender, EventArgs e)
+        private void _StoreGlobalWriteCommandtoFile()
         {
-            btGlobalWrite.Enabled = false;
+            SaveFileDialog sfdSelectFile = new SaveFileDialog();
+
+            sAcConfig = "//Write,DevAddr,RegAddr,Value\n" + "//Read,DevAddr,RegAddr,Value\n" +
+                "//Delay10mSec,Time\n";
+
+            ucInformation._bWrite_Click(null,null);
+            ucDigitalDiagnosticsMonitoring.bWrite_Click(null, null);
+            ucMemoryDump.bWrite_Click(null, null);
+
+            sfdSelectFile.Filter = "cfg files (*.cfg)|*.cfg";
+            if (sfdSelectFile.ShowDialog() != DialogResult.OK)
+                return;
+
+            System.IO.File.WriteAllText(sfdSelectFile.FileName, sAcConfig);
+        }
+
+        private void bGlobalWrite_Click(object sender, EventArgs e)
+        {
+            bool writeFail = false;
+
+            _DisableButtons();
             _InitialStateBar();
 
             if (cbInfomation.Checked)
             {
-                ucInformation._bWrite_Click(sender, e);
                 tbInformationReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+                
+                if (ucInformation.WriteApi() < 0)
+                    tbInformationReadState.BackColor = Color.Red;
+                else
+                    tbInformationReadState.BackColor = Color.YellowGreen;
+                
                 Application.DoEvents();
             }
 
             if (cbDdm.Checked)
             {
-                ucDigitalDiagnosticsMonitoring.bWrite_Click(sender, e);
                 tbDdmReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucDigitalDiagnosticsMonitoring.WriteApi() <0)
+                    tbDdmReadState.BackColor = Color.Red;
+                else
+                    tbDdmReadState.BackColor = Color.YellowGreen;
+                
                 Application.DoEvents();
             }
 
             if (cbMemDump.Checked)
             {
-                ucMemoryDump.bRead_Click(sender, e);
                 tbMemDumpReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucMemoryDump.WriteApi()< 0)
+                    tbMemDumpReadState.BackColor = Color.Red;
+                else
+                    tbMemDumpReadState.BackColor = Color.YellowGreen;
+
                 Application.DoEvents();
             }
 
             if (cbCorrector.Checked)
             {
-                if (ucGn1190Corrector.ReadAll() < 0)
+                tbCorrectorReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucGn1190Corrector.WriteAllApi() < 0)
                     tbCorrectorReadState.BackColor = Color.Red;
                 else
                     tbCorrectorReadState.BackColor = Color.YellowGreen;
@@ -594,9 +665,75 @@ namespace IntegratedGuiV2
                 Application.DoEvents();
             }
 
+            if (cbProductSelect.SelectedIndex != 0)
+            {
+                if (cbTxIcConfig.Checked)
+                {
+                    tbTxConfigReadState.BackColor = Color.SteelBlue;
+                    Application.DoEvents();
 
+                    switch (cbProductSelect.SelectedIndex)
+                    {
+                        case 1: // SAS4.0
+                            if (ucMald37045cConfig.WriteAllApi() < 0)
+                                writeFail = true;
 
-            btGlobalWrite.Enabled = true;
+                            break;
+                        case 2: // PCIe4
+                            if (ucRt146Config.WriteAllApi() <0)
+                                writeFail = true;
+
+                            break;
+                        case 3: // QSFP28
+                            if (ucGn2108Config.WriteAllApi() < 0)
+                                writeFail = true;
+
+                            break;
+                    }
+
+                    if (writeFail)
+                        tbTxConfigReadState.BackColor = Color.Red;
+                    else
+                        tbTxConfigReadState.BackColor = Color.YellowGreen;
+
+                    Application.DoEvents();
+                    writeFail = false;
+                }
+
+                if (cbRxIcConfig.Checked)
+                {
+                    tbRxConfigReadState.BackColor = Color.SteelBlue;
+                    Application.DoEvents();
+
+                    switch (cbProductSelect.SelectedIndex)
+                    {
+                        case 1: // SAS4.0
+                            if (ucMata37044cConfig.WriteAllApi() < 0)
+                                writeFail = true;
+
+                            break;
+                        case 2: // PCIe4
+                            if (ucRt145Config.WriteAllApi() <0)
+                                writeFail = true;
+
+                            break;
+                        case 3: // QSFP28
+                            if (ucGn2109Config.WriteAllApi() <0)
+                                writeFail = true;
+
+                            break;
+                    }
+
+                    if (writeFail)
+                        tbRxConfigReadState.BackColor = Color.Red;
+                    else
+                        tbRxConfigReadState.BackColor = Color.YellowGreen;
+
+                    Application.DoEvents();
+                }
+            }
+
+            _EnableButtons();
         }
 
         private void _InitialStateBar()
@@ -607,6 +744,39 @@ namespace IntegratedGuiV2
             tbCorrectorReadState.BackColor = Color.White;
             tbTxConfigReadState.BackColor = Color.White;
             tbRxConfigReadState.BackColor = Color.White;
+        }
+
+        private void _DisableButtons()
+        {
+            bGlobalRead.Enabled = false;
+            bInnerSwitch.Enabled = false;
+            bOutterSwitch.Enabled = false;
+            bGlobalWrite.Enabled = false;
+            bStoreIntoFlash.Enabled = false;
+            tcDdmi.Enabled = false;
+            tcIcConfig.Enabled = false;
+            ucGn1190Corrector.DisableButtonApi();
+        }
+
+        private void _EnableButtons()
+        {
+            bGlobalRead.Enabled = true;
+            bInnerSwitch.Enabled = true;
+            bOutterSwitch.Enabled = true;
+            tcDdmi.Enabled = true;
+            tcIcConfig.Enabled = true;
+            ucGn1190Corrector.EnableButtonApi();
+
+            if (FirstRead)
+            {
+                bGlobalWrite.Enabled = true;
+                bStoreIntoFlash.Enabled = true;
+            }
+            else
+            {
+                bGlobalWrite.Enabled = false;
+                bStoreIntoFlash.Enabled = false;
+            }
         }
 
         private void _GenerateXmlSettings()
@@ -743,99 +913,6 @@ namespace IntegratedGuiV2
                 return string.Compare(x.Name, y.Name, StringComparison.Ordinal); // 依components name進行排序
             }
         }
-
-        /*
-        private void _GenerateXmlSettings()
-        {
-            XmlDocument xmlDoc = new XmlDocument();
-            
-            XmlElement root = xmlDoc.CreateElement("Settings"); // XML Root node
-            xmlDoc.AppendChild(root);
-            XmlElement permissionsNode = xmlDoc.CreateElement("Permissions"); // Permissions node
-            root.AppendChild(permissionsNode);
-
-            string[] roles = { "Admin", "Engineer", "Operator" }; //Permission conditions
-
-            foreach (string role in roles)
-            {
-                XmlElement permissionNode = xmlDoc.CreateElement("Permission");
-                permissionNode.SetAttribute("role", role);
-                permissionsNode.AppendChild(permissionNode);
-
-                List<UserControl> userControls = _GetAllUserControls(this); // Get all user control from MainForm
-
-                foreach (UserControl userControl in userControls)
-                {
-                    XmlElement userControlNode = xmlDoc.CreateElement("UserControl");
-                    userControlNode.SetAttribute("name", userControl.Name);
-                    permissionNode.AppendChild(userControlNode);
-
-                    // Go through all the components in the User Control and create nodes for each
-                    List<Control> userControlComponents = _GetAllControls(userControl); 
-                    XmlElement componentsNode = xmlDoc.CreateElement("Components");
-
-                    foreach (Control control in userControlComponents)
-                    {
-                        XmlElement componentNode = xmlDoc.CreateElement("Component");
-                        componentNode.SetAttribute("name", control.Name);
-                        componentNode.SetAttribute("object", control.GetType().Name); // 
-                        componentNode.SetAttribute("visible", "true"); // Default value
-                        componentNode.SetAttribute("enabled", control.Enabled.ToString()); // added "enabled" 屬性
-
-                        if (control is TextBox textBox)
-                        {
-                            componentNode.SetAttribute("ReadOnly", textBox.ReadOnly.ToString());
-                        }
-
-                        componentsNode.AppendChild(componentNode);
-                    }
-
-                    userControlNode.AppendChild(componentsNode);
-                }
-            }
-
-            xmlDoc.Save("Settings.xml"); // Save XML file
-        }
-
-        // Go through the MainForm and get all the UserControls.
-        private List<UserControl> _GetAllUserControls(Control control)
-        {
-            List<UserControl> userControls = new List<UserControl>();
-
-            foreach (Control childControl in control.Controls)
-            {
-                if (childControl is UserControl userControl)
-                {
-                    userControls.Add(userControl);
-                }
-
-                userControls.AddRange(_GetAllUserControls(childControl));
-            }
-
-            return userControls;
-        }
-
-        // Go through the UserControls and get all the components
-        private List<Control> _GetAllControls(Control control)
-        {
-            List<Control> controls = new List<Control>();
-
-            foreach (Control childControl in control.Controls)
-            {
-                controls.Add(childControl);
-
-                //  Get all the components from each UserControl
-                if (childControl is UserControl userControl)
-                {
-                    controls.AddRange(_GetAllControls(userControl));
-                }
-
-                controls.AddRange(_GetAllControls(childControl));
-            }
-
-            return controls;
-        }
-        */
 
         public int ConfigUiByXmlApi(String configXml)
         {
@@ -1006,37 +1083,24 @@ namespace IntegratedGuiV2
         private void bOutterSwitch_Click(object sender, EventArgs e)
         {
             if (bOutterSwitch.Enabled == true)
-            {
-                bOutterSwitch.Enabled = false;
-                bInnerSwitch.Enabled = false;
-            }
-                
+                _DisableButtons();
 
             _channelSwitch();
 
             if (bOutterSwitch.Enabled == false)
-            {
-                bOutterSwitch.Enabled = true;
-                bInnerSwitch.Enabled = true;
-            }
+                _EnableButtons();
                 
         }
 
         private void bInnerSwitch_Click(object sender, EventArgs e)
         {
             if (bInnerSwitch.Enabled == true)
-            {
-                bInnerSwitch.Enabled = false;
-                bOutterSwitch.Enabled = false;
-            }
+                _DisableButtons();
 
             _channelSwitch();
 
             if (bInnerSwitch.Enabled == false)
-            {
-                bInnerSwitch.Enabled = true;
-                bOutterSwitch.Enabled = true;
-            }
+                _EnableButtons();
         }
 
         private void _channelSwitch()
@@ -1164,12 +1228,12 @@ namespace IntegratedGuiV2
         {
             if (bFunctionTest.Enabled)
                 bFunctionTest.Enabled = false;
-            
+
             //InitializeComponentsVisibility();
             //_GenerateXmlSettings();
             //ConfigUiByXmlApi("settings.xml");
-
-
+            //_StoreGlobalWriteCommandtoFile();
+            ucDigitalDiagnosticsMonitoring.bStoreIntoFlash_Click(sender, e);
             bFunctionTest.Enabled = true;
         }
 
@@ -1195,8 +1259,14 @@ namespace IntegratedGuiV2
                 bScanComponents.Enabled = false;
 
             _GenerateXmlSettings();
-
             bScanComponents.Enabled = true;
+        }
+
+        private void bStoreIntoFlash_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            ucInformation.bStoreIntoFlash_Click(null, null);
+            _EnableButtons();
         }
     }
 
