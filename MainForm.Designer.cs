@@ -34,21 +34,30 @@ namespace IntegratedGuiV2
             this.components = new System.ComponentModel.Container();
             this.tcDdmi = new System.Windows.Forms.TabControl();
             this.tabPage11 = new System.Windows.Forms.TabPage();
+            this.ucInformation = new QsfpDigitalDiagnosticMonitoring.UcInformation();
             this.tabPage12 = new System.Windows.Forms.TabPage();
+            this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
             this.tabPage13 = new System.Windows.Forms.TabPage();
+            this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
             this.tcIcConfig = new System.Windows.Forms.TabControl();
             this.tabPage31 = new System.Windows.Forms.TabPage();
             this.tcSas40 = new System.Windows.Forms.TabControl();
             this.tabPage311 = new System.Windows.Forms.TabPage();
+            this.ucMald37045cConfig = new Mald37045cMata37044c.UcMald37045cConfig();
             this.tabPage312 = new System.Windows.Forms.TabPage();
+            this.ucMata37044cConfig = new Mald37045cMata37044c.UcMata37044cConfig();
             this.tabPage32 = new System.Windows.Forms.TabPage();
             this.tcPcie4 = new System.Windows.Forms.TabControl();
             this.tabPage321 = new System.Windows.Forms.TabPage();
+            this.ucRt146Config = new Rt145Rt146Config.UcRt146Config();
             this.tabPage322 = new System.Windows.Forms.TabPage();
+            this.ucRt145Config = new Rt145Rt146Config.UcRt145Config();
             this.tabPage33 = new System.Windows.Forms.TabPage();
             this.tcQsfp28 = new System.Windows.Forms.TabControl();
             this.tabPage331 = new System.Windows.Forms.TabPage();
+            this.ucGn2108Config = new Gn2108Gn2109Config.UcGn2108Config();
             this.tabPage332 = new System.Windows.Forms.TabPage();
+            this.ucGn2109Config = new Gn2108Gn2109Config.UcGn2109Config();
             this.tcMain = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tabPage2 = new System.Windows.Forms.TabPage();
@@ -64,6 +73,8 @@ namespace IntegratedGuiV2
             this.bInnerSwitch = new System.Windows.Forms.Button();
             this.ucNuvotonIcpTool = new NuvotonIcpTool.UcNuvotonIcpTool();
             this.tabPage5 = new System.Windows.Forms.TabPage();
+            this.gbWriteConfig = new System.Windows.Forms.GroupBox();
+            this.dgvWriteConfig = new System.Windows.Forms.DataGridView();
             this.kryptonPalette1 = new ComponentFactory.Krypton.Toolkit.KryptonPalette(this.components);
             this.cbConnected = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
             this.lPassword = new System.Windows.Forms.Label();
@@ -88,23 +99,18 @@ namespace IntegratedGuiV2
             this.cbMemDump = new System.Windows.Forms.CheckBox();
             this.cbDdm = new System.Windows.Forms.CheckBox();
             this.bGlobalWrite = new System.Windows.Forms.Button();
-            this.bFunctionTest = new System.Windows.Forms.Button();
+            this.bGlobalWrite2 = new System.Windows.Forms.Button();
             this.cbPermission = new System.Windows.Forms.ComboBox();
             this.tbPasswordB3 = new System.Windows.Forms.TextBox();
             this.tbPasswordB2 = new System.Windows.Forms.TextBox();
             this.tbPasswordB1 = new System.Windows.Forms.TextBox();
             this.tbPasswordB0 = new System.Windows.Forms.TextBox();
             this.bScanComponents = new System.Windows.Forms.Button();
-            this.ucMald37045cConfig = new Mald37045cMata37044c.UcMald37045cConfig();
-            this.ucMata37044cConfig = new Mald37045cMata37044c.UcMata37044cConfig();
-            this.ucInformation = new QsfpDigitalDiagnosticMonitoring.UcInformation();
-            this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
-            this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
-            this.ucRt146Config = new Rt145Rt146Config.UcRt146Config();
-            this.ucRt145Config = new Rt145Rt146Config.UcRt145Config();
-            this.ucGn2108Config = new Gn2108Gn2109Config.UcGn2108Config();
-            this.ucGn2109Config = new Gn2108Gn2109Config.UcGn2109Config();
             this.bStoreIntoFlash = new System.Windows.Forms.Button();
+            this.bFunctionTest2 = new System.Windows.Forms.Button();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.bDumpToString = new System.Windows.Forms.Button();
+            this.bLoadString = new System.Windows.Forms.Button();
             this.tcDdmi.SuspendLayout();
             this.tabPage11.SuspendLayout();
             this.tabPage12.SuspendLayout();
@@ -127,6 +133,9 @@ namespace IntegratedGuiV2
             this.tabPage2.SuspendLayout();
             this.tabPage3.SuspendLayout();
             this.tabPage4.SuspendLayout();
+            this.tabPage5.SuspendLayout();
+            this.gbWriteConfig.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvWriteConfig)).BeginInit();
             this.gbChannelSwitcher.SuspendLayout();
             this.gbGlobalControl.SuspendLayout();
             this.SuspendLayout();
@@ -156,6 +165,14 @@ namespace IntegratedGuiV2
             this.tabPage11.Text = "Information";
             this.tabPage11.UseVisualStyleBackColor = true;
             // 
+            // ucInformation
+            // 
+            this.ucInformation.Location = new System.Drawing.Point(5, 5);
+            this.ucInformation.Margin = new System.Windows.Forms.Padding(4);
+            this.ucInformation.Name = "ucInformation";
+            this.ucInformation.Size = new System.Drawing.Size(960, 760);
+            this.ucInformation.TabIndex = 1;
+            // 
             // tabPage12
             // 
             this.tabPage12.Controls.Add(this.ucDigitalDiagnosticsMonitoring);
@@ -168,6 +185,14 @@ namespace IntegratedGuiV2
             this.tabPage12.Text = "DDM";
             this.tabPage12.UseVisualStyleBackColor = true;
             // 
+            // ucDigitalDiagnosticsMonitoring
+            // 
+            this.ucDigitalDiagnosticsMonitoring.Location = new System.Drawing.Point(5, 5);
+            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(4);
+            this.ucDigitalDiagnosticsMonitoring.Name = "ucDigitalDiagnosticsMonitoring";
+            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(960, 760);
+            this.ucDigitalDiagnosticsMonitoring.TabIndex = 1;
+            // 
             // tabPage13
             // 
             this.tabPage13.Controls.Add(this.ucMemoryDump);
@@ -179,6 +204,14 @@ namespace IntegratedGuiV2
             this.tabPage13.TabIndex = 2;
             this.tabPage13.Text = "MemDump";
             this.tabPage13.UseVisualStyleBackColor = true;
+            // 
+            // ucMemoryDump
+            // 
+            this.ucMemoryDump.Location = new System.Drawing.Point(5, 5);
+            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(4);
+            this.ucMemoryDump.Name = "ucMemoryDump";
+            this.ucMemoryDump.Size = new System.Drawing.Size(960, 760);
+            this.ucMemoryDump.TabIndex = 0;
             // 
             // tcIcConfig
             // 
@@ -227,6 +260,14 @@ namespace IntegratedGuiV2
             this.tabPage311.Text = "MALD37045C";
             this.tabPage311.UseVisualStyleBackColor = true;
             // 
+            // ucMald37045cConfig
+            // 
+            this.ucMald37045cConfig.Location = new System.Drawing.Point(5, 5);
+            this.ucMald37045cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucMald37045cConfig.Name = "ucMald37045cConfig";
+            this.ucMald37045cConfig.Size = new System.Drawing.Size(940, 740);
+            this.ucMald37045cConfig.TabIndex = 0;
+            // 
             // tabPage312
             // 
             this.tabPage312.Controls.Add(this.ucMata37044cConfig);
@@ -238,6 +279,14 @@ namespace IntegratedGuiV2
             this.tabPage312.TabIndex = 1;
             this.tabPage312.Text = "MATA37044C";
             this.tabPage312.UseVisualStyleBackColor = true;
+            // 
+            // ucMata37044cConfig
+            // 
+            this.ucMata37044cConfig.Location = new System.Drawing.Point(5, 5);
+            this.ucMata37044cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucMata37044cConfig.Name = "ucMata37044cConfig";
+            this.ucMata37044cConfig.Size = new System.Drawing.Size(940, 740);
+            this.ucMata37044cConfig.TabIndex = 0;
             // 
             // tabPage32
             // 
@@ -274,6 +323,15 @@ namespace IntegratedGuiV2
             this.tabPage321.Text = "RT146";
             this.tabPage321.UseVisualStyleBackColor = true;
             // 
+            // ucRt146Config
+            // 
+            this.ucRt146Config.BackColor = System.Drawing.Color.White;
+            this.ucRt146Config.Location = new System.Drawing.Point(5, 5);
+            this.ucRt146Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucRt146Config.Name = "ucRt146Config";
+            this.ucRt146Config.Size = new System.Drawing.Size(940, 740);
+            this.ucRt146Config.TabIndex = 0;
+            // 
             // tabPage322
             // 
             this.tabPage322.Controls.Add(this.ucRt145Config);
@@ -285,6 +343,15 @@ namespace IntegratedGuiV2
             this.tabPage322.TabIndex = 1;
             this.tabPage322.Text = "RT145";
             this.tabPage322.UseVisualStyleBackColor = true;
+            // 
+            // ucRt145Config
+            // 
+            this.ucRt145Config.BackColor = System.Drawing.Color.Transparent;
+            this.ucRt145Config.Location = new System.Drawing.Point(5, 5);
+            this.ucRt145Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.ucRt145Config.Name = "ucRt145Config";
+            this.ucRt145Config.Size = new System.Drawing.Size(940, 740);
+            this.ucRt145Config.TabIndex = 0;
             // 
             // tabPage33
             // 
@@ -319,6 +386,14 @@ namespace IntegratedGuiV2
             this.tabPage331.Text = "Gn2108";
             this.tabPage331.UseVisualStyleBackColor = true;
             // 
+            // ucGn2108Config
+            // 
+            this.ucGn2108Config.Location = new System.Drawing.Point(5, 5);
+            this.ucGn2108Config.Margin = new System.Windows.Forms.Padding(4);
+            this.ucGn2108Config.Name = "ucGn2108Config";
+            this.ucGn2108Config.Size = new System.Drawing.Size(940, 740);
+            this.ucGn2108Config.TabIndex = 0;
+            // 
             // tabPage332
             // 
             this.tabPage332.Controls.Add(this.ucGn2109Config);
@@ -330,6 +405,14 @@ namespace IntegratedGuiV2
             this.tabPage332.Text = "Gn2109";
             this.tabPage332.UseVisualStyleBackColor = true;
             // 
+            // ucGn2109Config
+            // 
+            this.ucGn2109Config.Location = new System.Drawing.Point(5, 5);
+            this.ucGn2109Config.Margin = new System.Windows.Forms.Padding(4);
+            this.ucGn2109Config.Name = "ucGn2109Config";
+            this.ucGn2109Config.Size = new System.Drawing.Size(940, 740);
+            this.ucGn2109Config.TabIndex = 0;
+            // 
             // tcMain
             // 
             this.tcMain.Controls.Add(this.tabPage1);
@@ -337,7 +420,7 @@ namespace IntegratedGuiV2
             this.tcMain.Controls.Add(this.tabPage3);
             this.tcMain.Controls.Add(this.tabPage4);
             this.tcMain.Controls.Add(this.tabPage5);
-            this.tcMain.Location = new System.Drawing.Point(3, 32);
+            this.tcMain.Location = new System.Drawing.Point(3, 28);
             this.tcMain.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tcMain.Name = "tcMain";
             this.tcMain.SelectedIndex = 0;
@@ -489,6 +572,7 @@ namespace IntegratedGuiV2
             // 
             // tabPage5
             // 
+            this.tabPage5.Controls.Add(this.gbWriteConfig);
             this.tabPage5.Location = new System.Drawing.Point(4, 22);
             this.tabPage5.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPage5.Name = "tabPage5";
@@ -497,6 +581,29 @@ namespace IntegratedGuiV2
             this.tabPage5.TabIndex = 4;
             this.tabPage5.Text = "...";
             this.tabPage5.UseVisualStyleBackColor = true;
+            // 
+            // gbWriteConfig
+            // 
+            this.gbWriteConfig.Controls.Add(this.dgvWriteConfig);
+            this.gbWriteConfig.Location = new System.Drawing.Point(24, 23);
+            this.gbWriteConfig.Name = "gbWriteConfig";
+            this.gbWriteConfig.Size = new System.Drawing.Size(349, 600);
+            this.gbWriteConfig.TabIndex = 88;
+            this.gbWriteConfig.TabStop = false;
+            this.gbWriteConfig.Text = "Write Config";
+            // 
+            // dgvWriteConfig
+            // 
+            this.dgvWriteConfig.AllowUserToResizeColumns = false;
+            this.dgvWriteConfig.AllowUserToResizeRows = false;
+            this.dgvWriteConfig.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.dgvWriteConfig.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvWriteConfig.Location = new System.Drawing.Point(6, 21);
+            this.dgvWriteConfig.Name = "dgvWriteConfig";
+            this.dgvWriteConfig.RowHeadersWidth = 51;
+            this.dgvWriteConfig.RowTemplate.Height = 24;
+            this.dgvWriteConfig.Size = new System.Drawing.Size(337, 573);
+            this.dgvWriteConfig.TabIndex = 0;
             // 
             // kryptonPalette1
             // 
@@ -728,11 +835,11 @@ namespace IntegratedGuiV2
             this.gbGlobalControl.Controls.Add(this.cbDdm);
             this.gbGlobalControl.Controls.Add(this.cbInfomation);
             this.gbGlobalControl.Font = new System.Drawing.Font("Times New Roman", 9F);
-            this.gbGlobalControl.Location = new System.Drawing.Point(1010, 175);
+            this.gbGlobalControl.Location = new System.Drawing.Point(1013, 168);
             this.gbGlobalControl.Margin = new System.Windows.Forms.Padding(2);
             this.gbGlobalControl.Name = "gbGlobalControl";
             this.gbGlobalControl.Padding = new System.Windows.Forms.Padding(2);
-            this.gbGlobalControl.Size = new System.Drawing.Size(106, 226);
+            this.gbGlobalControl.Size = new System.Drawing.Size(100, 226);
             this.gbGlobalControl.TabIndex = 1015;
             this.gbGlobalControl.TabStop = false;
             this.gbGlobalControl.Text = "Global control";
@@ -833,17 +940,17 @@ namespace IntegratedGuiV2
             this.bGlobalWrite.UseVisualStyleBackColor = true;
             this.bGlobalWrite.Click += new System.EventHandler(this.bGlobalWrite_Click);
             // 
-            // bFunctionTest
+            // bGlobalWrite2
             // 
-            this.bFunctionTest.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bFunctionTest.Location = new System.Drawing.Point(1025, 463);
-            this.bFunctionTest.Margin = new System.Windows.Forms.Padding(2);
-            this.bFunctionTest.Name = "bFunctionTest";
-            this.bFunctionTest.Size = new System.Drawing.Size(106, 28);
-            this.bFunctionTest.TabIndex = 1017;
-            this.bFunctionTest.Text = "FunctionTest";
-            this.bFunctionTest.UseVisualStyleBackColor = true;
-            this.bFunctionTest.Click += new System.EventHandler(this.bFunctionTest_Click);
+            this.bGlobalWrite2.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bGlobalWrite2.Location = new System.Drawing.Point(1013, 446);
+            this.bGlobalWrite2.Margin = new System.Windows.Forms.Padding(2);
+            this.bGlobalWrite2.Name = "bGlobalWrite2";
+            this.bGlobalWrite2.Size = new System.Drawing.Size(100, 28);
+            this.bGlobalWrite2.TabIndex = 1017;
+            this.bGlobalWrite2.Text = "GWrite2";
+            this.bGlobalWrite2.UseVisualStyleBackColor = true;
+            this.bGlobalWrite2.Click += new System.EventHandler(this.bGlobalWrite2_Click);
             // 
             // cbPermission
             // 
@@ -857,7 +964,7 @@ namespace IntegratedGuiV2
             "Admin",
             "Engineer",
             "Operator"});
-            this.cbPermission.Location = new System.Drawing.Point(1026, 503);
+            this.cbPermission.Location = new System.Drawing.Point(1010, 580);
             this.cbPermission.Name = "cbPermission";
             this.cbPermission.Size = new System.Drawing.Size(106, 23);
             this.cbPermission.TabIndex = 1019;
@@ -917,80 +1024,6 @@ namespace IntegratedGuiV2
             this.bScanComponents.UseVisualStyleBackColor = true;
             this.bScanComponents.Click += new System.EventHandler(this.bScanComponents_Click);
             // 
-            // ucMald37045cConfig
-            // 
-            this.ucMald37045cConfig.Location = new System.Drawing.Point(5, 5);
-            this.ucMald37045cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.ucMald37045cConfig.Name = "ucMald37045cConfig";
-            this.ucMald37045cConfig.Size = new System.Drawing.Size(940, 740);
-            this.ucMald37045cConfig.TabIndex = 0;
-            // 
-            // ucMata37044cConfig
-            // 
-            this.ucMata37044cConfig.Location = new System.Drawing.Point(5, 5);
-            this.ucMata37044cConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.ucMata37044cConfig.Name = "ucMata37044cConfig";
-            this.ucMata37044cConfig.Size = new System.Drawing.Size(940, 740);
-            this.ucMata37044cConfig.TabIndex = 0;
-            // 
-            // ucInformation
-            // 
-            this.ucInformation.Location = new System.Drawing.Point(5, 5);
-            this.ucInformation.Margin = new System.Windows.Forms.Padding(4);
-            this.ucInformation.Name = "ucInformation";
-            this.ucInformation.Size = new System.Drawing.Size(960, 760);
-            this.ucInformation.TabIndex = 1;
-            // 
-            // ucDigitalDiagnosticsMonitoring
-            // 
-            this.ucDigitalDiagnosticsMonitoring.Location = new System.Drawing.Point(5, 5);
-            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(4);
-            this.ucDigitalDiagnosticsMonitoring.Name = "ucDigitalDiagnosticsMonitoring";
-            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(960, 760);
-            this.ucDigitalDiagnosticsMonitoring.TabIndex = 1;
-            // 
-            // ucMemoryDump
-            // 
-            this.ucMemoryDump.Location = new System.Drawing.Point(5, 5);
-            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(4);
-            this.ucMemoryDump.Name = "ucMemoryDump";
-            this.ucMemoryDump.Size = new System.Drawing.Size(960, 760);
-            this.ucMemoryDump.TabIndex = 0;
-            // 
-            // ucRt146Config
-            // 
-            this.ucRt146Config.BackColor = System.Drawing.Color.White;
-            this.ucRt146Config.Location = new System.Drawing.Point(5, 5);
-            this.ucRt146Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.ucRt146Config.Name = "ucRt146Config";
-            this.ucRt146Config.Size = new System.Drawing.Size(940, 740);
-            this.ucRt146Config.TabIndex = 0;
-            // 
-            // ucRt145Config
-            // 
-            this.ucRt145Config.BackColor = System.Drawing.Color.Transparent;
-            this.ucRt145Config.Location = new System.Drawing.Point(5, 5);
-            this.ucRt145Config.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.ucRt145Config.Name = "ucRt145Config";
-            this.ucRt145Config.Size = new System.Drawing.Size(940, 740);
-            this.ucRt145Config.TabIndex = 0;
-            // 
-            // ucGn2108Config
-            // 
-            this.ucGn2108Config.Location = new System.Drawing.Point(5, 5);
-            this.ucGn2108Config.Margin = new System.Windows.Forms.Padding(4);
-            this.ucGn2108Config.Name = "ucGn2108Config";
-            this.ucGn2108Config.Size = new System.Drawing.Size(940, 740);
-            this.ucGn2108Config.TabIndex = 0;
-            // 
-            // ucGn2109Config
-            // 
-            this.ucGn2109Config.Location = new System.Drawing.Point(5, 5);
-            this.ucGn2109Config.Margin = new System.Windows.Forms.Padding(4);
-            this.ucGn2109Config.Name = "ucGn2109Config";
-            this.ucGn2109Config.Size = new System.Drawing.Size(940, 740);
-            this.ucGn2109Config.TabIndex = 0;
-            // 
             // bStoreIntoFlash
             // 
             this.bStoreIntoFlash.Enabled = false;
@@ -1004,16 +1037,63 @@ namespace IntegratedGuiV2
             this.bStoreIntoFlash.UseVisualStyleBackColor = true;
             this.bStoreIntoFlash.Click += new System.EventHandler(this.bStoreIntoFlash_Click);
             // 
+            // bFunctionTest2
+            // 
+            this.bFunctionTest2.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bFunctionTest2.Location = new System.Drawing.Point(1010, 605);
+            this.bFunctionTest2.Margin = new System.Windows.Forms.Padding(2);
+            this.bFunctionTest2.Name = "bFunctionTest2";
+            this.bFunctionTest2.Size = new System.Drawing.Size(109, 28);
+            this.bFunctionTest2.TabIndex = 1027;
+            this.bFunctionTest2.Text = "ReData table";
+            this.bFunctionTest2.UseVisualStyleBackColor = true;
+            this.bFunctionTest2.Click += new System.EventHandler(this.bReNew_Click);
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(1014, 475);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(100, 4);
+            this.progressBar1.TabIndex = 1028;
+            // 
+            // bDumpToString
+            // 
+            this.bDumpToString.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bDumpToString.Location = new System.Drawing.Point(1013, 414);
+            this.bDumpToString.Margin = new System.Windows.Forms.Padding(2);
+            this.bDumpToString.Name = "bDumpToString";
+            this.bDumpToString.Size = new System.Drawing.Size(100, 28);
+            this.bDumpToString.TabIndex = 1029;
+            this.bDumpToString.Text = "SaveTo Cfg";
+            this.bDumpToString.UseVisualStyleBackColor = true;
+            this.bDumpToString.Click += new System.EventHandler(this.bSaveToCfg_Click);
+            // 
+            // bLoadString
+            // 
+            this.bLoadString.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bLoadString.Location = new System.Drawing.Point(1014, 484);
+            this.bLoadString.Margin = new System.Windows.Forms.Padding(2);
+            this.bLoadString.Name = "bLoadString";
+            this.bLoadString.Size = new System.Drawing.Size(100, 28);
+            this.bLoadString.TabIndex = 1030;
+            this.bLoadString.Text = "Load string";
+            this.bLoadString.UseVisualStyleBackColor = true;
+            this.bLoadString.Click += new System.EventHandler(this.bLoadString_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
             this.ClientSize = new System.Drawing.Size(1184, 849);
+            this.Controls.Add(this.bLoadString);
+            this.Controls.Add(this.bDumpToString);
+            this.Controls.Add(this.progressBar1);
+            this.Controls.Add(this.bFunctionTest2);
             this.Controls.Add(this.bStoreIntoFlash);
             this.Controls.Add(this.bScanComponents);
             this.Controls.Add(this.cbPermission);
-            this.Controls.Add(this.bFunctionTest);
+            this.Controls.Add(this.bGlobalWrite2);
             this.Controls.Add(this.bGlobalWrite);
             this.Controls.Add(this.gbGlobalControl);
             this.Controls.Add(this.gbChannelSwitcher);
@@ -1057,6 +1137,9 @@ namespace IntegratedGuiV2
             this.tabPage3.ResumeLayout(false);
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
+            this.tabPage5.ResumeLayout(false);
+            this.gbWriteConfig.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dgvWriteConfig)).EndInit();
             this.gbChannelSwitcher.ResumeLayout(false);
             this.gbChannelSwitcher.PerformLayout();
             this.gbGlobalControl.ResumeLayout(false);
@@ -1125,7 +1208,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Button bOutterSwitch;
         private System.Windows.Forms.Button bInnerSwitch;
         private System.Windows.Forms.Button bGlobalWrite;
-        private System.Windows.Forms.Button bFunctionTest;
+        private System.Windows.Forms.Button bGlobalWrite2;
         private System.Windows.Forms.RadioButton rbCh1;
         private System.Windows.Forms.RadioButton rbCh2;
         private System.Windows.Forms.ComboBox cbProductSelect;
@@ -1141,6 +1224,12 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.TextBox tbPasswordB0;
         private System.Windows.Forms.Button bScanComponents;
         private System.Windows.Forms.Button bStoreIntoFlash;
+        private System.Windows.Forms.GroupBox gbWriteConfig;
+        private System.Windows.Forms.DataGridView dgvWriteConfig;
+        private System.Windows.Forms.Button bFunctionTest2;
+        private System.Windows.Forms.ProgressBar progressBar1;
+        private System.Windows.Forms.Button bDumpToString;
+        private System.Windows.Forms.Button bLoadString;
     }
 }
 
