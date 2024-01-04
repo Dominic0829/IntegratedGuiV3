@@ -28,7 +28,7 @@ namespace IntegratedGuiV2
        
         private I2cMaster i2cMaster = new I2cMaster();
         private AdapterSelector adapterSelector = new AdapterSelector();
-        private ExfoIqs1600Scpi powerMeter = new ExfoIqs1600Scpi();
+        //private ExfoIqs1600Scpi powerMeter = new ExfoIqs1600Scpi();
         private DataTable dtWriteConfig = new DataTable();
 
         private int iHandler = -1;
@@ -476,9 +476,6 @@ namespace IntegratedGuiV2
 
             dgvWriteConfig.DataSource = dtWriteConfig;
 
-            _ReadConfigFileAndPopulateDataTable();
-
-
 
             if (ucInformation.SetI2cReadCBApi(_I2cRead2) < 0)
             {
@@ -645,7 +642,6 @@ namespace IntegratedGuiV2
                 currentRow++;
                 double progressPercentage = (double)currentRow / rowCount * 100;
 
-                // 更新 progressBar1 進度條
                 progressBar1.Value = (int)progressPercentage;
 
                 switch (row["Command"].ToString())
@@ -749,27 +745,6 @@ namespace IntegratedGuiV2
             {
                 bGlobalWrite.Enabled = false;
                 bStoreIntoFlash.Enabled = false;
-            }
-        }
-
-        private void _ReadConfigFileAndPopulateDataTable()
-        {
-            dtWriteConfig.Clear();
-
-            try
-            {
-                string[] lines = File.ReadAllLines(fileName);
-
-                for (int i = 2; i < lines.Length; i++)
-                {
-                    string[] values = lines[i].Split(',');
-                    dtWriteConfig.Rows.Add(values);
-                    dgvWriteConfig.Refresh();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Error reading the config file: " + ex.Message);
             }
         }
 
@@ -1486,6 +1461,13 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
+        private void bStoreIntoFlash_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            ucInformation.bStoreIntoFlash_Click(null, null);
+            _EnableButtons();
+        }
+
         private void bSaveToCfg_Click(object sender, EventArgs e)
         {
             _DisableButtons();
@@ -1498,8 +1480,6 @@ namespace IntegratedGuiV2
             bGlobalWrite_Click(sender, e);
             writeToFile = false;
 
-            _ReadConfigFileAndPopulateDataTable();
-
             _EnableButtons();
         }
 
@@ -1507,10 +1487,17 @@ namespace IntegratedGuiV2
         {
             _DisableButtons();
 
-            _ReadConfigFileAndPopulateDataTable();
 
             if (_SetWriteConfig() < 0)
                 MessageBox.Show("Something went wrong, please check detail");
+            _EnableButtons();
+        }
+
+        private void bLoadString_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+
+
             _EnableButtons();
         }
 
@@ -1521,9 +1508,19 @@ namespace IntegratedGuiV2
             dtWriteConfig.Clear();
             
             dgvWriteConfig.DataSource = dtWriteConfig;
-            _ReadConfigFileAndPopulateDataTable();
 
             _EnableButtons();
+        }
+
+
+
+        private void bScanComponents_Click(object sender, EventArgs e)
+        {
+            if (bScanComponents.Enabled)
+                bScanComponents.Enabled = false;
+
+            _GenerateXmlSettings();
+            bScanComponents.Enabled = true;
         }
 
         private void cbProductSelect_SelectedIndexChanged(object sender, EventArgs e)
@@ -1542,28 +1539,11 @@ namespace IntegratedGuiV2
             ConfigUiByXmlApi("settings.xml");
         }
 
-        private void bScanComponents_Click(object sender, EventArgs e)
-        {
-            if (bScanComponents.Enabled)
-                bScanComponents.Enabled = false;
+       
 
-            _GenerateXmlSettings();
-            bScanComponents.Enabled = true;
-        }
+       
 
-        private void bStoreIntoFlash_Click(object sender, EventArgs e)
-        {
-            _DisableButtons();
-            ucInformation.bStoreIntoFlash_Click(null, null);
-            _EnableButtons();
-        }
-
-        private void bLoadString_Click(object sender, EventArgs e)
-        {
-            _DisableButtons();
-            _ReadConfigFileAndPopulateDataTable();
-            _EnableButtons();
-        }
+     
     }
 
     public class ComboBoxItem

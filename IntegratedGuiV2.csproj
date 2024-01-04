@@ -108,12 +108,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccountsManagement.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AccountsManagement.Designer.cs">
+      <DependentUpon>AccountsManagement.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AdminAuthentication.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AdminAuthentication.Designer.cs">
+      <DependentUpon>AdminAuthentication.cs</DependentUpon>
+    </Compile>
     <Compile Include="ComponentVisibility.cs" />
+    <Compile Include="LoadingForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LoadingForm.Designer.cs">
+      <DependentUpon>LoadingForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="LoginForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="LoginForm.Designer.cs">
       <DependentUpon>LoginForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="LoginForm1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="LoginForm1.Designer.cs">
+      <DependentUpon>LoginForm1.cs</DependentUpon>
     </Compile>
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -125,8 +149,21 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RolePermission.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="WaitFormFunc.cs" />
+    <EmbeddedResource Include="AccountsManagement.resx">
+      <DependentUpon>AccountsManagement.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AdminAuthentication.resx">
+      <DependentUpon>AdminAuthentication.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LoadingForm.resx">
+      <DependentUpon>LoadingForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="LoginForm.resx">
       <DependentUpon>LoginForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="LoginForm1.resx">
+      <DependentUpon>LoginForm1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
