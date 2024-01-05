@@ -92,7 +92,6 @@ namespace IntegratedGuiV2
             this.tbRxConfigReadState = new System.Windows.Forms.TextBox();
             this.cbInfomation = new System.Windows.Forms.CheckBox();
             this.gbGlobalControl = new System.Windows.Forms.GroupBox();
-            this.cbProductSelect = new System.Windows.Forms.ComboBox();
             this.cbRxIcConfig = new System.Windows.Forms.CheckBox();
             this.cbTxIcConfig = new System.Windows.Forms.CheckBox();
             this.cbCorrector = new System.Windows.Forms.CheckBox();
@@ -100,7 +99,6 @@ namespace IntegratedGuiV2
             this.cbDdm = new System.Windows.Forms.CheckBox();
             this.bGlobalWrite = new System.Windows.Forms.Button();
             this.bGlobalWrite2 = new System.Windows.Forms.Button();
-            this.cbPermission = new System.Windows.Forms.ComboBox();
             this.tbPasswordB3 = new System.Windows.Forms.TextBox();
             this.tbPasswordB2 = new System.Windows.Forms.TextBox();
             this.tbPasswordB1 = new System.Windows.Forms.TextBox();
@@ -110,7 +108,10 @@ namespace IntegratedGuiV2
             this.bFunctionTest2 = new System.Windows.Forms.Button();
             this.progressBar1 = new System.Windows.Forms.ProgressBar();
             this.bDumpToString = new System.Windows.Forms.Button();
-            this.bLoadString = new System.Windows.Forms.Button();
+            this.gbPermissions = new System.Windows.Forms.GroupBox();
+            this.cbPermission = new System.Windows.Forms.ComboBox();
+            this.gbProduct = new System.Windows.Forms.GroupBox();
+            this.cbProductSelect = new System.Windows.Forms.ComboBox();
             this.tcDdmi.SuspendLayout();
             this.tabPage11.SuspendLayout();
             this.tabPage12.SuspendLayout();
@@ -138,6 +139,8 @@ namespace IntegratedGuiV2
             ((System.ComponentModel.ISupportInitialize)(this.dgvWriteConfig)).BeginInit();
             this.gbChannelSwitcher.SuspendLayout();
             this.gbGlobalControl.SuspendLayout();
+            this.gbPermissions.SuspendLayout();
+            this.gbProduct.SuspendLayout();
             this.SuspendLayout();
             // 
             // tcDdmi
@@ -632,7 +635,7 @@ namespace IntegratedGuiV2
             | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
             this.kryptonPalette1.FormStyles.FormMain.StateCommon.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.None;
             this.kryptonPalette1.FormStyles.FormMain.StateCommon.Border.Rounding = 15;
-            this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
+            this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
             this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.ButtonEdgeInset = 10;
             this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Content.Padding = new System.Windows.Forms.Padding(10, -1, -1, -1);
             // 
@@ -787,7 +790,7 @@ namespace IntegratedGuiV2
             // 
             this.tbTxConfigReadState.Enabled = false;
             this.tbTxConfigReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
-            this.tbTxConfigReadState.Location = new System.Drawing.Point(20, 177);
+            this.tbTxConfigReadState.Location = new System.Drawing.Point(20, 142);
             this.tbTxConfigReadState.Margin = new System.Windows.Forms.Padding(2);
             this.tbTxConfigReadState.Name = "tbTxConfigReadState";
             this.tbTxConfigReadState.ShortcutsEnabled = false;
@@ -798,7 +801,7 @@ namespace IntegratedGuiV2
             // 
             this.tbRxConfigReadState.Enabled = false;
             this.tbRxConfigReadState.Font = new System.Drawing.Font("PMingLiU", 0.1F);
-            this.tbRxConfigReadState.Location = new System.Drawing.Point(20, 204);
+            this.tbRxConfigReadState.Location = new System.Drawing.Point(20, 169);
             this.tbRxConfigReadState.Margin = new System.Windows.Forms.Padding(2);
             this.tbRxConfigReadState.Name = "tbRxConfigReadState";
             this.tbRxConfigReadState.ShortcutsEnabled = false;
@@ -821,7 +824,6 @@ namespace IntegratedGuiV2
             // 
             // gbGlobalControl
             // 
-            this.gbGlobalControl.Controls.Add(this.cbProductSelect);
             this.gbGlobalControl.Controls.Add(this.tbDdmReadState);
             this.gbGlobalControl.Controls.Add(this.tbInformationReadState);
             this.gbGlobalControl.Controls.Add(this.tbMemDumpReadState);
@@ -839,32 +841,17 @@ namespace IntegratedGuiV2
             this.gbGlobalControl.Margin = new System.Windows.Forms.Padding(2);
             this.gbGlobalControl.Name = "gbGlobalControl";
             this.gbGlobalControl.Padding = new System.Windows.Forms.Padding(2);
-            this.gbGlobalControl.Size = new System.Drawing.Size(100, 226);
+            this.gbGlobalControl.Size = new System.Drawing.Size(100, 185);
             this.gbGlobalControl.TabIndex = 1015;
             this.gbGlobalControl.TabStop = false;
             this.gbGlobalControl.Text = "Global control";
-            // 
-            // cbProductSelect
-            // 
-            this.cbProductSelect.FormattingEnabled = true;
-            this.cbProductSelect.Items.AddRange(new object[] {
-            "Products",
-            "SAS4.0",
-            "PCIe4.0",
-            "QSFP28"});
-            this.cbProductSelect.Location = new System.Drawing.Point(5, 136);
-            this.cbProductSelect.Name = "cbProductSelect";
-            this.cbProductSelect.Size = new System.Drawing.Size(82, 23);
-            this.cbProductSelect.TabIndex = 4;
-            this.cbProductSelect.Text = "Product Sel...";
-            this.cbProductSelect.SelectedIndexChanged += new System.EventHandler(this.cbProductSelect_SelectedIndexChanged);
             // 
             // cbRxIcConfig
             // 
             this.cbRxIcConfig.AutoSize = true;
             this.cbRxIcConfig.BackColor = System.Drawing.Color.Transparent;
             this.cbRxIcConfig.Enabled = false;
-            this.cbRxIcConfig.Location = new System.Drawing.Point(4, 187);
+            this.cbRxIcConfig.Location = new System.Drawing.Point(4, 152);
             this.cbRxIcConfig.Margin = new System.Windows.Forms.Padding(2);
             this.cbRxIcConfig.Name = "cbRxIcConfig";
             this.cbRxIcConfig.Size = new System.Drawing.Size(80, 19);
@@ -877,7 +864,7 @@ namespace IntegratedGuiV2
             this.cbTxIcConfig.AutoSize = true;
             this.cbTxIcConfig.BackColor = System.Drawing.Color.Transparent;
             this.cbTxIcConfig.Enabled = false;
-            this.cbTxIcConfig.Location = new System.Drawing.Point(4, 161);
+            this.cbTxIcConfig.Location = new System.Drawing.Point(4, 126);
             this.cbTxIcConfig.Margin = new System.Windows.Forms.Padding(2);
             this.cbTxIcConfig.Name = "cbTxIcConfig";
             this.cbTxIcConfig.Size = new System.Drawing.Size(80, 19);
@@ -943,7 +930,7 @@ namespace IntegratedGuiV2
             // bGlobalWrite2
             // 
             this.bGlobalWrite2.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bGlobalWrite2.Location = new System.Drawing.Point(1013, 446);
+            this.bGlobalWrite2.Location = new System.Drawing.Point(1013, 507);
             this.bGlobalWrite2.Margin = new System.Windows.Forms.Padding(2);
             this.bGlobalWrite2.Name = "bGlobalWrite2";
             this.bGlobalWrite2.Size = new System.Drawing.Size(100, 28);
@@ -951,25 +938,6 @@ namespace IntegratedGuiV2
             this.bGlobalWrite2.Text = "GWrite2";
             this.bGlobalWrite2.UseVisualStyleBackColor = true;
             this.bGlobalWrite2.Click += new System.EventHandler(this.bGlobalWrite2_Click);
-            // 
-            // cbPermission
-            // 
-            this.cbPermission.AutoCompleteCustomSource.AddRange(new string[] {
-            "Admin",
-            "Engineer",
-            "Operator"});
-            this.cbPermission.Font = new System.Drawing.Font("Times New Roman", 9F);
-            this.cbPermission.FormattingEnabled = true;
-            this.cbPermission.Items.AddRange(new object[] {
-            "Admin",
-            "Engineer",
-            "Operator"});
-            this.cbPermission.Location = new System.Drawing.Point(1010, 580);
-            this.cbPermission.Name = "cbPermission";
-            this.cbPermission.Size = new System.Drawing.Size(106, 23);
-            this.cbPermission.TabIndex = 1019;
-            this.cbPermission.Text = "Permission Sel..";
-            this.cbPermission.SelectedIndexChanged += new System.EventHandler(this.cbPermission_SelectedIndexChanged);
             // 
             // tbPasswordB3
             // 
@@ -1051,7 +1019,7 @@ namespace IntegratedGuiV2
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(1014, 475);
+            this.progressBar1.Location = new System.Drawing.Point(1014, 536);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(100, 4);
             this.progressBar1.TabIndex = 1028;
@@ -1059,7 +1027,7 @@ namespace IntegratedGuiV2
             // bDumpToString
             // 
             this.bDumpToString.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bDumpToString.Location = new System.Drawing.Point(1013, 414);
+            this.bDumpToString.Location = new System.Drawing.Point(1013, 475);
             this.bDumpToString.Margin = new System.Windows.Forms.Padding(2);
             this.bDumpToString.Name = "bDumpToString";
             this.bDumpToString.Size = new System.Drawing.Size(100, 28);
@@ -1068,17 +1036,62 @@ namespace IntegratedGuiV2
             this.bDumpToString.UseVisualStyleBackColor = true;
             this.bDumpToString.Click += new System.EventHandler(this.bSaveToCfg_Click);
             // 
-            // bLoadString
+            // gbPermissions
             // 
-            this.bLoadString.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bLoadString.Location = new System.Drawing.Point(1014, 484);
-            this.bLoadString.Margin = new System.Windows.Forms.Padding(2);
-            this.bLoadString.Name = "bLoadString";
-            this.bLoadString.Size = new System.Drawing.Size(100, 28);
-            this.bLoadString.TabIndex = 1030;
-            this.bLoadString.Text = "Load string";
-            this.bLoadString.UseVisualStyleBackColor = true;
-            this.bLoadString.Click += new System.EventHandler(this.bLoadString_Click);
+            this.gbPermissions.Controls.Add(this.cbPermission);
+            this.gbPermissions.Font = new System.Drawing.Font("Times New Roman", 9F);
+            this.gbPermissions.Location = new System.Drawing.Point(1013, 409);
+            this.gbPermissions.Name = "gbPermissions";
+            this.gbPermissions.Size = new System.Drawing.Size(100, 45);
+            this.gbPermissions.TabIndex = 1031;
+            this.gbPermissions.TabStop = false;
+            this.gbPermissions.Text = "Permissions";
+            // 
+            // cbPermission
+            // 
+            this.cbPermission.AutoCompleteCustomSource.AddRange(new string[] {
+            "Admin",
+            "Engineer",
+            "Operator"});
+            this.cbPermission.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbPermission.FormattingEnabled = true;
+            this.cbPermission.Items.AddRange(new object[] {
+            "Operator",
+            "Engineer",
+            "Administrator"});
+            this.cbPermission.Location = new System.Drawing.Point(5, 20);
+            this.cbPermission.Name = "cbPermission";
+            this.cbPermission.Size = new System.Drawing.Size(90, 22);
+            this.cbPermission.TabIndex = 1020;
+            this.cbPermission.Text = "Permission Sel..";
+            this.cbPermission.SelectedIndexChanged += new System.EventHandler(this.cbPermission_SelectedIndexChanged);
+            // 
+            // gbProduct
+            // 
+            this.gbProduct.Controls.Add(this.cbProductSelect);
+            this.gbProduct.Font = new System.Drawing.Font("Times New Roman", 9F);
+            this.gbProduct.Location = new System.Drawing.Point(1013, 358);
+            this.gbProduct.Name = "gbProduct";
+            this.gbProduct.Size = new System.Drawing.Size(100, 45);
+            this.gbProduct.TabIndex = 1032;
+            this.gbProduct.TabStop = false;
+            this.gbProduct.Text = "Product";
+            // 
+            // cbProductSelect
+            // 
+            this.cbProductSelect.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbProductSelect.FormattingEnabled = true;
+            this.cbProductSelect.Items.AddRange(new object[] {
+            "Products",
+            "SAS4.0",
+            "PCIe4.0",
+            "QSFP28"});
+            this.cbProductSelect.Location = new System.Drawing.Point(5, 15);
+            this.cbProductSelect.Name = "cbProductSelect";
+            this.cbProductSelect.Size = new System.Drawing.Size(90, 22);
+            this.cbProductSelect.TabIndex = 5;
+            this.cbProductSelect.Text = "Product Sel...";
+            this.cbProductSelect.SelectedIndexChanged += new System.EventHandler(this.cbProductSelect_SelectedIndexChanged);
             // 
             // MainForm
             // 
@@ -1086,13 +1099,13 @@ namespace IntegratedGuiV2
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
             this.ClientSize = new System.Drawing.Size(1184, 849);
-            this.Controls.Add(this.bLoadString);
+            this.Controls.Add(this.gbProduct);
+            this.Controls.Add(this.gbPermissions);
             this.Controls.Add(this.bDumpToString);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.bFunctionTest2);
             this.Controls.Add(this.bStoreIntoFlash);
             this.Controls.Add(this.bScanComponents);
-            this.Controls.Add(this.cbPermission);
             this.Controls.Add(this.bGlobalWrite2);
             this.Controls.Add(this.bGlobalWrite);
             this.Controls.Add(this.gbGlobalControl);
@@ -1144,6 +1157,8 @@ namespace IntegratedGuiV2
             this.gbChannelSwitcher.PerformLayout();
             this.gbGlobalControl.ResumeLayout(false);
             this.gbGlobalControl.PerformLayout();
+            this.gbPermissions.ResumeLayout(false);
+            this.gbProduct.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1211,13 +1226,11 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Button bGlobalWrite2;
         private System.Windows.Forms.RadioButton rbCh1;
         private System.Windows.Forms.RadioButton rbCh2;
-        private System.Windows.Forms.ComboBox cbProductSelect;
         private System.Windows.Forms.Label lCh2;
         private System.Windows.Forms.Label lCh1;
         private System.Windows.Forms.Label lContinuousMode;
         private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbConnected;
         private ComponentFactory.Krypton.Toolkit.KryptonPalette kryptonPalette1;
-        private System.Windows.Forms.ComboBox cbPermission;
         private System.Windows.Forms.TextBox tbPasswordB3;
         private System.Windows.Forms.TextBox tbPasswordB2;
         private System.Windows.Forms.TextBox tbPasswordB1;
@@ -1229,7 +1242,10 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Button bFunctionTest2;
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button bDumpToString;
-        private System.Windows.Forms.Button bLoadString;
+        private System.Windows.Forms.GroupBox gbPermissions;
+        private System.Windows.Forms.ComboBox cbPermission;
+        private System.Windows.Forms.GroupBox gbProduct;
+        private System.Windows.Forms.ComboBox cbProductSelect;
     }
 }
 

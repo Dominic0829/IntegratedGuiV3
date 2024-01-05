@@ -40,6 +40,7 @@ namespace IntegratedGuiV2
         private bool AutoSelectIcConfig = false;
         private string sAcConfig;
         private bool writeToFile = false;
+        WaitFormFunc loadingForm = new WaitFormFunc();
 
         private string fileName = "3234.cfg";
         
@@ -466,6 +467,9 @@ namespace IntegratedGuiV2
             InitializeComponent();
             this.Size = new System.Drawing.Size(1170, 850);
             _InitialStateBar();
+            _EnableIcConfig();
+            _UpdateTabPageVisibility();
+            
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             cbProductSelect.SelectedIndex = 0;
 
@@ -622,6 +626,18 @@ namespace IntegratedGuiV2
 
         }
 
+        public void SetPermissions(string permissions)
+        {
+            cbPermission.SelectedItem = permissions;
+        }
+
+        public void SetProduct(string product)
+        {
+            cbProductSelect.SelectedItem = product;
+        }
+
+
+
         private int _SetWriteConfig()
         {
             byte[] data = new byte[1];
@@ -755,7 +771,7 @@ namespace IntegratedGuiV2
             xmlDoc.AppendChild(root);
             XmlElement permissionsNode = xmlDoc.CreateElement("Permissions");
             root.AppendChild(permissionsNode);
-            string[] roles = { "Admin", "Engineer", "Operator" };
+            string[] roles = { "Administrator", "Engineer", "Operator" };
 
             foreach (string role in roles)
             {
@@ -1493,14 +1509,6 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
-        private void bLoadString_Click(object sender, EventArgs e)
-        {
-            _DisableButtons();
-
-
-            _EnableButtons();
-        }
-
         private void bReNew_Click(object sender, EventArgs e)
         {
             _DisableButtons();
@@ -1538,12 +1546,7 @@ namespace IntegratedGuiV2
         {
             ConfigUiByXmlApi("settings.xml");
         }
-
-       
-
-       
-
-     
+      
     }
 
     public class ComboBoxItem

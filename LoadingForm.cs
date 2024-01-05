@@ -7,16 +7,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ComponentFactory.Krypton.Toolkit;
 
 namespace IntegratedGuiV2
 {
-    public partial class LoadingForm : Form
+    public partial class LoadingForm : KryptonForm
     {
         public LoadingForm()
         {
             InitializeComponent();
-            this.TransparencyKey = BackColor;
-            this.Opacity = 0.5;
+            //this.TransparencyKey = BackColor;
+            //this.Opacity = 0.5;
             this.StartPosition = FormStartPosition.CenterParent;
         }
 

@@ -8,10 +8,11 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.OleDb;
+using ComponentFactory.Krypton.Toolkit;
 
 namespace IntegratedGuiV2
 {
-    public partial class LoginForm1 : Form
+    public partial class LoginForm1 : KryptonForm
     {
 
         static string decryptionPassword = "c369";  // password for account management
@@ -23,6 +24,7 @@ namespace IntegratedGuiV2
         public LoginForm1()
         {
             InitializeComponent();
+            cbProducts.SelectedIndex = 2;
         }
 
         private void bLogin_Click(object sender, EventArgs e)
@@ -35,11 +37,18 @@ namespace IntegratedGuiV2
             dbCommand.Parameters.AddWithValue("@dbId", tbId.Text);
             dbCommand.Parameters.AddWithValue("@dbPassword", tbPassword.Text);
             OleDbDataReader dbReader = dbCommand.ExecuteReader();
+            MainForm mainForm = new MainForm();
+
 
 
             if (dbReader.Read())
             {
-                new MainForm().Show();
+                string permission = dbReader["dbPermissions"].ToString();
+
+                mainForm.SetPermissions(permission);
+                mainForm.SetProduct(cbProducts.SelectedItem.ToString());
+                mainForm.Show();
+
                 this.Hide();
                 loadingForm.Close();
             }
@@ -89,7 +98,7 @@ namespace IntegratedGuiV2
 
             AdminAuthentication adminAuthForm = new AdminAuthentication();
             adminAuthForm.FormClosed += (s, args) => {
-                this.Show(); // Re LoginForm1
+            this.Show();
             };
             adminAuthForm.ShowDialog();
         }

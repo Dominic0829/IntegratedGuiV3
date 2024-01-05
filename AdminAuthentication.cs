@@ -7,10 +7,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ComponentFactory.Krypton.Toolkit;
 
 namespace IntegratedGuiV2
 {
-    public partial class AdminAuthentication : Form
+    public partial class AdminAuthentication : KryptonForm
     {
         private const string AdminPassword = "543"; // 帳管密碼
         WaitFormFunc loadingForm = new WaitFormFunc();

@@ -10,17 +10,17 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using ComponentFactory.Krypton.Toolkit;
 
 namespace IntegratedGuiV2
 {
-    public partial class AccountsManagement : Form
+    public partial class AccountsManagement : KryptonForm
     {
         DataTable userDataTable = new DataTable();
         static string decryptionPassword = "c369";  // password for account management database
         OleDbConnection dbConnect = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=dbUsers.mdb;Jet OLEDB:Database Password={decryptionPassword}");
         OleDbCommand dbCommand = new OleDbCommand();
         OleDbDataAdapter dbAdapter = new OleDbDataAdapter();
-        WaitFormFunc loadingForm = new WaitFormFunc();
 
         public AccountsManagement()
         {
@@ -32,7 +32,6 @@ namespace IntegratedGuiV2
 
         private void LoadData()
         {
-            loadingForm.Show(this);
             userDataTable.Clear();
 
             dbConnect.Open();
@@ -41,7 +40,6 @@ namespace IntegratedGuiV2
             dbAdapter.Fill(userDataTable);
             dataGridView1.DataSource = userDataTable;
             dbConnect.Close();
-            loadingForm.Close();
         }
 
 
@@ -53,7 +51,7 @@ namespace IntegratedGuiV2
             }
             else if (tbPassword.Text != "")
             {
-                using (OleDbConnection con = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=dbUsers.mdb;Jet OLEDB:Database Password=c369"))
+                using (OleDbConnection con = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=dbUsers.mdb;Jet OLEDB:Database Password={decryptionPassword}"))
                 using (OleDbCommand cmd = new OleDbCommand())
 
                 {
@@ -88,7 +86,7 @@ namespace IntegratedGuiV2
 
         private bool IsIdExists(string id)
         {
-            using (OleDbConnection con = new OleDbConnection(@"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=dbUsers.mdb;Jet OLEDB:Database Password=c369"))
+            using (OleDbConnection con = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=dbUsers.mdb;Jet OLEDB:Database Password={decryptionPassword}"))
             using (OleDbCommand cmd = new OleDbCommand())
             {
                 cmd.Connection = con;
