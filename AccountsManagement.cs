@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using ComponentFactory.Krypton.Toolkit;
+using System.Threading;
 
 namespace IntegratedGuiV2
 {
@@ -28,6 +29,8 @@ namespace IntegratedGuiV2
             LoadData();
 
             cbPermissions.SelectedIndex = 0;
+            this.FormClosing += new FormClosingEventHandler(_AccountsManagement_FormClosing);
+
         }
 
         private void LoadData()
@@ -139,8 +142,8 @@ namespace IntegratedGuiV2
 
         private void lBackToLogin_Click(object sender, EventArgs e)
         {
-            new LoginForm1().Show();
-            this.Hide();
+            this.Close();
+            Application.Restart();
         }
 
         private void TbRegister_KeyDown(object sender, KeyEventArgs e)
@@ -155,6 +158,14 @@ namespace IntegratedGuiV2
         private void lExit_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private void _AccountsManagement_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                Application.Exit();
+            }
         }
     }
 }

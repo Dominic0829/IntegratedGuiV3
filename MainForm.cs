@@ -20,6 +20,7 @@ using System.Web.UI.Design;
 using System.Security.Policy;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace IntegratedGuiV2
 {
@@ -465,10 +466,11 @@ namespace IntegratedGuiV2
         public MainForm()
         {
             InitializeComponent();
+            this.FormClosing += new FormClosingEventHandler(_MainForm_FormClosing);
             this.Size = new System.Drawing.Size(1170, 850);
             _InitialStateBar();
-            _EnableIcConfig();
-            _UpdateTabPageVisibility();
+            //_EnableIcConfig();
+            //_UpdateTabPageVisibility();
             
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             cbProductSelect.SelectedIndex = 0;
@@ -637,12 +639,18 @@ namespace IntegratedGuiV2
         }
 
 
+        /*
+        private async Task<int> _SetWriteConfigAsync()
+        {
+            int result = await Task.Run(() => _SetWriteConfig());
 
-        private int _SetWriteConfig()
+            return result;
+        }
+
+        private async Task<int> _SetWriteConfig()
         {
             byte[] data = new byte[1];
             byte devAddr, regAddr;
-            int rowCount = dtWriteConfig.Rows.Count;
             int currentRow = 0;
 
             progressBar1.Value = 0;
@@ -653,43 +661,170 @@ namespace IntegratedGuiV2
                 return -1;
             }
 
-            foreach (DataRow row in dtWriteConfig.Rows)
+            int totalLines = File.ReadLines(fileName).Count();
+
+            using (StreamReader sr = new StreamReader(fileName))
             {
-                currentRow++;
-                double progressPercentage = (double)currentRow / rowCount * 100;
-
-                progressBar1.Value = (int)progressPercentage;
-
-                switch (row["Command"].ToString())
+                while (!sr.EndOfStream)
                 {
-                    case "Write":
-                        devAddr = byte.Parse(row["DevAddr"].ToString().Substring(2), System.Globalization.NumberStyles.HexNumber);
-                        regAddr = byte.Parse(row["RegAddr"].ToString().Substring(2), System.Globalization.NumberStyles.HexNumber);
-                        data[0] = byte.Parse(row["Value"].ToString().Substring(2), System.Globalization.NumberStyles.HexNumber);
-                        ucDigitalDiagnosticsMonitoring.i2cWriteCB(devAddr, regAddr, 1, data);
-                        break;
+                    //currentRow++;
+                    //double progressPercentage = (double)currentRow / totalLines * 100;
+                    //progressBar1.Value = (int)progressPercentage;
 
-                    case "Read":
-                        devAddr = byte.Parse(row["DevAddr"].ToString().Substring(2), System.Globalization.NumberStyles.HexNumber);
-                        regAddr = byte.Parse(row["RegAddr"].ToString().Substring(2), System.Globalization.NumberStyles.HexNumber);
-                        while (ucDigitalDiagnosticsMonitoring.i2cReadCB(devAddr, regAddr, 1, data) != 1)
+                    string line = await sr.ReadLineAsync();
+
+                    if (line.StartsWith("//") || line.Trim() == "")
+                        continue;
+
+                    string[] tokens = line.Split(',');
+
+                    if (tokens.Length < 4)
+                    {
+                        MessageBox.Show("Invalid line format: " + line);
+                        return -1;
+                    }
+
+                    if (tokens[1].Length >= 2)
+                    {
+                        string devAddrString = tokens[1].Substring(2);
+
+                        if (!byte.TryParse(devAddrString, System.Globalization.NumberStyles.HexNumber, null, out devAddr))
                         {
-                            MessageBox.Show("i2cReadCB() fail!!");
-                            Thread.Sleep(100);
-                        }
-                        if (data[0] != byte.Parse(row["Value"].ToString().Substring(2), System.Globalization.NumberStyles.HexNumber))
-                        {
-                            MessageBox.Show("DevAddr:0x" + devAddr.ToString("X2") + "RegAddr:0x" + regAddr.ToString("X2") +
-                                "Value:0x" + data[0].ToString("X2") + " != " + row["Value"].ToString());
+                            MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
                             return -1;
                         }
-                        break;
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
+                        return -1;
+                    }
 
-                    default:
-                        break;
+                    string command = tokens[0];
+                    devAddr = byte.Parse(tokens[1].Substring(2), System.Globalization.NumberStyles.HexNumber);
+                    regAddr = byte.Parse(tokens[2].Substring(2), System.Globalization.NumberStyles.HexNumber);
+                    data[0] = byte.Parse(tokens[3].Substring(2), System.Globalization.NumberStyles.HexNumber);
+
+                    switch (command)
+                    {
+                        case "Write":
+                            ucDigitalDiagnosticsMonitoring.i2cWriteCB(devAddr, regAddr, 1, data);
+                            break;
+
+                        case "Read":
+                            while (ucDigitalDiagnosticsMonitoring.i2cReadCB(devAddr, regAddr, 1, data) != 1)
+                            {
+                                MessageBox.Show("i2cReadCB() fail!!");
+                                await Task.Delay(100); // 非同步延遲
+                            }
+                            if (data[0] != byte.Parse(tokens[4].Substring(2), System.Globalization.NumberStyles.HexNumber))
+                            {
+                                MessageBox.Show("DevAddr:0x" + devAddr.ToString("X2") + "RegAddr:0x" + regAddr.ToString("X2") +
+                                    "Value:0x" + data[0].ToString("X2") + " != " + tokens[4]);
+                                return -1;
+                            }
+                            break;
+
+                        default:
+                            MessageBox.Show("Invalid command: " + command);
+                            return -1;
+                    }
+
+                    Application.DoEvents();
                 }
+            }
 
-                Application.DoEvents();
+            return 0;
+        }
+
+        */
+
+        private int _SetWriteConfig() // The function could work, but it's too slow
+        {
+            byte[] data = new byte[1];
+            byte devAddr, regAddr;
+            int currentRow = 0;
+
+            progressBar1.Value = 0;
+
+            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB == null)
+            {
+                MessageBox.Show("i2cWriteCB rv: " + ucDigitalDiagnosticsMonitoring.i2cWriteCB);
+                return -1;
+            }
+
+            int totalLines = File.ReadLines(fileName).Count();
+
+            using (StreamReader sr = new StreamReader(fileName))
+            {
+                while (!sr.EndOfStream)
+                {
+                    currentRow++;
+                    double progressPercentage = (double)currentRow / totalLines * 100;
+                    progressBar1.Value = (int)progressPercentage;
+
+                    string line = sr.ReadLine();
+
+                    if (line.StartsWith("//") || line.Trim() == "")
+                        continue;
+
+                    string[] tokens = line.Split(',');
+
+                    
+                    if (tokens.Length < 4)// 檢查 tokens 的數量
+                    {
+                        MessageBox.Show("Invalid line format: " + line);
+                        return -1;
+                    }
+
+                    if (tokens[1].Length >= 2)
+                    {
+                        string devAddrString = tokens[1].Substring(2);
+
+                        if (!byte.TryParse(devAddrString, System.Globalization.NumberStyles.HexNumber, null, out devAddr))
+                        {
+                            MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
+                            return -1;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
+                        return -1;
+                    }
+
+                    string command = tokens[0];
+                    devAddr = byte.Parse(tokens[1].Substring(2), System.Globalization.NumberStyles.HexNumber);
+                    regAddr = byte.Parse(tokens[2].Substring(2), System.Globalization.NumberStyles.HexNumber);
+                    data[0] = byte.Parse(tokens[3].Substring(2), System.Globalization.NumberStyles.HexNumber);
+
+                    switch (command)
+                    {
+                        case "Write":
+                            ucDigitalDiagnosticsMonitoring.i2cWriteCB(devAddr, regAddr, 1, data);
+                            break;
+
+                        case "Read":
+                            while (ucDigitalDiagnosticsMonitoring.i2cReadCB(devAddr, regAddr, 1, data) != 1)
+                            {
+                                MessageBox.Show("i2cReadCB() fail!!");
+                                Thread.Sleep(100);
+                            }
+                            if (data[0] != byte.Parse(tokens[4].Substring(2), System.Globalization.NumberStyles.HexNumber))
+                            {
+                                MessageBox.Show("DevAddr:0x" + devAddr.ToString("X2") + "RegAddr:0x" + regAddr.ToString("X2") +
+                                    "Value:0x" + data[0].ToString("X2") + " != " + tokens[4]);
+                                return -1;
+                            }
+                            break;
+
+                        default:
+                            MessageBox.Show("Invalid command: " + command);
+                            return -1;
+                    }
+
+                    Application.DoEvents();
+                }
             }
 
             return 0;
@@ -1136,9 +1271,9 @@ namespace IntegratedGuiV2
             if (cbProductSelect.SelectedIndex != 0)
             {
                 cbTxIcConfig.Enabled = true;
-                cbTxIcConfig.Checked = true;
+                cbTxIcConfig.Checked = false;
                 cbRxIcConfig.Enabled = true;
-                cbRxIcConfig.Checked = true;
+                cbRxIcConfig.Checked = false;
                 tbTxConfigReadState.Enabled = true;
                 tbRxConfigReadState.Enabled = true;
                 AutoSelectIcConfig = true;
@@ -1498,14 +1633,25 @@ namespace IntegratedGuiV2
 
             _EnableButtons();
         }
+        /*
+        private async void bGlobalWrite2_Click(object sender, EventArgs e)
+{
+            _DisableButtons();
+
+            if (await _SetWriteConfigAsync() < 0)
+                MessageBox.Show("Something went wrong, please check detail");
+
+            _EnableButtons();
+        }
+        */
 
         private void bGlobalWrite2_Click(object sender, EventArgs e)
         {
             _DisableButtons();
 
-
             if (_SetWriteConfig() < 0)
                 MessageBox.Show("Something went wrong, please check detail");
+            
             _EnableButtons();
         }
 
@@ -1546,7 +1692,15 @@ namespace IntegratedGuiV2
         {
             ConfigUiByXmlApi("settings.xml");
         }
-      
+
+        private void _MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                Application.Exit();
+            }
+        }
+
     }
 
     public class ComboBoxItem
@@ -1560,5 +1714,6 @@ namespace IntegratedGuiV2
 
     }
 
+   
 
 }

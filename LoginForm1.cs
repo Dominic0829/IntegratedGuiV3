@@ -19,13 +19,13 @@ namespace IntegratedGuiV2
         OleDbConnection dbConnect = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=dbUsers.mdb;Jet OLEDB:Database Password={decryptionPassword}");
         OleDbCommand dbCommand = new OleDbCommand();
         OleDbDataAdapter dbAdapter = new OleDbDataAdapter();
-        WaitFormFunc loadingForm = new WaitFormFunc();
 
         public LoginForm1()
         {
             InitializeComponent();
             cbProducts.SelectedIndex = 2;
         }
+        WaitFormFunc loadingForm = new WaitFormFunc();
 
         private void bLogin_Click(object sender, EventArgs e)
         {
@@ -44,13 +44,11 @@ namespace IntegratedGuiV2
             if (dbReader.Read())
             {
                 string permission = dbReader["dbPermissions"].ToString();
-
                 mainForm.SetPermissions(permission);
                 mainForm.SetProduct(cbProducts.SelectedItem.ToString());
                 mainForm.Show();
-
-                this.Hide();
                 loadingForm.Close();
+                this.Hide();
             }
             else
             {
@@ -94,12 +92,11 @@ namespace IntegratedGuiV2
 
         private void lCreateAccount_Click(object sender, EventArgs e)
         {
-            this.Hide();
-
             AdminAuthentication adminAuthForm = new AdminAuthentication();
             adminAuthForm.FormClosed += (s, args) => {
-            this.Show();
+                this.Show();
             };
+            this.Hide();
             adminAuthForm.ShowDialog();
         }
 

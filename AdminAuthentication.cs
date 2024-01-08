@@ -15,6 +15,8 @@ namespace IntegratedGuiV2
     {
         private const string AdminPassword = "543"; // 帳管密碼
         WaitFormFunc loadingForm = new WaitFormFunc();
+        AccountsManagement accountsManagement = new AccountsManagement();
+        LoginForm1 loginForm1 = new LoginForm1();
 
         public AdminAuthentication()
         {
@@ -28,9 +30,12 @@ namespace IntegratedGuiV2
 
             if (tbAdminPassword.Text == AdminPassword)
             {
-                new AccountsManagement().Show();
-                this.Hide();
+                accountsManagement.Show();
+                accountsManagement.BringToFront();
+
                 loadingForm.Close();
+                loginForm1.Close();
+                this.Hide();
             }
             else
             {
@@ -52,6 +57,7 @@ namespace IntegratedGuiV2
 
         private void lBackToLogin_Click(object sender, EventArgs e)
         {
+            new LoginForm1().Show();
             this.Close();
         }
        
