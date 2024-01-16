@@ -930,7 +930,7 @@ namespace IntegratedGuiV2
             // bGlobalWrite2
             // 
             this.bGlobalWrite2.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bGlobalWrite2.Location = new System.Drawing.Point(1013, 507);
+            this.bGlobalWrite2.Location = new System.Drawing.Point(1013, 516);
             this.bGlobalWrite2.Margin = new System.Windows.Forms.Padding(2);
             this.bGlobalWrite2.Name = "bGlobalWrite2";
             this.bGlobalWrite2.Size = new System.Drawing.Size(100, 28);
@@ -1019,7 +1019,7 @@ namespace IntegratedGuiV2
             // 
             // progressBar1
             // 
-            this.progressBar1.Location = new System.Drawing.Point(1014, 536);
+            this.progressBar1.Location = new System.Drawing.Point(1014, 545);
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(100, 4);
             this.progressBar1.TabIndex = 1028;
@@ -1027,12 +1027,12 @@ namespace IntegratedGuiV2
             // bDumpToString
             // 
             this.bDumpToString.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bDumpToString.Location = new System.Drawing.Point(1013, 475);
+            this.bDumpToString.Location = new System.Drawing.Point(1013, 456);
             this.bDumpToString.Margin = new System.Windows.Forms.Padding(2);
             this.bDumpToString.Name = "bDumpToString";
-            this.bDumpToString.Size = new System.Drawing.Size(100, 28);
+            this.bDumpToString.Size = new System.Drawing.Size(100, 56);
             this.bDumpToString.TabIndex = 1029;
-            this.bDumpToString.Text = "SaveTo Cfg";
+            this.bDumpToString.Text = "SaveToCfg for Write";
             this.bDumpToString.UseVisualStyleBackColor = true;
             this.bDumpToString.Click += new System.EventHandler(this.bSaveToCfg_Click);
             // 
@@ -1124,7 +1124,6 @@ namespace IntegratedGuiV2
             this.Palette = this.kryptonPalette1;
             this.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.Custom;
             this.ShowIcon = false;
-            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "AOC Integrated Firmware Master ";
             this.tcDdmi.ResumeLayout(false);
@@ -1212,12 +1211,12 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.TextBox tbRxConfigReadState;
         private System.Windows.Forms.TextBox tbInnerStateCh2;
         private System.Windows.Forms.TextBox tbInnerStateCh1;
-        private System.Windows.Forms.CheckBox cbInfomation;
+        public System.Windows.Forms.CheckBox cbInfomation;
         private System.Windows.Forms.CheckBox cbRxIcConfig;
         private System.Windows.Forms.CheckBox cbTxIcConfig;
-        private System.Windows.Forms.CheckBox cbCorrector;
-        private System.Windows.Forms.CheckBox cbMemDump;
-        private System.Windows.Forms.CheckBox cbDdm;
+        public System.Windows.Forms.CheckBox cbCorrector;
+        public System.Windows.Forms.CheckBox cbMemDump;
+        public System.Windows.Forms.CheckBox cbDdm;
         private System.Windows.Forms.CheckBox cbContinuousMode;
         private System.Windows.Forms.Button bGlobalRead;
         private System.Windows.Forms.Button bOutterSwitch;

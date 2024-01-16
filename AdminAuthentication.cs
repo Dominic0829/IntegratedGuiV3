@@ -16,7 +16,7 @@ namespace IntegratedGuiV2
         private const string AdminPassword = "543"; // 帳管密碼
         WaitFormFunc loadingForm = new WaitFormFunc();
         AccountsManagement accountsManagement = new AccountsManagement();
-        LoginForm1 loginForm1 = new LoginForm1();
+        LoginForm loginForm1 = new LoginForm();
 
         public AdminAuthentication()
         {
@@ -57,8 +57,7 @@ namespace IntegratedGuiV2
 
         private void lBackToLogin_Click(object sender, EventArgs e)
         {
-            new LoginForm1().Show();
-            this.Close();
+            Application.Restart();
         }
        
     }

@@ -48,8 +48,8 @@
             // 
             // kryptonPalette1
             // 
-            this.kryptonPalette1.FormStyles.FormMain.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(231)))), ((int)(((byte)(231)))));
-            this.kryptonPalette1.FormStyles.FormMain.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(231)))), ((int)(((byte)(231)))));
+            this.kryptonPalette1.FormStyles.FormMain.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(241)))), ((int)(((byte)(212)))));
+            this.kryptonPalette1.FormStyles.FormMain.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(241)))), ((int)(((byte)(212)))));
             this.kryptonPalette1.FormStyles.FormMain.StateCommon.Border.Color1 = System.Drawing.Color.DarkGray;
             this.kryptonPalette1.FormStyles.FormMain.StateCommon.Border.Color2 = System.Drawing.Color.DarkGray;
             this.kryptonPalette1.FormStyles.FormMain.StateCommon.Border.DrawBorders = ((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders)((((ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Top | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Bottom) 
@@ -57,14 +57,14 @@
             | ComponentFactory.Krypton.Toolkit.PaletteDrawBorders.Right)));
             this.kryptonPalette1.FormStyles.FormMain.StateCommon.Border.GraphicsHint = ComponentFactory.Krypton.Toolkit.PaletteGraphicsHint.None;
             this.kryptonPalette1.FormStyles.FormMain.StateCommon.Border.Rounding = 15;
-            this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
-            this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(231)))), ((int)(((byte)(231)))));
+            this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Back.Color1 = System.Drawing.Color.FromArgb(((int)(((byte)(124)))), ((int)(((byte)(132)))), ((int)(((byte)(92)))));
+            this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Back.Color2 = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(241)))), ((int)(((byte)(212)))));
             // 
             // bDelete
             // 
             this.bDelete.BackColor = System.Drawing.Color.White;
             this.bDelete.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bDelete.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
+            this.bDelete.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
             this.bDelete.Location = new System.Drawing.Point(516, 20);
             this.bDelete.Name = "bDelete";
             this.bDelete.Size = new System.Drawing.Size(67, 36);
@@ -80,7 +80,7 @@
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToResizeColumns = false;
             this.dataGridView1.AllowUserToResizeRows = false;
-            this.dataGridView1.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(209)))), ((int)(((byte)(209)))), ((int)(((byte)(209)))));
+            this.dataGridView1.BackgroundColor = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(241)))), ((int)(((byte)(202)))));
             this.dataGridView1.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleVertical;
             this.dataGridView1.ColumnHeadersBorderStyle = System.Windows.Forms.DataGridViewHeaderBorderStyle.Single;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -97,12 +97,13 @@
             this.lExit.AutoSize = true;
             this.lExit.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lExit.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lExit.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
+            this.lExit.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
             this.lExit.Location = new System.Drawing.Point(186, 367);
             this.lExit.Name = "lExit";
             this.lExit.Size = new System.Drawing.Size(33, 19);
             this.lExit.TabIndex = 57;
             this.lExit.Text = "Exit";
+            this.lExit.Visible = false;
             this.lExit.Click += new System.EventHandler(this.lExit_Click);
             // 
             // lBackToLogin
@@ -110,7 +111,7 @@
             this.lBackToLogin.AutoSize = true;
             this.lBackToLogin.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lBackToLogin.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lBackToLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
+            this.lBackToLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
             this.lBackToLogin.Location = new System.Drawing.Point(57, 367);
             this.lBackToLogin.Name = "lBackToLogin";
             this.lBackToLogin.Size = new System.Drawing.Size(106, 19);
@@ -122,7 +123,7 @@
             // 
             this.bClear.BackColor = System.Drawing.Color.White;
             this.bClear.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bClear.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
+            this.bClear.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
             this.bClear.Location = new System.Drawing.Point(17, 274);
             this.bClear.Name = "bClear";
             this.bClear.Size = new System.Drawing.Size(200, 36);
@@ -133,7 +134,7 @@
             // 
             // bRegister
             // 
-            this.bRegister.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(125)))), ((int)(((byte)(125)))), ((int)(((byte)(125)))));
+            this.bRegister.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
             this.bRegister.Cursor = System.Windows.Forms.Cursors.Hand;
             this.bRegister.FlatAppearance.BorderSize = 0;
             this.bRegister.ForeColor = System.Drawing.Color.White;
@@ -184,7 +185,7 @@
             // 
             this.lPassword.AutoSize = true;
             this.lPassword.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lPassword.ForeColor = System.Drawing.Color.Gray;
+            this.lPassword.ForeColor = System.Drawing.Color.DarkGray;
             this.lPassword.Location = new System.Drawing.Point(13, 103);
             this.lPassword.Name = "lPassword";
             this.lPassword.Size = new System.Drawing.Size(77, 19);
@@ -195,7 +196,7 @@
             // 
             this.lId.AutoSize = true;
             this.lId.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lId.ForeColor = System.Drawing.Color.Gray;
+            this.lId.ForeColor = System.Drawing.Color.DarkGray;
             this.lId.Location = new System.Drawing.Point(13, 46);
             this.lId.Name = "lId";
             this.lId.Size = new System.Drawing.Size(27, 19);
@@ -206,7 +207,7 @@
             // 
             this.lCreateAccount.AutoSize = true;
             this.lCreateAccount.Font = new System.Drawing.Font("Nirmala UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lCreateAccount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(90)))), ((int)(((byte)(90)))), ((int)(((byte)(90)))));
+            this.lCreateAccount.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(124)))), ((int)(((byte)(132)))), ((int)(((byte)(92)))));
             this.lCreateAccount.Location = new System.Drawing.Point(206, 0);
             this.lCreateAccount.Name = "lCreateAccount";
             this.lCreateAccount.Size = new System.Drawing.Size(189, 32);
@@ -217,7 +218,7 @@
             // 
             this.lPermissions.AutoSize = true;
             this.lPermissions.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lPermissions.ForeColor = System.Drawing.Color.Gray;
+            this.lPermissions.ForeColor = System.Drawing.Color.DarkGray;
             this.lPermissions.Location = new System.Drawing.Point(13, 160);
             this.lPermissions.Name = "lPermissions";
             this.lPermissions.Size = new System.Drawing.Size(91, 19);
@@ -228,7 +229,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(231)))), ((int)(((byte)(231)))), ((int)(((byte)(231)))));
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(241)))), ((int)(((byte)(212)))));
             this.ClientSize = new System.Drawing.Size(600, 400);
             this.Controls.Add(this.bDelete);
             this.Controls.Add(this.dataGridView1);

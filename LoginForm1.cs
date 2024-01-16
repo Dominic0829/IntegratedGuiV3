@@ -12,7 +12,7 @@ using ComponentFactory.Krypton.Toolkit;
 
 namespace IntegratedGuiV2
 {
-    public partial class LoginForm1 : KryptonForm
+    public partial class LoginForm : KryptonForm
     {
 
         static string decryptionPassword = "c369";  // password for account management
@@ -20,7 +20,7 @@ namespace IntegratedGuiV2
         OleDbCommand dbCommand = new OleDbCommand();
         OleDbDataAdapter dbAdapter = new OleDbDataAdapter();
 
-        public LoginForm1()
+        public LoginForm()
         {
             InitializeComponent();
             cbProducts.SelectedIndex = 2;
@@ -37,7 +37,7 @@ namespace IntegratedGuiV2
             dbCommand.Parameters.AddWithValue("@dbId", tbId.Text);
             dbCommand.Parameters.AddWithValue("@dbPassword", tbPassword.Text);
             OleDbDataReader dbReader = dbCommand.ExecuteReader();
-            MainForm mainForm = new MainForm();
+            MainForm mainForm = new MainForm(true);
 
 
 

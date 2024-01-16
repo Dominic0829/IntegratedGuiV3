@@ -1,6 +1,6 @@
 ﻿namespace IntegratedGuiV2
 {
-    partial class LoginForm1
+    partial class LoginForm
     {
         /// <summary>
         /// Required designer variable.
@@ -69,6 +69,7 @@
             this.lExit.Size = new System.Drawing.Size(33, 19);
             this.lExit.TabIndex = 43;
             this.lExit.Text = "Exit";
+            this.lExit.Visible = false;
             this.lExit.Click += new System.EventHandler(this.lExit_Click);
             // 
             // label2
@@ -209,7 +210,7 @@
             this.lProduct.TabIndex = 55;
             this.lProduct.Text = "Product:";
             // 
-            // LoginForm1
+            // LoginForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -231,9 +232,10 @@
             this.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(164)))), ((int)(((byte)(165)))), ((int)(((byte)(169)))));
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-            this.Name = "LoginForm1";
+            this.Name = "LoginForm";
             this.Palette = this.kryptonPalette1;
             this.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.Custom;
+            this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.ResumeLayout(false);
             this.PerformLayout();

@@ -1,6 +1,6 @@
 ﻿namespace IntegratedGuiV2
 {
-    partial class LoginForm
+    partial class LoginForm99
     {
         /// <summary>
         /// Required designer variable.

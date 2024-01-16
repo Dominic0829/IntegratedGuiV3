@@ -142,7 +142,6 @@ namespace IntegratedGuiV2
 
         private void lBackToLogin_Click(object sender, EventArgs e)
         {
-            this.Close();
             Application.Restart();
         }
 

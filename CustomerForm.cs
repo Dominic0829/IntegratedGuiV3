@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace IntegratedGuiV2
 {
-    public partial class LoginForm : Form
+    public partial class CustomerForm : Form
     {
-        public LoginForm()
+        public CustomerForm()
         {
             InitializeComponent();
         }
