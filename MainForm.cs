@@ -52,10 +52,16 @@ namespace IntegratedGuiV2
 
         // 定義事件，通知各功能的讀取狀態
         public event EventHandler<string> ReadStateUpdated;
+        public event EventHandler<int> ProgressValue;
 
-        protected virtual void OnReadStateUpdated(string message)
+        protected virtual void StateUpdated(string message)
         {
             ReadStateUpdated?.Invoke(this, message);
+        }
+
+        protected virtual void ProgressUpdated(int value)
+        {
+            ProgressValue?.Invoke(this, value);
         }
 
         private int _AppendWriteToFile(string sAction)
@@ -1372,9 +1378,13 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
-        public void _GlobalRead()
+        public int _GlobalRead()
         {
             bool readFail = false;
+            int errorCount = 0;
+
+            ProgressUpdated(0);
+            StateUpdated("ReadState:\nStart...");
 
             if (cbInfomation.Checked)
             {
@@ -1384,12 +1394,14 @@ namespace IntegratedGuiV2
                 if (ucInformation.ReadAllApi() < 0)
                 {
                     tbInformationReadState.BackColor = Color.Red;
-                    OnReadStateUpdated("ReadState:Information...Failed");
+                    StateUpdated("ReadState:\nInformation...Failed");
+                    errorCount++;
                 }
                 else
                 {
                     tbInformationReadState.BackColor = Color.YellowGreen;
-                    OnReadStateUpdated("ReadState:Information...Done");
+                    StateUpdated("ReadState:\nInformation...Done");
+                    ProgressUpdated(3);
                 }
 
                 Application.DoEvents();
@@ -1403,12 +1415,14 @@ namespace IntegratedGuiV2
                 if (ucDigitalDiagnosticsMonitoring.ReadAllApi() < 0)
                 {
                     tbDdmReadState.BackColor = Color.Red;
-                    OnReadStateUpdated("ReadState:Ddm...Failed");
+                    StateUpdated("ReadState:\nDdm...Failed");
+                    errorCount++;
                 }
                 else
                 {
                     tbDdmReadState.BackColor = Color.YellowGreen;
-                    OnReadStateUpdated("ReadState:Ddm...Done");
+                    StateUpdated("ReadState:\nDdm...Done");
+                    ProgressUpdated(7);
                 }
 
                 Application.DoEvents();
@@ -1422,12 +1436,14 @@ namespace IntegratedGuiV2
                 if (ucMemoryDump.ReadAllApi() < 0)
                 {
                     tbMemDumpReadState.BackColor = Color.Red;
-                    OnReadStateUpdated("ReadState:MemDump...Failed");
+                    StateUpdated("ReadState:\nMemDump...Failed");
+                    errorCount++;
                 }
                 else
                 {
                     tbMemDumpReadState.BackColor = Color.YellowGreen;
-                    OnReadStateUpdated("ReadState:MemDump...Done");
+                    StateUpdated("ReadState:\nMemDump...Done");
+                    ProgressUpdated(10);
                 }
 
                 Application.DoEvents();
@@ -1441,12 +1457,14 @@ namespace IntegratedGuiV2
                 if (ucGn1190Corrector.ReadAllApi() < 0)
                 {
                     tbCorrectorReadState.BackColor = Color.Red;
-                    OnReadStateUpdated("ReadState:Corrector...Failed");
+                    StateUpdated("ReadState:\nCorrector...Failed");
+                    errorCount++;
                 }
                 else
                 {
                     tbCorrectorReadState.BackColor = Color.YellowGreen;
-                    OnReadStateUpdated("ReadState:Corrector...Done");
+                    StateUpdated("ReadState:\nCorrector...Done");
+                    ProgressUpdated(15);
                 }
 
                 Application.DoEvents();
@@ -1479,9 +1497,17 @@ namespace IntegratedGuiV2
                     }
 
                     if (readFail)
+                    {
                         tbTxConfigReadState.BackColor = Color.Red;
+                        StateUpdated("ReadState:\nTxIcConfig...Failed");
+                        errorCount++;
+                    }
                     else
+                    {
                         tbTxConfigReadState.BackColor = Color.YellowGreen;
+                        StateUpdated("ReadState:\nTxIcConfig...Done");
+                        ProgressUpdated(23);
+                    }
 
                     Application.DoEvents();
                     readFail = false;
@@ -1512,16 +1538,22 @@ namespace IntegratedGuiV2
                     }
 
                     if (readFail)
+                    {
                         tbRxConfigReadState.BackColor = Color.Red;
+                        StateUpdated("ReadState:\nRxIcConfig...Failed");
+                        errorCount++;
+                    }
                     else
+                    {
                         tbRxConfigReadState.BackColor = Color.YellowGreen;
+                        StateUpdated("ReadState:\nRxIcConfig...Done");
+                        ProgressUpdated(30);
+                    }
 
                     Application.DoEvents();
                 }
             }
-
-          
-
+            return errorCount;
         }
 
         private void bGlobalWrite_Click(object sender, EventArgs e)

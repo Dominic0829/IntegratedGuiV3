@@ -41,6 +41,11 @@
             this.cProgressBar2 = new CircularProgressBar.CircularProgressBar();
             this.lCh1Message = new System.Windows.Forms.Label();
             this.lCh2Message = new System.Windows.Forms.Label();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.lCh1EC = new System.Windows.Forms.Label();
+            this.lCh2EC = new System.Windows.Forms.Label();
+            this.lProduct = new System.Windows.Forms.Label();
+            this.lMode = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // kryptonPalette1
@@ -64,7 +69,7 @@
             this.bLogin.FlatAppearance.BorderSize = 0;
             this.bLogin.Font = new System.Drawing.Font("Nirmala UI", 16F, System.Drawing.FontStyle.Bold);
             this.bLogin.ForeColor = System.Drawing.Color.White;
-            this.bLogin.Location = new System.Drawing.Point(20, 97);
+            this.bLogin.Location = new System.Drawing.Point(20, 113);
             this.bLogin.Name = "bLogin";
             this.bLogin.Size = new System.Drawing.Size(76, 53);
             this.bLogin.TabIndex = 44;
@@ -77,7 +82,7 @@
             this.tbId.BackColor = System.Drawing.Color.White;
             this.tbId.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbId.Font = new System.Drawing.Font("Nirmala UI", 14F);
-            this.tbId.Location = new System.Drawing.Point(20, 61);
+            this.tbId.Location = new System.Drawing.Point(20, 45);
             this.tbId.Multiline = true;
             this.tbId.Name = "tbId";
             this.tbId.Size = new System.Drawing.Size(281, 30);
@@ -88,7 +93,7 @@
             this.lFilePath.AutoSize = true;
             this.lFilePath.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lFilePath.ForeColor = System.Drawing.Color.White;
-            this.lFilePath.Location = new System.Drawing.Point(16, 35);
+            this.lFilePath.Location = new System.Drawing.Point(16, 23);
             this.lFilePath.Name = "lFilePath";
             this.lFilePath.Size = new System.Drawing.Size(70, 19);
             this.lFilePath.TabIndex = 42;
@@ -99,7 +104,7 @@
             this.lLogin.AutoSize = true;
             this.lLogin.Font = new System.Drawing.Font("Nirmala UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.lLogin.Location = new System.Drawing.Point(95, -3);
+            this.lLogin.Location = new System.Drawing.Point(98, -3);
             this.lLogin.Name = "lLogin";
             this.lLogin.Size = new System.Drawing.Size(337, 32);
             this.lLogin.TabIndex = 41;
@@ -115,7 +120,7 @@
             this.cProgressBar1.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(40)))), ((int)(((byte)(60)))));
             this.cProgressBar1.InnerMargin = 2;
             this.cProgressBar1.InnerWidth = -1;
-            this.cProgressBar1.Location = new System.Drawing.Point(317, 43);
+            this.cProgressBar1.Location = new System.Drawing.Point(317, 38);
             this.cProgressBar1.MarqueeAnimationSpeed = 2000;
             this.cProgressBar1.Name = "cProgressBar1";
             this.cProgressBar1.OuterColor = System.Drawing.Color.FromArgb(((int)(((byte)(28)))), ((int)(((byte)(26)))), ((int)(((byte)(43)))));
@@ -142,7 +147,7 @@
             // 
             this.rbSingle.AutoSize = true;
             this.rbSingle.Checked = true;
-            this.rbSingle.Location = new System.Drawing.Point(102, 97);
+            this.rbSingle.Location = new System.Drawing.Point(102, 113);
             this.rbSingle.Name = "rbSingle";
             this.rbSingle.Size = new System.Drawing.Size(68, 23);
             this.rbSingle.TabIndex = 49;
@@ -154,7 +159,7 @@
             // rbBoth
             // 
             this.rbBoth.AutoSize = true;
-            this.rbBoth.Location = new System.Drawing.Point(102, 120);
+            this.rbBoth.Location = new System.Drawing.Point(102, 136);
             this.rbBoth.Name = "rbBoth";
             this.rbBoth.Size = new System.Drawing.Size(89, 23);
             this.rbBoth.TabIndex = 50;
@@ -172,7 +177,7 @@
             this.cProgressBar2.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(42)))), ((int)(((byte)(40)))), ((int)(((byte)(60)))));
             this.cProgressBar2.InnerMargin = 2;
             this.cProgressBar2.InnerWidth = -1;
-            this.cProgressBar2.Location = new System.Drawing.Point(423, 43);
+            this.cProgressBar2.Location = new System.Drawing.Point(423, 38);
             this.cProgressBar2.MarqueeAnimationSpeed = 2000;
             this.cProgressBar2.Name = "cProgressBar2";
             this.cProgressBar2.OuterColor = System.Drawing.Color.FromArgb(((int)(((byte)(28)))), ((int)(((byte)(26)))), ((int)(((byte)(43)))));
@@ -199,25 +204,74 @@
             // lCh1Message
             // 
             this.lCh1Message.AutoSize = true;
-            this.lCh1Message.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lCh1Message.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
             this.lCh1Message.ForeColor = System.Drawing.Color.White;
-            this.lCh1Message.Location = new System.Drawing.Point(313, 144);
+            this.lCh1Message.Location = new System.Drawing.Point(313, 139);
             this.lCh1Message.Name = "lCh1Message";
-            this.lCh1Message.Size = new System.Drawing.Size(21, 19);
+            this.lCh1Message.Size = new System.Drawing.Size(16, 13);
             this.lCh1Message.TabIndex = 52;
             this.lCh1Message.Text = "...";
             // 
             // lCh2Message
             // 
             this.lCh2Message.AutoSize = true;
-            this.lCh2Message.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lCh2Message.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
             this.lCh2Message.ForeColor = System.Drawing.Color.White;
-            this.lCh2Message.Location = new System.Drawing.Point(418, 144);
+            this.lCh2Message.Location = new System.Drawing.Point(418, 139);
             this.lCh2Message.Name = "lCh2Message";
-            this.lCh2Message.Size = new System.Drawing.Size(21, 19);
+            this.lCh2Message.Size = new System.Drawing.Size(16, 13);
             this.lCh2Message.TabIndex = 53;
             this.lCh2Message.Text = "...";
             this.lCh2Message.Visible = false;
+            // 
+            // timer1
+            // 
+            this.timer1.Enabled = true;
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
+            // 
+            // lCh1EC
+            // 
+            this.lCh1EC.AutoSize = true;
+            this.lCh1EC.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
+            this.lCh1EC.ForeColor = System.Drawing.Color.White;
+            this.lCh1EC.Location = new System.Drawing.Point(401, 35);
+            this.lCh1EC.Name = "lCh1EC";
+            this.lCh1EC.Size = new System.Drawing.Size(16, 13);
+            this.lCh1EC.TabIndex = 54;
+            this.lCh1EC.Text = "...";
+            // 
+            // lCh2EC
+            // 
+            this.lCh2EC.AutoSize = true;
+            this.lCh2EC.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
+            this.lCh2EC.ForeColor = System.Drawing.Color.White;
+            this.lCh2EC.Location = new System.Drawing.Point(508, 35);
+            this.lCh2EC.Name = "lCh2EC";
+            this.lCh2EC.Size = new System.Drawing.Size(16, 13);
+            this.lCh2EC.TabIndex = 55;
+            this.lCh2EC.Text = "...";
+            // 
+            // lProduct
+            // 
+            this.lProduct.AutoSize = true;
+            this.lProduct.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lProduct.ForeColor = System.Drawing.Color.White;
+            this.lProduct.Location = new System.Drawing.Point(151, 78);
+            this.lProduct.Name = "lProduct";
+            this.lProduct.Size = new System.Drawing.Size(66, 19);
+            this.lProduct.TabIndex = 56;
+            this.lProduct.Text = "Product:";
+            // 
+            // lMode
+            // 
+            this.lMode.AutoSize = true;
+            this.lMode.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lMode.ForeColor = System.Drawing.Color.White;
+            this.lMode.Location = new System.Drawing.Point(16, 78);
+            this.lMode.Name = "lMode";
+            this.lMode.Size = new System.Drawing.Size(52, 19);
+            this.lMode.TabIndex = 57;
+            this.lMode.Text = "Mode:";
             // 
             // CustomerAndMpForm
             // 
@@ -225,6 +279,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
             this.ClientSize = new System.Drawing.Size(536, 176);
+            this.Controls.Add(this.lMode);
+            this.Controls.Add(this.lProduct);
+            this.Controls.Add(this.lCh2EC);
+            this.Controls.Add(this.lCh1EC);
             this.Controls.Add(this.lCh2Message);
             this.Controls.Add(this.lCh1Message);
             this.Controls.Add(this.cProgressBar2);
@@ -235,6 +293,7 @@
             this.Controls.Add(this.tbId);
             this.Controls.Add(this.lFilePath);
             this.Controls.Add(this.lLogin);
+            this.Cursor = System.Windows.Forms.Cursors.Default;
             this.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -261,5 +320,10 @@
         private CircularProgressBar.CircularProgressBar cProgressBar2;
         private System.Windows.Forms.Label lCh1Message;
         private System.Windows.Forms.Label lCh2Message;
+        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.Label lCh1EC;
+        private System.Windows.Forms.Label lCh2EC;
+        private System.Windows.Forms.Label lProduct;
+        private System.Windows.Forms.Label lMode;
     }
 }

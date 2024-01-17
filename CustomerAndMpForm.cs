@@ -23,12 +23,19 @@ namespace IntegratedGuiV2
             InitializeComponent();
 
             mainForm = new MainForm(true);
+            cProgressBar1.Value = 0;
+            cProgressBar2.Value = 0;
         }
 
         private void MainForm_ReadStateUpdated(object sender, string e)
         {
-            // 當 Form B 發送 ReadStateUpdated 事件時，更新對應的 Label 文本
-            lCh1Message.Text = e;
+            lCh1Message.Text = e; // MainForm 送出 ReadStateUpdated event，update to Label.text
+        }
+
+        private void MainForm_ProgressUpdated(object sender, int e)
+        {
+            cProgressBar1.Value = e;
+            cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
         }
 
         private void _RemoteInitial()
@@ -37,22 +44,42 @@ namespace IntegratedGuiV2
             mainForm.cbCorrector.Checked = true;
             mainForm.cbDdm.Checked = true;
             mainForm.cbMemDump.Checked = true;
+            mainForm.cbProductSelect.SelectedIndex = 2; // for PICe4.0
+            mainForm.cbTxIcConfig.Checked = true;
+            mainForm.cbRxIcConfig.Checked = true;
         }
 
         private void _RemoteControl()
         {
+            int errorCountCh1 = 0;
+            int errorCountCh2 = 0;
+
             _RemoteInitial();
             mainForm.ReadStateUpdated += MainForm_ReadStateUpdated;
-            mainForm._GlobalRead();
+            mainForm.ProgressValue += MainForm_ProgressUpdated;
+
+            errorCountCh1 = mainForm._GlobalRead();
+
+            lCh1EC.Text = errorCountCh1.ToString();
+            lCh2EC.Text = errorCountCh2.ToString();
 
         }
 
         private void bLogin_Click(object sender, EventArgs e)
         {
-            bLogin.Enabled = false;
+            Cursor.Current = Cursors.WaitCursor;
 
-            _RemoteControl();
-            bLogin.Enabled = true;
+            try
+            {
+                bLogin.Enabled = false;
+                _RemoteControl();
+
+            }
+            finally
+            {
+                Cursor.Current = Cursors.Default;
+                bLogin.Enabled = true;
+            }
         }
 
 
@@ -64,6 +91,8 @@ namespace IntegratedGuiV2
                 cProgressBar2.Visible = false;
                 lCh1Message.Visible = true;
                 lCh2Message.Visible = false;
+                lCh1EC.Visible = true;
+                lCh2EC.Visible = false;
             }
             else if ( rbBoth.Checked == true)
             {
@@ -71,6 +100,8 @@ namespace IntegratedGuiV2
                 cProgressBar2.Visible = true;
                 lCh1Message.Visible = true;
                 lCh2Message.Visible = true;
+                lCh1EC.Visible = true;
+                lCh2EC.Visible = true;
             }
         }
 
@@ -84,6 +115,21 @@ namespace IntegratedGuiV2
             _SwitchOrNot();
         }
 
-        
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            /*
+                cProgressBar1.Value += 1;
+                cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
+
+                cProgressBar2.Value += 2;
+                cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
+
+                if (cProgressBar1.Value == 100 || cProgressBar2.Value == 100)
+                {
+                    timer1.Enabled = false;
+                }
+            */
+
+        }
     }
 }

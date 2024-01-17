@@ -502,6 +502,7 @@ namespace IntegratedGuiV2
             this.lContinuousMode.Size = new System.Drawing.Size(281, 12);
             this.lContinuousMode.TabIndex = 1018;
             this.lContinuousMode.Text = "(The DUT will cross-flash firmware in a sequential pattern.)";
+            this.lContinuousMode.Visible = false;
             // 
             // cbContinuousMode
             // 
@@ -513,6 +514,7 @@ namespace IntegratedGuiV2
             this.cbContinuousMode.TabIndex = 1015;
             this.cbContinuousMode.Text = "Continuous mode";
             this.cbContinuousMode.UseVisualStyleBackColor = true;
+            this.cbContinuousMode.Visible = false;
             this.cbContinuousMode.CheckedChanged += new System.EventHandler(this.cbContinuousMode_CheckedChanged);
             // 
             // lCh2
@@ -1212,11 +1214,13 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.TextBox tbInnerStateCh2;
         private System.Windows.Forms.TextBox tbInnerStateCh1;
         public System.Windows.Forms.CheckBox cbInfomation;
-        private System.Windows.Forms.CheckBox cbRxIcConfig;
-        private System.Windows.Forms.CheckBox cbTxIcConfig;
+        public System.Windows.Forms.CheckBox cbRxIcConfig;
+        public System.Windows.Forms.CheckBox cbTxIcConfig;
         public System.Windows.Forms.CheckBox cbCorrector;
         public System.Windows.Forms.CheckBox cbMemDump;
         public System.Windows.Forms.CheckBox cbDdm;
+        public System.Windows.Forms.ComboBox cbProductSelect;
+        private System.Windows.Forms.ComboBox cbPermission;
         private System.Windows.Forms.CheckBox cbContinuousMode;
         private System.Windows.Forms.Button bGlobalRead;
         private System.Windows.Forms.Button bOutterSwitch;
@@ -1242,9 +1246,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.ProgressBar progressBar1;
         private System.Windows.Forms.Button bDumpToString;
         private System.Windows.Forms.GroupBox gbPermissions;
-        private System.Windows.Forms.ComboBox cbPermission;
         private System.Windows.Forms.GroupBox gbProduct;
-        private System.Windows.Forms.ComboBox cbProductSelect;
     }
 }
 
