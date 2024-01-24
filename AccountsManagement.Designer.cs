@@ -112,11 +112,11 @@
             this.lBackToLogin.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lBackToLogin.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lBackToLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
-            this.lBackToLogin.Location = new System.Drawing.Point(57, 367);
+            this.lBackToLogin.Location = new System.Drawing.Point(54, 367);
             this.lBackToLogin.Name = "lBackToLogin";
-            this.lBackToLogin.Size = new System.Drawing.Size(106, 19);
+            this.lBackToLogin.Size = new System.Drawing.Size(131, 19);
             this.lBackToLogin.TabIndex = 56;
-            this.lBackToLogin.Text = "Back to LOGIN";
+            this.lBackToLogin.Text = "Back to MainForm";
             this.lBackToLogin.Click += new System.EventHandler(this.lBackToLogin_Click);
             // 
             // bClear

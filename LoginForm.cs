@@ -24,6 +24,7 @@ namespace IntegratedGuiV2
         {
             InitializeComponent();
             cbProducts.SelectedIndex = 2;
+            this.FormClosing += new FormClosingEventHandler(_FormClosing);
         }
         WaitFormFunc loadingForm = new WaitFormFunc();
 
@@ -100,9 +101,17 @@ namespace IntegratedGuiV2
             adminAuthForm.ShowDialog();
         }
 
-        private void lExit_Click(object sender, EventArgs e)
+        private void _FormClosing(object sender, FormClosingEventArgs e)
         {
-            Application.Exit();
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                Application.Exit();
+            }
+        }
+
+        private void lBackToLogin_Click(object sender, EventArgs e)
+        {
+            Application.Restart();
         }
     }
 }

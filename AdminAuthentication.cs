@@ -21,7 +21,7 @@ namespace IntegratedGuiV2
         public AdminAuthentication()
         {
             InitializeComponent();
-            //tbAdminPassword.KeyDown += TbAdminPassword_KeyDown;
+            this.FormClosing += new FormClosingEventHandler(_FormClosing);
         }
 
         private void bAuthenticate_Click(object sender, EventArgs e)
@@ -59,6 +59,13 @@ namespace IntegratedGuiV2
         {
             Application.Restart();
         }
-       
+
+        private void _FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                Application.Exit();
+            }
+        }
     }
 }

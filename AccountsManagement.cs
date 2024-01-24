@@ -29,7 +29,7 @@ namespace IntegratedGuiV2
             LoadData();
 
             cbPermissions.SelectedIndex = 0;
-            this.FormClosing += new FormClosingEventHandler(_AccountsManagement_FormClosing);
+            this.FormClosing += new FormClosingEventHandler(_FormClosing);
 
         }
 
@@ -159,7 +159,7 @@ namespace IntegratedGuiV2
             Application.Exit();
         }
 
-        private void _AccountsManagement_FormClosing(object sender, FormClosingEventArgs e)
+        private void _FormClosing(object sender, FormClosingEventArgs e)
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {

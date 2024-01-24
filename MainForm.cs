@@ -27,22 +27,17 @@ namespace IntegratedGuiV2
     public partial class MainForm : KryptonForm
     {
        
-        private I2cMaster i2cMaster = new I2cMaster();
-        private AdapterSelector adapterSelector = new AdapterSelector();
-        //private ExfoIqs1600Scpi powerMeter = new ExfoIqs1600Scpi();
+        internal I2cMaster i2cMaster = new I2cMaster();
         private DataTable dtWriteConfig = new DataTable();
 
-        private int iHandler = -1;
         private short iBitrate = 400; //kbps
         private short TriggerDelay = 100; //ms
         private int Channel = 0;
         private bool FirstRead = false;
-        private bool StopContinuousMode = false;
         private bool AutoSelectIcConfig = false;
         private string sAcConfig;
+        private string BinFilePath;
         private bool writeToFile = false;
-        WaitFormFunc loadingForm = new WaitFormFunc();
-
         private string fileName = "3234.cfg";
 
         public bool InformationReadState { get; private set; }
@@ -50,17 +45,12 @@ namespace IntegratedGuiV2
         public bool MemDumpReadState { get; private set; }
         public bool CorrectorReadState { get; private set; }
 
-        // 定義事件，通知各功能的讀取狀態
         public event EventHandler<string> ReadStateUpdated;
         public event EventHandler<int> ProgressValue;
 
-        protected virtual void StateUpdated(string message)
+        protected virtual void StateUpdated(string message, int value)
         {
             ReadStateUpdated?.Invoke(this, message);
-        }
-
-        protected virtual void ProgressUpdated(int value)
-        {
             ProgressValue?.Invoke(this, value);
         }
 
@@ -106,7 +96,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _I2cMasterConnect(bool setMode)
+        internal int I2cMasterConnectApi(bool setMode)
         {
             if (i2cMaster.ConnectApi(iBitrate) < 0)
                 return -1;
@@ -122,7 +112,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _I2cMasterDisconnect()
+        internal int I2cMasterDisconnectApi()
         {
             if (i2cMaster.DisconnectApi() < 0)
                 return -1;
@@ -137,7 +127,7 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true) < 0)
+                if (I2cMasterConnectApi(true) < 0)
                     return -1;
             }
             
@@ -151,7 +141,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
+                    I2cMasterDisconnectApi();
                 }
                 else if (rv != length)
                     MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
@@ -176,7 +166,7 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(false) < 0)
+                if (I2cMasterConnectApi(false) < 0)
                     return -1;
             }
 
@@ -187,7 +177,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
+                    I2cMasterDisconnectApi();
                 }
                 else if (rv != length)
                     MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
@@ -211,7 +201,7 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true) < 0)
+                if (I2cMasterConnectApi(true) < 0)
                     return -1;
             }
 
@@ -225,7 +215,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
+                    I2cMasterDisconnectApi();
                 }
                 else if (rv != length)
                     MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
@@ -250,7 +240,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true) < 0)
+                if (I2cMasterConnectApi(true) < 0)
                     return -1;
             }
             
@@ -263,7 +253,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
+                    I2cMasterDisconnectApi();
                 }
 
                 return rv;
@@ -286,7 +276,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(false) < 0)
+                if (I2cMasterConnectApi(false) < 0)
                     return -1;
             }
 
@@ -296,7 +286,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
+                    I2cMasterDisconnectApi();
                 }
 
                 return rv;
@@ -319,7 +309,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true) < 0)
+                if (I2cMasterConnectApi(true) < 0)
                     return -1;
             }
 
@@ -333,7 +323,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
+                    I2cMasterDisconnectApi();
                 }
 
                 return rv;
@@ -463,22 +453,32 @@ namespace IntegratedGuiV2
         {
             if (cbConnected.Checked == true)
             {
-                if (_I2cMasterConnect(true) < 0)
-                    return;
-                _WriteModulePassword();
-                i2cMaster.ChannelSet(1);
-                gbChannelSwitcher.Enabled = true;
-                Channel = 1;
+                _I2cLinkInitial();
                 _UpdateButtonState();
             }
             else
             {
-                _I2cMasterDisconnect();
+                I2cMasterDisconnectApi();
                 gbChannelSwitcher.Enabled = false;
             }
 
         }
 
+        private void _I2cLinkInitial()
+        {
+            if (I2cMasterConnectApi(true) < 0)
+                return;
+            _WriteModulePassword();
+            i2cMaster.ChannelSetApi(1);
+            gbChannelSwitcher.Enabled = true;
+            Channel = 1;
+        }
+
+        internal void I2cLinkInitalApi()
+        {
+            _I2cLinkInitial();
+        }
+        
         public MainForm(bool visible)
         {
             InitializeComponent();
@@ -489,7 +489,7 @@ namespace IntegratedGuiV2
             }
 
             this.FormClosing += new FormClosingEventHandler(_MainForm_FormClosing);
-            this.Size = new System.Drawing.Size(1170, 850);
+            this.Size = new System.Drawing.Size(1170, 870);
             _InitialStateBar();
             //_EnableIcConfig();
             //_UpdateTabPageVisibility();
@@ -659,108 +659,7 @@ namespace IntegratedGuiV2
         {
             cbProductSelect.SelectedItem = product;
         }
-
-
-        /*
-        private async Task<int> _SetWriteConfigAsync()
-        {
-            int result = await Task.Run(() => _SetWriteConfig());
-
-            return result;
-        }
-
-        private async Task<int> _SetWriteConfig()
-        {
-            byte[] data = new byte[1];
-            byte devAddr, regAddr;
-            int currentRow = 0;
-
-            progressBar1.Value = 0;
-
-            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB == null)
-            {
-                MessageBox.Show("i2cWriteCB rv: " + ucDigitalDiagnosticsMonitoring.i2cWriteCB);
-                return -1;
-            }
-
-            int totalLines = File.ReadLines(fileName).Count();
-
-            using (StreamReader sr = new StreamReader(fileName))
-            {
-                while (!sr.EndOfStream)
-                {
-                    //currentRow++;
-                    //double progressPercentage = (double)currentRow / totalLines * 100;
-                    //progressBar1.Value = (int)progressPercentage;
-
-                    string line = await sr.ReadLineAsync();
-
-                    if (line.StartsWith("//") || line.Trim() == "")
-                        continue;
-
-                    string[] tokens = line.Split(',');
-
-                    if (tokens.Length < 4)
-                    {
-                        MessageBox.Show("Invalid line format: " + line);
-                        return -1;
-                    }
-
-                    if (tokens[1].Length >= 2)
-                    {
-                        string devAddrString = tokens[1].Substring(2);
-
-                        if (!byte.TryParse(devAddrString, System.Globalization.NumberStyles.HexNumber, null, out devAddr))
-                        {
-                            MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
-                            return -1;
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
-                        return -1;
-                    }
-
-                    string command = tokens[0];
-                    devAddr = byte.Parse(tokens[1].Substring(2), System.Globalization.NumberStyles.HexNumber);
-                    regAddr = byte.Parse(tokens[2].Substring(2), System.Globalization.NumberStyles.HexNumber);
-                    data[0] = byte.Parse(tokens[3].Substring(2), System.Globalization.NumberStyles.HexNumber);
-
-                    switch (command)
-                    {
-                        case "Write":
-                            ucDigitalDiagnosticsMonitoring.i2cWriteCB(devAddr, regAddr, 1, data);
-                            break;
-
-                        case "Read":
-                            while (ucDigitalDiagnosticsMonitoring.i2cReadCB(devAddr, regAddr, 1, data) != 1)
-                            {
-                                MessageBox.Show("i2cReadCB() fail!!");
-                                await Task.Delay(100); // 非同步延遲
-                            }
-                            if (data[0] != byte.Parse(tokens[4].Substring(2), System.Globalization.NumberStyles.HexNumber))
-                            {
-                                MessageBox.Show("DevAddr:0x" + devAddr.ToString("X2") + "RegAddr:0x" + regAddr.ToString("X2") +
-                                    "Value:0x" + data[0].ToString("X2") + " != " + tokens[4]);
-                                return -1;
-                            }
-                            break;
-
-                        default:
-                            MessageBox.Show("Invalid command: " + command);
-                            return -1;
-                    }
-
-                    Application.DoEvents();
-                }
-            }
-
-            return 0;
-        }
-
-        */
-
+       
         private int _SetWriteConfig() // The function could work, but it's too slow
         {
             byte[] data = new byte[1];
@@ -921,7 +820,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _GenerateXmlSettings()
+        private void _GenerateXmlFileFromUcComponents()
         {
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Settings");
@@ -1001,7 +900,45 @@ namespace IntegratedGuiV2
 
             xmlDoc.Save("Settings.xml");
         }
-        
+
+        private void _GenerateXmlFileForProject()
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            XmlElement root = xmlDoc.CreateElement("Project");
+            xmlDoc.AppendChild(root);
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "XML Files|*.xml";
+            saveFileDialog.Title = "Save XML File";
+            saveFileDialog.FileName = "Project.xml"; // 預設檔案名稱
+
+            XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
+
+            if (rbCustomerMode.Checked)
+            {
+                permissionsNode.SetAttribute("role", "Customer");
+            }
+            else if (rbMpMode.Checked)
+            {
+                permissionsNode.SetAttribute("role", "MP");
+            }
+
+            root.AppendChild(permissionsNode);
+
+            XmlElement productNode = xmlDoc.CreateElement("Product");
+            productNode.SetAttribute("name", cbProductSelect.SelectedItem.ToString());
+            permissionsNode.AppendChild(productNode);
+
+            XmlElement binFileNode = xmlDoc.CreateElement("BinFile");
+            binFileNode.SetAttribute("name", lBinFilePath.Text);
+            permissionsNode.AppendChild(binFileNode);
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string selectedFileName = saveFileDialog.FileName;
+                xmlDoc.Save(selectedFileName);
+            }
+        }
+
         private List<UserControl> GetAllUserControls(Control control) // 遞迴取得 MainForm 中的所有 User Control
         {
             List<UserControl> userControls = new List<UserControl>();
@@ -1249,7 +1186,7 @@ namespace IntegratedGuiV2
         {
             Channel = (Channel == 1) ? 2 : 1;
 
-            i2cMaster.ChannelSet(Channel);
+            i2cMaster.ChannelSetApi(Channel);
             _UpdateButtonState();
 
             return;
@@ -1279,14 +1216,12 @@ namespace IntegratedGuiV2
 
         private void _ContinuousMode()
         {
-            while(cbContinuousMode.Checked){ 
-            ucNuvotonIcpTool.bLink_Click(null, null);
-            ucNuvotonIcpTool.bStart_Click(null, null);
-            bInnerSwitch_Click(null, null);
+            while(cbContinuousMode.Checked){
+                ucNuvotonIcpTool.ConnectSingleApi();
+                ucNuvotonIcpTool.WriteStartApi();
+                bInnerSwitch_Click(null, null);
             }
         }
-
-        
 
         private void _EnableIcConfig()
         {
@@ -1383,8 +1318,7 @@ namespace IntegratedGuiV2
             bool readFail = false;
             int errorCount = 0;
 
-            ProgressUpdated(0);
-            StateUpdated("ReadState:\nStart...");
+            StateUpdated("Read State:\nResource preparation...", 0);
 
             if (cbInfomation.Checked)
             {
@@ -1394,14 +1328,13 @@ namespace IntegratedGuiV2
                 if (ucInformation.ReadAllApi() < 0)
                 {
                     tbInformationReadState.BackColor = Color.Red;
-                    StateUpdated("ReadState:\nInformation...Failed");
+                    StateUpdated("Read State:\nInformation...Failed", 3);
                     errorCount++;
                 }
                 else
                 {
                     tbInformationReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("ReadState:\nInformation...Done");
-                    ProgressUpdated(3);
+                    StateUpdated("Read State:\nInformation...Done", 3);
                 }
 
                 Application.DoEvents();
@@ -1415,14 +1348,13 @@ namespace IntegratedGuiV2
                 if (ucDigitalDiagnosticsMonitoring.ReadAllApi() < 0)
                 {
                     tbDdmReadState.BackColor = Color.Red;
-                    StateUpdated("ReadState:\nDdm...Failed");
+                    StateUpdated("Read State:\nDdm...Failed", 7);
                     errorCount++;
                 }
                 else
                 {
                     tbDdmReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("ReadState:\nDdm...Done");
-                    ProgressUpdated(7);
+                    StateUpdated("Read State:\nDdm...Done", 7);
                 }
 
                 Application.DoEvents();
@@ -1436,14 +1368,13 @@ namespace IntegratedGuiV2
                 if (ucMemoryDump.ReadAllApi() < 0)
                 {
                     tbMemDumpReadState.BackColor = Color.Red;
-                    StateUpdated("ReadState:\nMemDump...Failed");
+                    StateUpdated("Read State:\nMemDump...Failed", 10);
                     errorCount++;
                 }
                 else
                 {
                     tbMemDumpReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("ReadState:\nMemDump...Done");
-                    ProgressUpdated(10);
+                    StateUpdated("Read State:\nMemDump...Done", 10);
                 }
 
                 Application.DoEvents();
@@ -1457,14 +1388,13 @@ namespace IntegratedGuiV2
                 if (ucGn1190Corrector.ReadAllApi() < 0)
                 {
                     tbCorrectorReadState.BackColor = Color.Red;
-                    StateUpdated("ReadState:\nCorrector...Failed");
+                    StateUpdated("Read State:\nCorrector...Failed", 15);
                     errorCount++;
                 }
                 else
                 {
                     tbCorrectorReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("ReadState:\nCorrector...Done");
-                    ProgressUpdated(15);
+                    StateUpdated("Read State:\nCorrector...Done", 15);
                 }
 
                 Application.DoEvents();
@@ -1499,14 +1429,13 @@ namespace IntegratedGuiV2
                     if (readFail)
                     {
                         tbTxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("ReadState:\nTxIcConfig...Failed");
+                        StateUpdated("Read State:\nTxIcConfig...Failed", 23);
                         errorCount++;
                     }
                     else
                     {
                         tbTxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("ReadState:\nTxIcConfig...Done");
-                        ProgressUpdated(23);
+                        StateUpdated("Read State:\nTxIcConfig...Done", 23);
                     }
 
                     Application.DoEvents();
@@ -1540,14 +1469,13 @@ namespace IntegratedGuiV2
                     if (readFail)
                     {
                         tbRxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("ReadState:\nRxIcConfig...Failed");
+                        StateUpdated("Read State:\nRxIcConfig...Failed", 30);
                         errorCount++;
                     }
                     else
                     {
                         tbRxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("ReadState:\nRxIcConfig...Done");
-                        ProgressUpdated(30);
+                        StateUpdated("Read State:\nRxIcConfig...Done", 30);
                     }
 
                     Application.DoEvents();
@@ -1556,13 +1484,56 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
+        private bool _LoadFilesPosition()
+        {
+            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                openFileDialog.Title = "Files position";
+                openFileDialog.Filter = "Binary Files (*.bin)|*.bin";
+                openFileDialog.InitialDirectory = initialDirectory;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    lBinFilePath.Text = Path.GetFileName(openFileDialog.FileName);
+                    cbBinFilePath.Checked = true;
+                    return true;  
+                }
+                else
+                {
+                    cbBinFilePath.Checked = false;
+                    return false;  
+                }
+            }
+        }
+
+        private void _GenerateCfgButtonState()
+        {
+            if (cbBinFilePath.Checked && (rbCustomerMode.Checked || rbMpMode.Checked))
+                bGenerateCfg.Enabled = true;
+            else
+                bGenerateCfg.Enabled = false;
+        }
+
         private void bGlobalWrite_Click(object sender, EventArgs e)
         {
-            bool writeFail = false;
-            int returnValue;
-
             _DisableButtons();
             _InitialStateBar();
+
+            _GlobalWirte();
+
+            _EnableButtons();
+        }
+
+        public int _GlobalWirte()
+        {
+
+            bool writeFail = false;
+            int returnValue;
+            int errorCount = 0;
+
+            StateUpdated("Write State:\nResource preparation...", 62);
 
             if (cbInfomation.Checked)
             {
@@ -1570,9 +1541,16 @@ namespace IntegratedGuiV2
                 Application.DoEvents();
 
                 if (ucInformation.WriteApi() < 0)
+                {
                     tbInformationReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nInformation...Failed", 65);
+                    errorCount++;
+                }
                 else
+                {
                     tbInformationReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nInformation...Done", 65);
+                }
 
                 Application.DoEvents();
             }
@@ -1587,10 +1565,15 @@ namespace IntegratedGuiV2
                     returnValue = ucDigitalDiagnosticsMonitoring.WriteApi();
                     MessageBox.Show("rv : " + returnValue);
                     tbDdmReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nDdm...Failed", 68);
+                    errorCount++;
                 }
 
                 else
+                {
                     tbDdmReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nDdm...Done", 68);
+                }
 
                 Application.DoEvents();
             }
@@ -1601,9 +1584,16 @@ namespace IntegratedGuiV2
                 Application.DoEvents();
 
                 if (ucMemoryDump.WriteApi() < 0)
+                {
                     tbMemDumpReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nMemoryDump...Failed", 70);
+                    errorCount++;
+                }
                 else
+                {
                     tbMemDumpReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nMemoryDump...Done", 70);
+                }
 
                 Application.DoEvents();
             }
@@ -1614,9 +1604,16 @@ namespace IntegratedGuiV2
                 Application.DoEvents();
 
                 if (ucGn1190Corrector.WriteAllApi() < 0)
+                {
                     tbCorrectorReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nCorrector...Failed", 80);
+                    errorCount++;
+                }
                 else
+                {
                     tbCorrectorReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nCorrector...Done", 80);
+                }
 
                 Application.DoEvents();
             }
@@ -1648,9 +1645,16 @@ namespace IntegratedGuiV2
                     }
 
                     if (writeFail)
+                    {
                         tbTxConfigReadState.BackColor = Color.Red;
+                        StateUpdated("Write State:\nTxIcConfig...Failed", 89);
+                        errorCount++;
+                    }
                     else
+                    {
                         tbTxConfigReadState.BackColor = Color.YellowGreen;
+                        StateUpdated("Write State:\nTxIcConfig...Done", 89);
+                    }
 
                     Application.DoEvents();
                     writeFail = false;
@@ -1681,15 +1685,22 @@ namespace IntegratedGuiV2
                     }
 
                     if (writeFail)
+                    {
                         tbRxConfigReadState.BackColor = Color.Red;
+                        StateUpdated("Write State:\nRxIcConfig...Failed", 98);
+                        errorCount++;
+                    }
                     else
+                    {
                         tbRxConfigReadState.BackColor = Color.YellowGreen;
+                        StateUpdated("Write State:\nRxIcConfig...Done", 98);
+                    }
 
                     Application.DoEvents();
                 }
             }
 
-            _EnableButtons();
+            return errorCount;
         }
 
         private void bStoreIntoFlash_Click(object sender, EventArgs e)
@@ -1753,7 +1764,8 @@ namespace IntegratedGuiV2
             if (bScanComponents.Enabled)
                 bScanComponents.Enabled = false;
 
-            _GenerateXmlSettings();
+            //_GenerateXmlFileFromUcComponents();
+            _GenerateXmlFileForProject();
             bScanComponents.Enabled = true;
         }
 
@@ -1781,6 +1793,35 @@ namespace IntegratedGuiV2
             }
         }
 
+        private void cbBinFilePath_CheckedChanged(object sender, EventArgs e)
+        {
+            _LoadFilesPosition();
+            _GenerateCfgButtonState();
+        }
+
+        private void rbCustomerMode_CheckedChanged(object sender, EventArgs e)
+        {
+            _GenerateCfgButtonState();
+        }
+
+        private void rbMpMode_CheckedChanged(object sender, EventArgs e)
+        {
+            _GenerateCfgButtonState();
+        }
+
+        private void bBackToMainForm_Click(object sender, EventArgs e)
+        {
+            Application.Restart();
+        }
+
+        private void bGenerateCfg_Click(object sender, EventArgs e)
+        {
+            if (bGenerateCfg.Enabled)
+                bGenerateCfg.Enabled = false;
+
+            _GenerateXmlFileForProject();
+            bGenerateCfg.Enabled = true;
+        }
     }
 
     public class ComboBoxItem
