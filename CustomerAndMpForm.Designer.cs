@@ -50,6 +50,22 @@
             this.lProductT = new System.Windows.Forms.Label();
             this.lPathT = new System.Windows.Forms.Label();
             this.lPath = new System.Windows.Forms.Label();
+            this.cbBypassW = new System.Windows.Forms.CheckBox();
+            this.cb1 = new System.Windows.Forms.CheckBox();
+            this.gbOperatorMode = new System.Windows.Forms.GroupBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.textBox3 = new System.Windows.Forms.TextBox();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.lVenderSn = new System.Windows.Forms.Label();
+            this.tbRssi0 = new System.Windows.Forms.TextBox();
+            this.tbVenderSn = new System.Windows.Forms.TextBox();
+            this.lRssi = new System.Windows.Forms.Label();
+            this.lDateCode = new System.Windows.Forms.Label();
+            this.tbDateCode = new System.Windows.Forms.TextBox();
+            this.gbOperatorMode.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonPalette1
@@ -86,13 +102,14 @@
             this.tbFilePath.BackColor = System.Drawing.Color.White;
             this.tbFilePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbFilePath.Font = new System.Drawing.Font("Nirmala UI", 10F);
-            this.tbFilePath.ForeColor = System.Drawing.Color.Gray;
+            this.tbFilePath.ForeColor = System.Drawing.Color.Silver;
             this.tbFilePath.Location = new System.Drawing.Point(20, 45);
             this.tbFilePath.Name = "tbFilePath";
             this.tbFilePath.Size = new System.Drawing.Size(281, 25);
             this.tbFilePath.TabIndex = 43;
-            this.tbFilePath.Text = "Please specify the import of the Config file...";
-            this.tbFilePath.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tbFilePath_MouseClick);
+            this.tbFilePath.Text = "Please click here, to import the Config file...";
+            this.tbFilePath.Enter += new System.EventHandler(this.tbFilePath_Enter);
+            this.tbFilePath.Leave += new System.EventHandler(this.tbFilePath_Leave);
             // 
             // lFilePath
             // 
@@ -110,7 +127,7 @@
             this.lLogin.AutoSize = true;
             this.lLogin.Font = new System.Drawing.Font("Nirmala UI", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.lLogin.Location = new System.Drawing.Point(98, -3);
+            this.lLogin.Location = new System.Drawing.Point(15, -8);
             this.lLogin.Name = "lLogin";
             this.lLogin.Size = new System.Drawing.Size(337, 32);
             this.lLogin.TabIndex = 41;
@@ -160,7 +177,7 @@
             this.rbSingle.TabStop = true;
             this.rbSingle.Text = "Single";
             this.rbSingle.UseVisualStyleBackColor = true;
-            this.rbSingle.CheckedChanged += new System.EventHandler(this.radioButton1_CheckedChanged);
+            this.rbSingle.CheckedChanged += new System.EventHandler(this.raSingle_CheckedChanged);
             // 
             // rbBoth
             // 
@@ -210,50 +227,47 @@
             // lCh1Message
             // 
             this.lCh1Message.AutoSize = true;
-            this.lCh1Message.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
+            this.lCh1Message.Font = new System.Drawing.Font("Nirmala UI", 7F, System.Drawing.FontStyle.Bold);
             this.lCh1Message.ForeColor = System.Drawing.Color.White;
-            this.lCh1Message.Location = new System.Drawing.Point(313, 139);
+            this.lCh1Message.Location = new System.Drawing.Point(322, 137);
             this.lCh1Message.Name = "lCh1Message";
-            this.lCh1Message.Size = new System.Drawing.Size(16, 13);
+            this.lCh1Message.Size = new System.Drawing.Size(14, 12);
             this.lCh1Message.TabIndex = 52;
             this.lCh1Message.Text = "...";
             // 
             // lCh2Message
             // 
             this.lCh2Message.AutoSize = true;
-            this.lCh2Message.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
+            this.lCh2Message.Font = new System.Drawing.Font("Nirmala UI", 7F, System.Drawing.FontStyle.Bold);
             this.lCh2Message.ForeColor = System.Drawing.Color.White;
-            this.lCh2Message.Location = new System.Drawing.Point(418, 139);
+            this.lCh2Message.Location = new System.Drawing.Point(428, 137);
             this.lCh2Message.Name = "lCh2Message";
-            this.lCh2Message.Size = new System.Drawing.Size(16, 13);
+            this.lCh2Message.Size = new System.Drawing.Size(14, 12);
             this.lCh2Message.TabIndex = 53;
             this.lCh2Message.Text = "...";
             this.lCh2Message.Visible = false;
             // 
-            // timer1
-            // 
-            this.timer1.Enabled = true;
-            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
-            // 
             // lCh1EC
             // 
             this.lCh1EC.AutoSize = true;
-            this.lCh1EC.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
+            this.lCh1EC.BackColor = System.Drawing.Color.Transparent;
+            this.lCh1EC.Font = new System.Drawing.Font("Nirmala UI", 5F, System.Drawing.FontStyle.Bold);
             this.lCh1EC.ForeColor = System.Drawing.Color.White;
-            this.lCh1EC.Location = new System.Drawing.Point(401, 35);
+            this.lCh1EC.Location = new System.Drawing.Point(391, 36);
             this.lCh1EC.Name = "lCh1EC";
-            this.lCh1EC.Size = new System.Drawing.Size(16, 13);
+            this.lCh1EC.Size = new System.Drawing.Size(11, 10);
             this.lCh1EC.TabIndex = 54;
             this.lCh1EC.Text = "...";
             // 
             // lCh2EC
             // 
             this.lCh2EC.AutoSize = true;
-            this.lCh2EC.Font = new System.Drawing.Font("Nirmala UI", 8F, System.Drawing.FontStyle.Bold);
+            this.lCh2EC.BackColor = System.Drawing.Color.Transparent;
+            this.lCh2EC.Font = new System.Drawing.Font("Nirmala UI", 5F, System.Drawing.FontStyle.Bold);
             this.lCh2EC.ForeColor = System.Drawing.Color.White;
-            this.lCh2EC.Location = new System.Drawing.Point(508, 35);
+            this.lCh2EC.Location = new System.Drawing.Point(498, 36);
             this.lCh2EC.Name = "lCh2EC";
-            this.lCh2EC.Size = new System.Drawing.Size(16, 13);
+            this.lCh2EC.Size = new System.Drawing.Size(11, 10);
             this.lCh2EC.TabIndex = 55;
             this.lCh2EC.Text = "...";
             this.lCh2EC.Visible = false;
@@ -324,12 +338,186 @@
             this.lPath.TabIndex = 61;
             this.lPath.Text = "_";
             // 
+            // cbBypassW
+            // 
+            this.cbBypassW.AutoSize = true;
+            this.cbBypassW.Checked = true;
+            this.cbBypassW.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbBypassW.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbBypassW.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbBypassW.Location = new System.Drawing.Point(472, 0);
+            this.cbBypassW.Name = "cbBypassW";
+            this.cbBypassW.Size = new System.Drawing.Size(68, 15);
+            this.cbBypassW.TabIndex = 62;
+            this.cbBypassW.Text = "DemoMode";
+            this.cbBypassW.UseVisualStyleBackColor = true;
+            // 
+            // cb1
+            // 
+            this.cb1.AutoSize = true;
+            this.cb1.Checked = true;
+            this.cb1.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cb1.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cb1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cb1.Location = new System.Drawing.Point(472, 16);
+            this.cb1.Name = "cb1";
+            this.cb1.Size = new System.Drawing.Size(39, 15);
+            this.cb1.TabIndex = 63;
+            this.cb1.Text = "Link";
+            this.cb1.UseVisualStyleBackColor = true;
+            this.cb1.CheckedChanged += new System.EventHandler(this.I2cMasterConnect_CheckedChanged);
+            // 
+            // gbOperatorMode
+            // 
+            this.gbOperatorMode.Controls.Add(this.label3);
+            this.gbOperatorMode.Controls.Add(this.label2);
+            this.gbOperatorMode.Controls.Add(this.label1);
+            this.gbOperatorMode.Controls.Add(this.textBox3);
+            this.gbOperatorMode.Controls.Add(this.textBox2);
+            this.gbOperatorMode.Controls.Add(this.textBox1);
+            this.gbOperatorMode.Controls.Add(this.lVenderSn);
+            this.gbOperatorMode.Controls.Add(this.tbRssi0);
+            this.gbOperatorMode.Controls.Add(this.tbVenderSn);
+            this.gbOperatorMode.Controls.Add(this.lRssi);
+            this.gbOperatorMode.Controls.Add(this.lDateCode);
+            this.gbOperatorMode.Controls.Add(this.tbDateCode);
+            this.gbOperatorMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.gbOperatorMode.Location = new System.Drawing.Point(23, 193);
+            this.gbOperatorMode.Name = "gbOperatorMode";
+            this.gbOperatorMode.Size = new System.Drawing.Size(486, 69);
+            this.gbOperatorMode.TabIndex = 70;
+            this.gbOperatorMode.TabStop = false;
+            this.gbOperatorMode.Text = "MP information";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.ForeColor = System.Drawing.Color.White;
+            this.label3.Location = new System.Drawing.Point(432, 21);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(39, 13);
+            this.label3.TabIndex = 75;
+            this.label3.Text = "RSSI-4";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.Color.White;
+            this.label2.Location = new System.Drawing.Point(381, 21);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(39, 13);
+            this.label2.TabIndex = 74;
+            this.label2.Text = "RSSI-3";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.Color.White;
+            this.label1.Location = new System.Drawing.Point(330, 21);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(39, 13);
+            this.label1.TabIndex = 73;
+            this.label1.Text = "RSSI-2";
+            // 
+            // textBox3
+            // 
+            this.textBox3.Enabled = false;
+            this.textBox3.Location = new System.Drawing.Point(434, 36);
+            this.textBox3.Name = "textBox3";
+            this.textBox3.Size = new System.Drawing.Size(45, 26);
+            this.textBox3.TabIndex = 72;
+            // 
+            // textBox2
+            // 
+            this.textBox2.Enabled = false;
+            this.textBox2.Location = new System.Drawing.Point(383, 36);
+            this.textBox2.Name = "textBox2";
+            this.textBox2.Size = new System.Drawing.Size(45, 26);
+            this.textBox2.TabIndex = 71;
+            // 
+            // textBox1
+            // 
+            this.textBox1.Enabled = false;
+            this.textBox1.Location = new System.Drawing.Point(332, 36);
+            this.textBox1.Name = "textBox1";
+            this.textBox1.Size = new System.Drawing.Size(45, 26);
+            this.textBox1.TabIndex = 70;
+            // 
+            // lVenderSn
+            // 
+            this.lVenderSn.AutoSize = true;
+            this.lVenderSn.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lVenderSn.ForeColor = System.Drawing.Color.White;
+            this.lVenderSn.Location = new System.Drawing.Point(8, 21);
+            this.lVenderSn.Name = "lVenderSn";
+            this.lVenderSn.Size = new System.Drawing.Size(64, 13);
+            this.lVenderSn.TabIndex = 64;
+            this.lVenderSn.Text = "Vender SN:";
+            // 
+            // tbRssi0
+            // 
+            this.tbRssi0.Enabled = false;
+            this.tbRssi0.Location = new System.Drawing.Point(281, 36);
+            this.tbRssi0.Name = "tbRssi0";
+            this.tbRssi0.Size = new System.Drawing.Size(45, 26);
+            this.tbRssi0.TabIndex = 69;
+            // 
+            // tbVenderSn
+            // 
+            this.tbVenderSn.ForeColor = System.Drawing.Color.Silver;
+            this.tbVenderSn.Location = new System.Drawing.Point(10, 36);
+            this.tbVenderSn.Name = "tbVenderSn";
+            this.tbVenderSn.Size = new System.Drawing.Size(117, 26);
+            this.tbVenderSn.TabIndex = 65;
+            this.tbVenderSn.Text = "YYMMDLSSSS";
+            this.tbVenderSn.Enter += new System.EventHandler(this.tbVenderSn_Enter);
+            this.tbVenderSn.Leave += new System.EventHandler(this.tbVenderSn_Leave);
+            // 
+            // lRssi
+            // 
+            this.lRssi.AutoSize = true;
+            this.lRssi.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssi.ForeColor = System.Drawing.Color.White;
+            this.lRssi.Location = new System.Drawing.Point(279, 21);
+            this.lRssi.Name = "lRssi";
+            this.lRssi.Size = new System.Drawing.Size(39, 13);
+            this.lRssi.TabIndex = 68;
+            this.lRssi.Text = "RSSI-1";
+            // 
+            // lDateCode
+            // 
+            this.lDateCode.AutoSize = true;
+            this.lDateCode.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lDateCode.ForeColor = System.Drawing.Color.White;
+            this.lDateCode.Location = new System.Drawing.Point(131, 21);
+            this.lDateCode.Name = "lDateCode";
+            this.lDateCode.Size = new System.Drawing.Size(62, 13);
+            this.lDateCode.TabIndex = 66;
+            this.lDateCode.Text = "Date code:";
+            // 
+            // tbDateCode
+            // 
+            this.tbDateCode.ForeColor = System.Drawing.Color.Silver;
+            this.tbDateCode.Location = new System.Drawing.Point(133, 36);
+            this.tbDateCode.Name = "tbDateCode";
+            this.tbDateCode.Size = new System.Drawing.Size(90, 26);
+            this.tbDateCode.TabIndex = 67;
+            this.tbDateCode.Text = "YYMMDD";
+            this.tbDateCode.Enter += new System.EventHandler(this.tbDateCode_Enter);
+            this.tbDateCode.Leave += new System.EventHandler(this.tbDateCode_Leave);
+            // 
             // CustomerAndMpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
-            this.ClientSize = new System.Drawing.Size(536, 176);
+            this.ClientSize = new System.Drawing.Size(536, 264);
+            this.Controls.Add(this.gbOperatorMode);
+            this.Controls.Add(this.cb1);
+            this.Controls.Add(this.cbBypassW);
             this.Controls.Add(this.lPath);
             this.Controls.Add(this.lPathT);
             this.Controls.Add(this.lModeT);
@@ -357,6 +545,8 @@
             this.PaletteMode = ComponentFactory.Krypton.Toolkit.PaletteMode.Custom;
             this.ShowIcon = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.gbOperatorMode.ResumeLayout(false);
+            this.gbOperatorMode.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -384,5 +574,20 @@
         private System.Windows.Forms.Label lProductT;
         private System.Windows.Forms.Label lPathT;
         private System.Windows.Forms.Label lPath;
+        private System.Windows.Forms.CheckBox cbBypassW;
+        private System.Windows.Forms.CheckBox cb1;
+        private System.Windows.Forms.GroupBox gbOperatorMode;
+        private System.Windows.Forms.Label lVenderSn;
+        private System.Windows.Forms.TextBox tbRssi0;
+        private System.Windows.Forms.TextBox tbVenderSn;
+        private System.Windows.Forms.Label lRssi;
+        private System.Windows.Forms.Label lDateCode;
+        private System.Windows.Forms.TextBox tbDateCode;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox textBox3;
+        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox textBox1;
     }
 }

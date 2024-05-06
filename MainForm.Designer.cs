@@ -64,6 +64,7 @@ namespace IntegratedGuiV2
             this.tabPage332 = new System.Windows.Forms.TabPage();
             this.ucGn2109Config = new Gn2108Gn2109Config.UcGn2109Config();
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.ucNuvotonIcpTool = new NuvotonIcpTool.UcNuvotonIcpTool();
             this.lContinuousMode = new System.Windows.Forms.Label();
             this.cbContinuousMode = new System.Windows.Forms.CheckBox();
             this.lCh2 = new System.Windows.Forms.Label();
@@ -71,7 +72,6 @@ namespace IntegratedGuiV2
             this.tbInnerStateCh2 = new System.Windows.Forms.TextBox();
             this.tbInnerStateCh1 = new System.Windows.Forms.TextBox();
             this.bInnerSwitch = new System.Windows.Forms.Button();
-            this.ucNuvotonIcpTool = new NuvotonIcpTool.UcNuvotonIcpTool();
             this.tabPage5 = new System.Windows.Forms.TabPage();
             this.gbWriteConfig = new System.Windows.Forms.GroupBox();
             this.dgvWriteConfig = new System.Windows.Forms.DataGridView();
@@ -488,6 +488,7 @@ namespace IntegratedGuiV2
             // 
             // tabPage4
             // 
+            this.tabPage4.Controls.Add(this.ucNuvotonIcpTool);
             this.tabPage4.Controls.Add(this.lContinuousMode);
             this.tabPage4.Controls.Add(this.cbContinuousMode);
             this.tabPage4.Controls.Add(this.lCh2);
@@ -495,7 +496,6 @@ namespace IntegratedGuiV2
             this.tabPage4.Controls.Add(this.tbInnerStateCh2);
             this.tabPage4.Controls.Add(this.tbInnerStateCh1);
             this.tabPage4.Controls.Add(this.bInnerSwitch);
-            this.tabPage4.Controls.Add(this.ucNuvotonIcpTool);
             this.tabPage4.Location = new System.Drawing.Point(4, 25);
             this.tabPage4.Margin = new System.Windows.Forms.Padding(4, 2, 4, 2);
             this.tabPage4.Name = "tabPage4";
@@ -504,6 +504,14 @@ namespace IntegratedGuiV2
             this.tabPage4.TabIndex = 3;
             this.tabPage4.Text = "ICP Tool";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // ucNuvotonIcpTool
+            // 
+            this.ucNuvotonIcpTool.Location = new System.Drawing.Point(27, 24);
+            this.ucNuvotonIcpTool.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
+            this.ucNuvotonIcpTool.Name = "ucNuvotonIcpTool";
+            this.ucNuvotonIcpTool.Size = new System.Drawing.Size(587, 375);
+            this.ucNuvotonIcpTool.TabIndex = 0;
             // 
             // lContinuousMode
             // 
@@ -533,6 +541,7 @@ namespace IntegratedGuiV2
             // lCh2
             // 
             this.lCh2.AutoSize = true;
+            this.lCh2.Enabled = false;
             this.lCh2.Font = new System.Drawing.Font("PMingLiU", 16F);
             this.lCh2.Location = new System.Drawing.Point(853, 49);
             this.lCh2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
@@ -544,6 +553,7 @@ namespace IntegratedGuiV2
             // lCh1
             // 
             this.lCh1.AutoSize = true;
+            this.lCh1.Enabled = false;
             this.lCh1.Font = new System.Drawing.Font("PMingLiU", 16F);
             this.lCh1.Location = new System.Drawing.Point(780, 49);
             this.lCh1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
@@ -555,6 +565,7 @@ namespace IntegratedGuiV2
             // tbInnerStateCh2
             // 
             this.tbInnerStateCh2.BackColor = System.Drawing.Color.White;
+            this.tbInnerStateCh2.Enabled = false;
             this.tbInnerStateCh2.Font = new System.Drawing.Font("PMingLiU", 1F);
             this.tbInnerStateCh2.Location = new System.Drawing.Point(847, 80);
             this.tbInnerStateCh2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -565,6 +576,7 @@ namespace IntegratedGuiV2
             // tbInnerStateCh1
             // 
             this.tbInnerStateCh1.BackColor = System.Drawing.Color.White;
+            this.tbInnerStateCh1.Enabled = false;
             this.tbInnerStateCh1.Font = new System.Drawing.Font("PMingLiU", 1F);
             this.tbInnerStateCh1.Location = new System.Drawing.Point(772, 80);
             this.tbInnerStateCh1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -583,14 +595,6 @@ namespace IntegratedGuiV2
             this.bInnerSwitch.Text = "Channel Switch";
             this.bInnerSwitch.UseVisualStyleBackColor = true;
             this.bInnerSwitch.Click += new System.EventHandler(this.bInnerSwitch_Click);
-            // 
-            // ucNuvotonIcpTool
-            // 
-            this.ucNuvotonIcpTool.Location = new System.Drawing.Point(27, 24);
-            this.ucNuvotonIcpTool.Margin = new System.Windows.Forms.Padding(5, 5, 5, 5);
-            this.ucNuvotonIcpTool.Name = "ucNuvotonIcpTool";
-            this.ucNuvotonIcpTool.Size = new System.Drawing.Size(587, 375);
-            this.ucNuvotonIcpTool.TabIndex = 0;
             // 
             // tabPage5
             // 
@@ -744,7 +748,7 @@ namespace IntegratedGuiV2
             this.bOutterSwitch.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.bOutterSwitch.Name = "bOutterSwitch";
             this.bOutterSwitch.Size = new System.Drawing.Size(60, 35);
-            this.bOutterSwitch.TabIndex = 1007;
+            this.bOutterSwitch.TabIndex = 6;
             this.bOutterSwitch.Text = "SW";
             this.bOutterSwitch.UseVisualStyleBackColor = true;
             this.bOutterSwitch.Click += new System.EventHandler(this.bOutterSwitch_Click);
@@ -871,7 +875,6 @@ namespace IntegratedGuiV2
             // 
             this.cbRxIcConfig.AutoSize = true;
             this.cbRxIcConfig.BackColor = System.Drawing.Color.Transparent;
-            this.cbRxIcConfig.Enabled = false;
             this.cbRxIcConfig.Location = new System.Drawing.Point(5, 190);
             this.cbRxIcConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbRxIcConfig.Name = "cbRxIcConfig";
@@ -884,7 +887,6 @@ namespace IntegratedGuiV2
             // 
             this.cbTxIcConfig.AutoSize = true;
             this.cbTxIcConfig.BackColor = System.Drawing.Color.Transparent;
-            this.cbTxIcConfig.Enabled = false;
             this.cbTxIcConfig.Location = new System.Drawing.Point(5, 158);
             this.cbTxIcConfig.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.cbTxIcConfig.Name = "cbTxIcConfig";
@@ -959,6 +961,7 @@ namespace IntegratedGuiV2
             this.bGlobalWrite2.TabIndex = 1017;
             this.bGlobalWrite2.Text = "GWrite2";
             this.bGlobalWrite2.UseVisualStyleBackColor = false;
+            this.bGlobalWrite2.Visible = false;
             this.bGlobalWrite2.Click += new System.EventHandler(this.bGlobalWrite2_Click);
             // 
             // tbPasswordB3
@@ -1008,6 +1011,7 @@ namespace IntegratedGuiV2
             // bScanComponents
             // 
             this.bScanComponents.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.bScanComponents.Enabled = false;
             this.bScanComponents.Font = new System.Drawing.Font("Times New Roman", 12F);
             this.bScanComponents.Location = new System.Drawing.Point(1351, 952);
             this.bScanComponents.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -1034,6 +1038,7 @@ namespace IntegratedGuiV2
             // bFunctionTest2
             // 
             this.bFunctionTest2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.bFunctionTest2.Enabled = false;
             this.bFunctionTest2.Font = new System.Drawing.Font("Times New Roman", 12F);
             this.bFunctionTest2.Location = new System.Drawing.Point(1351, 902);
             this.bFunctionTest2.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -1051,6 +1056,7 @@ namespace IntegratedGuiV2
             this.progressBar1.Name = "progressBar1";
             this.progressBar1.Size = new System.Drawing.Size(133, 5);
             this.progressBar1.TabIndex = 1028;
+            this.progressBar1.Visible = false;
             // 
             // bDumpToString
             // 
@@ -1063,6 +1069,7 @@ namespace IntegratedGuiV2
             this.bDumpToString.TabIndex = 1029;
             this.bDumpToString.Text = "SaveToCfg for Write";
             this.bDumpToString.UseVisualStyleBackColor = false;
+            this.bDumpToString.Visible = false;
             this.bDumpToString.Click += new System.EventHandler(this.bSaveToCfg_Click);
             // 
             // gbPermissions
@@ -1084,6 +1091,7 @@ namespace IntegratedGuiV2
             "Admin",
             "Engineer",
             "Operator"});
+            this.cbPermission.Enabled = false;
             this.cbPermission.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cbPermission.FormattingEnabled = true;
             this.cbPermission.Items.AddRange(new object[] {
@@ -1113,6 +1121,7 @@ namespace IntegratedGuiV2
             // 
             // cbProductSelect
             // 
+            this.cbProductSelect.Enabled = false;
             this.cbProductSelect.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cbProductSelect.FormattingEnabled = true;
             this.cbProductSelect.Items.AddRange(new object[] {
@@ -1208,7 +1217,6 @@ namespace IntegratedGuiV2
             // 
             // bBackToMainForm
             // 
-            this.bBackToMainForm.Enabled = false;
             this.bBackToMainForm.Font = new System.Drawing.Font("Times New Roman", 12F);
             this.bBackToMainForm.Location = new System.Drawing.Point(1351, 1000);
             this.bBackToMainForm.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -1315,17 +1323,6 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.TabPage tabPage332;
         private System.Windows.Forms.TabPage tabPage5;
         private System.Windows.Forms.TabControl tcDdmi;
-        private QsfpDigitalDiagnosticMonitoring.UCMemoryDump ucMemoryDump;
-        private QsfpDigitalDiagnosticMonitoring.UcInformation ucInformation;
-        private QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring ucDigitalDiagnosticsMonitoring;
-        private Gn1190Corrector.UcGn1190CorrectorLite ucGn1190Corrector;
-        private Mald37045cMata37044c.UcMald37045cConfig ucMald37045cConfig;
-        private Mald37045cMata37044c.UcMata37044cConfig ucMata37044cConfig;
-        private Rt145Rt146Config.UcRt146Config ucRt146Config;
-        private Rt145Rt146Config.UcRt145Config ucRt145Config;
-        private Gn2108Gn2109Config.UcGn2108Config ucGn2108Config;
-        private Gn2108Gn2109Config.UcGn2109Config ucGn2109Config;
-        private NuvotonIcpTool.UcNuvotonIcpTool ucNuvotonIcpTool;
         private System.Windows.Forms.TabControl tcIcConfig;
         private System.Windows.Forms.TabControl tcSas40;
         private System.Windows.Forms.TabControl tcPcie4;
@@ -1342,13 +1339,13 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.TextBox tbRxConfigReadState;
         private System.Windows.Forms.TextBox tbInnerStateCh2;
         private System.Windows.Forms.TextBox tbInnerStateCh1;
-        public System.Windows.Forms.CheckBox cbInfomation;
-        public System.Windows.Forms.CheckBox cbRxIcConfig;
-        public System.Windows.Forms.CheckBox cbTxIcConfig;
-        public System.Windows.Forms.CheckBox cbCorrector;
-        public System.Windows.Forms.CheckBox cbMemDump;
-        public System.Windows.Forms.CheckBox cbDdm;
-        public System.Windows.Forms.ComboBox cbProductSelect;
+        private System.Windows.Forms.CheckBox cbInfomation;
+        private System.Windows.Forms.CheckBox cbDdm;
+        private System.Windows.Forms.CheckBox cbMemDump;
+        private System.Windows.Forms.CheckBox cbCorrector;
+        private System.Windows.Forms.CheckBox cbTxIcConfig;
+        private System.Windows.Forms.CheckBox cbRxIcConfig;
+        private System.Windows.Forms.ComboBox cbProductSelect;
         private System.Windows.Forms.ComboBox cbPermission;
         private System.Windows.Forms.CheckBox cbContinuousMode;
         private System.Windows.Forms.Button bGlobalRead;
@@ -1383,6 +1380,17 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Button bGenerateCfg;
         private System.Windows.Forms.Label lBinFilePath;
         private System.Windows.Forms.Button bBackToMainForm;
+        private QsfpDigitalDiagnosticMonitoring.UcInformation ucInformation;
+        private QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring ucDigitalDiagnosticsMonitoring;
+        private QsfpDigitalDiagnosticMonitoring.UCMemoryDump ucMemoryDump;
+        private Gn1190Corrector.UcGn1190CorrectorLite ucGn1190Corrector;
+        private Mald37045cMata37044c.UcMald37045cConfig ucMald37045cConfig;
+        private Mald37045cMata37044c.UcMata37044cConfig ucMata37044cConfig;
+        private Rt145Rt146Config.UcRt146Config ucRt146Config;
+        private Rt145Rt146Config.UcRt145Config ucRt145Config;
+        private Gn2108Gn2109Config.UcGn2108Config ucGn2108Config;
+        private Gn2108Gn2109Config.UcGn2109Config ucGn2109Config;
+        private NuvotonIcpTool.UcNuvotonIcpTool ucNuvotonIcpTool;
     }
 }
 

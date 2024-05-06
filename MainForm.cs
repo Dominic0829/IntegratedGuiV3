@@ -21,24 +21,30 @@ using System.Security.Policy;
 using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using System.Threading.Tasks;
+using NuvotonIcpTool;
+using System.Reflection;
 
 namespace IntegratedGuiV2
 {
     public partial class MainForm : KryptonForm
     {
        
-        internal I2cMaster i2cMaster = new I2cMaster();
+        private I2cMaster i2cMaster = new I2cMaster();
         private DataTable dtWriteConfig = new DataTable();
 
         private short iBitrate = 400; //kbps
         private short TriggerDelay = 100; //ms
-        private int Channel = 0;
+        private int ProcessingChannel = 0;
         private bool FirstRead = false;
         private bool AutoSelectIcConfig = false;
         private string sAcConfig;
         private string BinFilePath;
         private bool writeToFile = false;
         private string fileName = "3234.cfg";
+        private bool TestMode = false;
+        private bool I2cConnected = false;
+        private bool BypassWriteIcConfig = false;
+        private bool FirstRound = true;
 
         public bool InformationReadState { get; private set; }
         public bool DdmReadState { get; private set; }
@@ -54,11 +60,167 @@ namespace IntegratedGuiV2
             ProgressValue?.Invoke(this, value);
         }
 
+        public string GetValueFromUcRt146Config(string comboBoxId)
+        {
+            return ucRt146Config.GetComboBoxSelectedValue(comboBoxId);
+        }
+
+        public string GetValueFromUcRt145Config(string comboBoxId)
+        {
+            return ucRt145Config.GetComboBoxSelectedValue(comboBoxId);
+        }
+
+        public List<string> GetComboBoxItems()
+        {
+            List<string> items = new List<string>();
+
+            foreach (var item in cbProductSelect.Items)
+            {
+                items.Add(item.ToString());
+            }
+
+            return items;
+        }
+
+        public string GetSelectedProduct()
+        {
+            if (cbProductSelect.InvokeRequired)
+            {
+                return (string)cbProductSelect.Invoke(new Func<string>(() => (string)cbProductSelect.SelectedItem));
+            }
+            else
+            {
+                return (string)cbProductSelect.SelectedItem;
+            }
+        }
+
+        public Dictionary<string, bool> GetCheckBoxStates()
+        {
+            return new Dictionary<string, bool>
+            {
+                { "cbInfomation", cbInfomation.Checked },
+                { "cbDdm", cbDdm.Checked },
+                { "cbMemDump", cbMemDump.Checked },
+                { "cbCorrector", cbCorrector.Checked },
+                { "cbTxIcConfig", cbTxIcConfig.Checked },
+                { "cbRxIcConfig", cbRxIcConfig.Checked }
+            };
+        }
+
+        public void SelectProduct(string selectedProduct)
+        {
+            if (cbProductSelect.InvokeRequired)
+                cbProductSelect.Invoke(new Action(() => CheckAndSelectProduct(selectedProduct)));
+            else
+                CheckAndSelectProduct(selectedProduct);
+        }
+
+        private void CheckAndSelectProduct(string selectedProduct)
+        {
+            if (cbProductSelect.Items.Contains(selectedProduct))
+                cbProductSelect.SelectedItem = selectedProduct;
+            else
+                MessageBox.Show("Product not found in the ComboBox.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
+        public void SetCheckboxChecked(CheckBox checkbox, bool value)
+        {
+            if (checkbox.InvokeRequired)
+                checkbox.Invoke(new Action(() => checkbox.Checked = value));
+            else
+                checkbox.Checked = value;
+        }
+
+        public void SetCheckBoxCheckedByName(string checkBoxName, bool value)
+        {
+            CheckBox checkBox = GetCheckBoxByName(checkBoxName);
+            if (checkBox != null)
+                SetCheckboxChecked(checkBox, value);
+        }
+
+        public bool GetVarBoolState(string varName)
+        {
+            Type type = this.GetType();
+
+            FieldInfo field = type.GetField(varName, BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (field != null && field.FieldType == typeof(bool))
+            {
+                return (bool)field.GetValue(this);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid Var Name or Var is not a bool type");
+            }
+        }
+
+        public void SetVarBoolState(string varName, bool value)
+        {
+            Type type = this.GetType();
+            FieldInfo field = type.GetField(varName, BindingFlags.NonPublic | BindingFlags.Instance);
+
+            if (field != null && field.FieldType == typeof(bool))
+            {
+                field.SetValue(this, value);
+            }
+            else
+            {
+                throw new ArgumentException("Invalid Var Name or Var is not a bool type");
+            }
+        }
+
+        /*
+        public void SwitchChannelApi()
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(_channelSwitch));
+            else
+                _channelSwitch();
+        }
+                
+        public void I2cReLinkApi()
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(_I2cReLink));
+            else
+                _I2cReLink();
+        }
+
+        private void _I2cReLink()
+        {
+            i2cMaster.DisconnectApi();
+            Thread.Sleep(10);
+            _I2cLinkInitialWithoutSwtichCh();
+        }
+        */
+
+        private CheckBox GetCheckBoxByName(string name)
+        {
+            switch (name)
+            {
+                case "cbInfomation":
+                    return cbInfomation;
+                case "cbDdm":
+                    return cbDdm;
+                case "cbMemDump":
+                    return cbMemDump;
+                case "cbCorrector":
+                    return cbCorrector;
+                case "cbTxIcConfig":
+                    return cbTxIcConfig;
+                case "cbRxIcConfig":
+                    return cbRxIcConfig;
+
+                default:
+                    return null;
+            }
+        }
+
         private int _AppendWriteToFile(string sAction)
         {
             if (!System.IO.File.Exists(fileName)||
                 string.IsNullOrEmpty(System.IO.File.ReadAllText(fileName)))
-            {
+            { 
                 sAcConfig = "//Write,DevAddr,RegAddr,Value\n" + "//Read,DevAddr,RegAddr,Value\n";
             }
             else
@@ -96,41 +258,102 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        internal int I2cMasterConnectApi(bool setMode)
+        private int _I2cMasterConnect(bool setMode, bool setPassword)
         {
-            if (i2cMaster.ConnectApi(iBitrate) < 0)
+            if (i2cMaster.ConnectApi(400) < 0)
                 return -1;
 
             cbConnected.Checked = true;
+            I2cConnected = true;
 
-            if (setMode)
-            {
-                if (_SetQsfpMode(0x4D) < 0)
-                    return -1;
-            }
+            if (setMode && _SetQsfpMode(0x4D) < 0)
+                return -1;
 
+            if (setPassword && _WriteModulePassword() < 0)
+                return -1;
+                    
             return 0;
         }
-
-        internal int I2cMasterDisconnectApi()
+        
+        private int _I2cMasterDisconnect()
         {
             if (i2cMaster.DisconnectApi() < 0)
                 return -1;
 
             cbConnected.Checked = false;
+            I2cConnected = false;
 
             return 0;
         }
+        
+        private int _ChannelSwitch()
+        {
+            ProcessingChannel = (ProcessingChannel == 1) ? 2 : 1;
+            _ChannelSet(ProcessingChannel);
+            _UpdateButtonState();
 
-        private int _I2cRead(byte devAddr, byte regAddr, byte length, byte[] data)
+            return ProcessingChannel;
+        }
+
+        private void _ChannelSet(int ch)
+        {
+            i2cMaster.ChannelSetApi(ch);
+            return;
+        }
+
+        public int I2cMasterConnectApi(bool setMode, bool setPassword)
+        {
+            int result = -1;
+
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => result = _I2cMasterConnect(setMode, setPassword)));
+            else
+                result = _I2cMasterConnect(setMode, setPassword);
+
+            return result;
+        }
+
+        public int I2cMasterDisconnectApi()
+        {
+            int result = -1;
+
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => result = _I2cMasterDisconnect()));
+            else
+                result = _I2cMasterDisconnect();
+
+            return result;
+        }
+
+        public int ChannelSwitchApi()
+        {
+            int result = -1;
+
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => result = _ChannelSwitch()));
+            else
+                result = _ChannelSwitch();
+
+            return result;
+        }
+
+        public void ChannelSetApi(int ch)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _ChannelSet(ch)));
+            else
+                _ChannelSet(ch);
+        }
+
+        private int _I2cReadIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (I2cMasterConnectApi(true) < 0)
+                if (_I2cMasterConnect(true, false) < 0)
                     return -1;
             }
-            
+
             if (_SetQsfpMode(0x4D) < 0)
                 return -1;
 
@@ -141,7 +364,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    I2cMasterDisconnectApi();
+                    _I2cMasterDisconnect();
                 }
                 else if (rv != length)
                     MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
@@ -161,23 +384,22 @@ namespace IntegratedGuiV2
 
         }
 
-        private int _I2cRead2(byte devAddr, byte regAddr, byte length, byte[] data)
+        private int _I2cRead(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (I2cMasterConnectApi(false) < 0)
+                if (_I2cMasterConnect(false, false) < 0)
                     return -1;
             }
 
             if (writeToFile == false)
             {
-
                 rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    I2cMasterDisconnectApi();
+                    _I2cMasterDisconnect();
                 }
                 else if (rv != length)
                     MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
@@ -201,7 +423,7 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (I2cMasterConnectApi(true) < 0)
+                if (_I2cMasterConnect(true, false) < 0)
                     return -1;
             }
 
@@ -215,7 +437,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    I2cMasterDisconnectApi();
+                    _I2cMasterDisconnect();
                 }
                 else if (rv != length)
                     MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
@@ -234,16 +456,16 @@ namespace IntegratedGuiV2
             }
         }
 
-        private int _I2cWrite(byte devAddr, byte regAddr, byte length, byte[] data)
+        private int _I2cWriteIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
 
             if (i2cMaster.connected == false)
             {
-                if (I2cMasterConnectApi(true) < 0)
+                if (_I2cMasterConnect(true, false) < 0)
                     return -1;
             }
-            
+
             if (_SetQsfpMode(0x4D) < 0)
                 return -1;
 
@@ -253,7 +475,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    I2cMasterDisconnectApi();
+                    _I2cMasterDisconnect();
                 }
 
                 return rv;
@@ -270,13 +492,13 @@ namespace IntegratedGuiV2
             }
         }
 
-        private int _I2cWrite2(byte devAddr, byte regAddr, byte length, byte[] data)
+        private int _I2cWrite(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
 
             if (i2cMaster.connected == false)
             {
-                if (I2cMasterConnectApi(false) < 0)
+                if (_I2cMasterConnect(false, false) < 0)
                     return -1;
             }
 
@@ -286,7 +508,7 @@ namespace IntegratedGuiV2
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    I2cMasterDisconnectApi();
+                    _I2cMasterDisconnect();
                 }
 
                 return rv;
@@ -309,7 +531,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (I2cMasterConnectApi(true) < 0)
+                if (_I2cMasterConnect(true, false) < 0)
                     return -1;
             }
 
@@ -318,12 +540,11 @@ namespace IntegratedGuiV2
 
             if (writeToFile == false)
             {
-
                 rv = i2cMaster.Write16Api(devAddr, regAddr, length, data);
                 if (rv < 0)
                 {
                     MessageBox.Show("TRx module no response!!");
-                    I2cMasterDisconnectApi();
+                    _I2cMasterDisconnect();
                 }
 
                 return rv;
@@ -354,38 +575,12 @@ namespace IntegratedGuiV2
 
             return 0;
         }
-
-        private int _GetPassword_(int length, byte[] data)
-        {
-            byte[] tmp = new byte[4];
-            string dataS;
-
-            if (length < 4)
-                return -1;
-
-            if (data == null)
-                return -1;
-
-            if (tbPassword.Text.Length != 4)
-            {
-                MessageBox.Show("Please input a 4-digit password before operating!!");
-                return -1;
-            }
-
-            for (int i = 0; i < 4; i++)
-            {
-                data[i] = Convert.ToByte(tbPassword.Text[i].ToString(), 16);
-            }
-
-            dataS = Encoding.Default.GetString(data);
-            MessageBox.Show("GetPassword parsed: " + dataS);
-
-            return 4;
-        }
-
+        
         private int _GetPassword(int length, byte[] data)
         {
             byte[] tmp = new byte[4];
+            TextBox[] textBoxes = new TextBox[] { tbPasswordB0, tbPasswordB1, tbPasswordB2, tbPasswordB3 };
+
             string dataS;
 
             if (length < 4)
@@ -400,12 +595,18 @@ namespace IntegratedGuiV2
                 return -1;
             }
 
+            /*
+            for (int i = 0; i < textBoxes.Length; i++)
+            {
+                data[i] = Convert.ToByte(textBoxes[i].Text.ToString(), 16);
+            }
+            */
             data[0] = Convert.ToByte(tbPasswordB0.Text, 16);
             data[1] = Convert.ToByte(tbPasswordB1.Text, 16);
             data[2] = Convert.ToByte(tbPasswordB2.Text, 16);
             data[3] = Convert.ToByte(tbPasswordB3.Text, 16);
-
-            dataS = Encoding.Default.GetString(data);
+            
+        dataS = Encoding.Default.GetString(data);
             //MessageBox.Show("_GetPassword parse： " + dataS);
 
             return 4;
@@ -449,40 +650,34 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private void cbConnected_CheckedChanged(object sender, EventArgs e)
+        /*
+        private void _I2cLinkInitial(int Ch)
         {
-            if (cbConnected.Checked == true)
-            {
-                _I2cLinkInitial();
-                _UpdateButtonState();
-            }
-            else
-            {
-                I2cMasterDisconnectApi();
-                gbChannelSwitcher.Enabled = false;
-            }
-
-        }
-
-        private void _I2cLinkInitial()
-        {
-            if (I2cMasterConnectApi(true) < 0)
+            if (_I2cMasterConnect(true) < 0)
                 return;
-            _WriteModulePassword();
-            i2cMaster.ChannelSetApi(1);
+            _WriteModulePassword(); //LowPage password
+            //i2cMaster.ChannelSetApi(Ch);
             gbChannelSwitcher.Enabled = true;
-            Channel = 1;
+            ProcessingChannel = Ch;
         }
 
-        internal void I2cLinkInitalApi()
+        private void _I2cLinkInitialWithoutSwtichCh()
         {
-            _I2cLinkInitial();
+            if (_I2cMasterConnect(true) < 0)
+                return;
+            _WriteModulePassword(); //LowPage password
+            gbChannelSwitcher.Enabled = true;
         }
         
+        internal void I2cLinkInitalApi(int Ch)
+        {
+            _I2cLinkInitial(Ch);
+        }
+        */
         public MainForm(bool visible)
         {
             InitializeComponent();
-            
+
             if (!visible)
             {
                 this.ShowInTaskbar = false;
@@ -504,13 +699,20 @@ namespace IntegratedGuiV2
 
             dgvWriteConfig.DataSource = dtWriteConfig;
 
+            bool tmp = ucNuvotonIcpTool.GetVarBoolState("PublicVariable");
+            ucNuvotonIcpTool.SetVarBoolState("PublicVariable", true);
+            MessageBox.Show("ucNuvotonIcp_PublicVariable bool: "
+                            + "\nBefore: " + tmp
+                            + "\nAfter: " + ucNuvotonIcpTool.GetVarBoolState("PublicVariable")
+                            );
 
-            if (ucInformation.SetI2cReadCBApi(_I2cRead2) < 0)
+
+            if (ucInformation.SetI2cReadCBApi(_I2cRead) < 0)
             {
                 MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucInformation.SetI2cWriteCBApi(_I2cWrite2) < 0)
+            if (ucInformation.SetI2cWriteCBApi(_I2cWrite) < 0)
             {
                 MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
                 return;
@@ -520,13 +722,12 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucInformation.SetGetPasswordCBApi() faile Error!!");
                 return;
             }
-
-            if (ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi(_I2cRead2) < 0)
+            if (ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi(_I2cRead) < 0)
             {
                 MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucDigitalDiagnosticsMonitoring.SetI2cWriteCBApi(_I2cWrite2) < 0)
+            if (ucDigitalDiagnosticsMonitoring.SetI2cWriteCBApi(_I2cWrite) < 0)
             {
                 MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
                 return;
@@ -536,13 +737,12 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi() faile Error!!");
                 return;
             }
-
-            if (ucMemoryDump.SetI2cReadCBApi(_I2cRead2) < 0)
+            if (ucMemoryDump.SetI2cReadCBApi(_I2cRead) < 0)
             {
                 MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucMemoryDump.SetI2cWriteCBApi(_I2cWrite2) < 0)
+            if (ucMemoryDump.SetI2cWriteCBApi(_I2cWrite) < 0)
             {
                 MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
                 return;
@@ -553,65 +753,65 @@ namespace IntegratedGuiV2
                 return;
             }
 
-            if (ucGn1190Corrector.SetQsfpI2cReadCBApi(_I2cRead2) < 0)
+            if (ucGn1190Corrector.SetQsfpI2cReadCBApi(_I2cRead) < 0)
             {
                 MessageBox.Show("ucQsfpCorrector.SetQsfpI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucGn1190Corrector.SetQsfpI2cWriteCBApi(_I2cWrite2) < 0)
+            if (ucGn1190Corrector.SetQsfpI2cWriteCBApi(_I2cWrite) < 0)
             {
                 MessageBox.Show("ucQsfpCorrector.SetQsfpI2cWriteCBApi() faile Error!!");
                 return;
             }
 
-            if (ucMald37045cConfig.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucMald37045cConfig.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucMald37045cConfig.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucMald37045cConfig.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucMald37045cConfig.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
             {
                 MessageBox.Show("ucMald37045cConfig.SetI2cWriteCBApi() faile Error!!");
                 return;
             }
-            if (ucMata37044cConfig.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucMata37044cConfig.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucMata37044cConfig.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucMata37044cConfig.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucMata37044cConfig.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
             {
                 MessageBox.Show("ucMata37044cConfig.SetI2cWriteCBApi() faile Error!!");
                 return;
             }
 
-            if (ucRt145Config.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucRt145Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucRt145Config.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucRt145Config.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucRt145Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
             {
                 MessageBox.Show("ucRt145Config.SetI2cWriteCBApi() faile Error!!");
                 return;
             }
-            if (ucRt146Config.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucRt146Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucRt145Config.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucRt146Config.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucRt146Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
             {
                 MessageBox.Show("ucRt145Config.SetI2cWriteCBApi() faile Error!!");
                 return;
             }
 
-            if (ucGn2108Config.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucGn2108Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucGn2108Config.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucGn2108Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
             {
                 MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
                 return;
@@ -627,12 +827,12 @@ namespace IntegratedGuiV2
                 return;
             }
 
-            if (ucGn2109Config.SetI2cReadCBApi(_I2cRead) < 0)
+            if (ucGn2109Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucGn2109Config.SetI2cWriteCBApi(_I2cWrite) < 0)
+            if (ucGn2109Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
             {
                 MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
                 return;
@@ -647,7 +847,6 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucGn1190Config.SetI2cWrite16CBApi() faile Error!!");
                 return;
             }
-
         }
 
         public void SetPermissions(string permissions)
@@ -779,33 +978,37 @@ namespace IntegratedGuiV2
             tbRxConfigReadState.BackColor = Color.White;
         }
 
-        public void _DisableButtons()
+        private void _DisableButtons()
         {
             bGlobalRead.Enabled = false;
             bInnerSwitch.Enabled = false;
             bOutterSwitch.Enabled = false;
             bGlobalWrite.Enabled = false;
             bStoreIntoFlash.Enabled = false;
+            ucNuvotonIcpTool.DisableButtonApi();
+            /*
             tcDdmi.Enabled = false;
             tcIcConfig.Enabled = false;
             ucGn1190Corrector.DisableButtonApi();
-            ucNuvotonIcpTool.DisableButtonApi();
+            */
             bGlobalWrite2.Enabled = false;
-            bFunctionTest2.Enabled = false;
+            //bFunctionTest2.Enabled = false;
             bDumpToString.Enabled = false;
         }
 
-        public void _EnableButtons()
+        private void _EnableButtons()
         {
             bGlobalRead.Enabled = true;
             bInnerSwitch.Enabled = true;
             bOutterSwitch.Enabled = true;
+            /*
             tcDdmi.Enabled = true;
             tcIcConfig.Enabled = true;
             ucGn1190Corrector.EnableButtonApi();
+            */
             ucNuvotonIcpTool.EnableButtonApi();
             bGlobalWrite2.Enabled = true;
-            bFunctionTest2.Enabled = true;
+            //bFunctionTest2.Enabled = true;
             bDumpToString.Enabled = true;
 
             if (FirstRead)
@@ -1157,45 +1360,39 @@ namespace IntegratedGuiV2
             reader.Read(); // Move to the next Component element
         }
 
-
-
         private void bOutterSwitch_Click(object sender, EventArgs e)
         {
             if (bOutterSwitch.Enabled == true)
-                _DisableButtons();
+                bOutterSwitch.Enabled = false;
+                //_DisableButtons(); //為了避免切換期間，限制輸入其他狀態
 
-            _channelSwitch();
+            _ChannelSwitch();
+            bOutterSwitch.Select();
 
             if (bOutterSwitch.Enabled == false)
-                _EnableButtons();
-                
+                bOutterSwitch.Enabled = true;
+                //_EnableButtons(); //為了避免切換期間，限制輸入其他狀態
+
         }
 
         private void bInnerSwitch_Click(object sender, EventArgs e)
         {
             if (bInnerSwitch.Enabled == true)
-                _DisableButtons();
-
-            _channelSwitch();
+                bInnerSwitch.Enabled = false;
+               
+            _ChannelSwitch();
 
             if (bInnerSwitch.Enabled == false)
-                _EnableButtons();
+                bInnerSwitch.Enabled = true;
+                
+            bInnerSwitch.Select();
         }
 
-        private void _channelSwitch()
-        {
-            Channel = (Channel == 1) ? 2 : 1;
-
-            i2cMaster.ChannelSetApi(Channel);
-            _UpdateButtonState();
-
-            return;
-        }
         
         private void _UpdateButtonState()
         {
            
-            if (Channel == 1)
+            if (ProcessingChannel == 1)
             {
                 rbCh1.Checked = true;
                 rbCh2.Checked = false;
@@ -1203,7 +1400,7 @@ namespace IntegratedGuiV2
                 tbInnerStateCh2.BackColor = Color.White;
             }
 
-            if (Channel == 2)
+            if (ProcessingChannel == 2)
             {
                 rbCh2.Checked = true;
                 rbCh1.Checked = false;
@@ -1218,7 +1415,7 @@ namespace IntegratedGuiV2
         {
             while(cbContinuousMode.Checked){
                 ucNuvotonIcpTool.ConnectSingleApi();
-                ucNuvotonIcpTool.WriteStartApi();
+                ucNuvotonIcpTool.StartFlashingApi();
                 bInnerSwitch_Click(null, null);
             }
         }
@@ -1302,7 +1499,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        public void bGlobalRead_Click(object sender, EventArgs e)
+        private void bGlobalRead_Click(object sender, EventArgs e)
         {
             _DisableButtons();
             _InitialStateBar();
@@ -1313,15 +1510,18 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
-        public int _GlobalRead()
+        internal int _GlobalRead()
         {
             bool readFail = false;
             int errorCount = 0;
-
-            StateUpdated("Read State:\nResource preparation...", 0);
+            int delay = 10;
+            
+            StateUpdated("Read State:\nPreparing resources...", 1);
 
             if (cbInfomation.Checked)
             {
+                Thread.Sleep(delay);
+
                 tbInformationReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -1342,6 +1542,8 @@ namespace IntegratedGuiV2
 
             if (cbDdm.Checked)
             {
+                Thread.Sleep(delay);
+
                 tbDdmReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -1362,6 +1564,8 @@ namespace IntegratedGuiV2
 
             if (cbMemDump.Checked)
             {
+                Thread.Sleep(delay);
+
                 tbMemDumpReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -1382,6 +1586,8 @@ namespace IntegratedGuiV2
 
             if (cbCorrector.Checked)
             {
+                Thread.Sleep(delay);
+
                 tbCorrectorReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -1404,6 +1610,7 @@ namespace IntegratedGuiV2
             {
                 if (cbTxIcConfig.Checked)
                 {
+                    Thread.Sleep(delay);
                     tbTxConfigReadState.BackColor = Color.SteelBlue;
                     Application.DoEvents();
 
@@ -1444,6 +1651,7 @@ namespace IntegratedGuiV2
 
                 if (cbRxIcConfig.Checked)
                 {
+                    Thread.Sleep(delay);
                     tbRxConfigReadState.BackColor = Color.SteelBlue;
                     Application.DoEvents();
 
@@ -1521,24 +1729,253 @@ namespace IntegratedGuiV2
             _DisableButtons();
             _InitialStateBar();
 
-            _GlobalWirte();
+            _GlobalWrite(false);
 
             _EnableButtons();
         }
 
-        public int _GlobalWirte()
+        internal int _GlobalWrite(bool ExpernalMode)
+        {
+            bool writeFail = false;
+            int returnValue = 0;
+            int errorCount = 0;
+            int delay = 10;
+
+            StateUpdated("Write State:\nPreparing resources...", 62);
+            Application.DoEvents();
+
+            if (TestMode)
+                MessageBox.Show("cbInfomation Check state: " + cbInfomation.CheckState);
+
+            
+            if (cbInfomation.Checked)
+            {
+                Thread.Sleep(delay);
+                tbInformationReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucInformation.WriteApi() < 0)
+                {
+                    tbInformationReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nInformation...Failed", 65);
+                    errorCount++;
+                }
+                else
+                {
+                    tbInformationReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nInformation...Done", 65);
+                    if (TestMode)
+                        MessageBox.Show("Write State: Information...Done");
+                }
+                Application.DoEvents();
+            }
+
+            if (TestMode)
+                MessageBox.Show("cbDdm Check state: " + cbDdm.CheckState);
+
+            if (cbDdm.Checked)
+            {
+                Thread.Sleep(delay);
+                tbDdmReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucDigitalDiagnosticsMonitoring.WriteApi() < 0)
+                {
+                    returnValue = ucDigitalDiagnosticsMonitoring.WriteApi();
+                    MessageBox.Show("rv : " + returnValue);
+                    tbDdmReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nDdm...Failed", 68);
+                    errorCount++;
+                }
+
+                else
+                {
+                    tbDdmReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nDdm...Done", 68);
+                    if (TestMode)
+                        MessageBox.Show("Write State: Ddm...Done");
+                }
+                Application.DoEvents();
+            }
+
+            if (TestMode)
+                MessageBox.Show("cbMemDump Check state: " + cbMemDump.CheckState);
+
+            if (cbMemDump.Checked)
+            {
+                Thread.Sleep(delay);
+                tbMemDumpReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucMemoryDump.WriteApi() < 0)
+                {
+                    tbMemDumpReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nMemoryDump...Failed", 70);
+                    errorCount++;
+                }
+                else
+                {
+                    tbMemDumpReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nMemoryDump...Done", 70);
+                    if (TestMode)
+                        MessageBox.Show("Write State: MemoryDump...Done");
+                }
+                Application.DoEvents();
+            }
+
+            if (TestMode)
+                MessageBox.Show("cbCorrector Check state: " + cbCorrector.CheckState);
+
+            if (cbCorrector.Checked)
+            {
+                Thread.Sleep(delay);
+                tbCorrectorReadState.BackColor = Color.SteelBlue;
+                Application.DoEvents();
+
+                if (ucGn1190Corrector.WriteAllApi() < 0)
+                {
+                    tbCorrectorReadState.BackColor = Color.Red;
+                    StateUpdated("Write State:\nCorrector...Failed", 80);
+                    errorCount++;
+                }
+                else
+                {
+                    tbCorrectorReadState.BackColor = Color.YellowGreen;
+                    StateUpdated("Write State:\nCorrector...Done", 80);
+                    if (TestMode)
+                        MessageBox.Show("Write State: Corrector...Done");
+                }
+                Application.DoEvents();
+            }
+
+            if (TestMode)
+            {
+                MessageBox.Show("cbTxIcConfig Check state: " + cbTxIcConfig.CheckState
+                                + "\ncbProductSelect state: " + cbProductSelect.Text
+                                );
+            }
+
+            if (cbProductSelect.SelectedIndex != 0)
+            {
+                if (cbTxIcConfig.Checked)
+                {
+                    Thread.Sleep(delay);
+                    tbTxConfigReadState.BackColor = Color.SteelBlue;
+                    Application.DoEvents();
+
+                    if (!BypassWriteIcConfig)
+                    {
+                        switch (cbProductSelect.SelectedIndex)
+                        {
+                            case 1: // SAS4.0
+                                if (ucMald37045cConfig.WriteAllApi() < 0)
+                                    writeFail = true;
+
+                                break;
+                            case 2: // PCIe4
+                                if (ucRt146Config.WriteAllApi() < 0)
+                                    writeFail = true;
+
+                                break;
+                            case 3: // QSFP28
+                                if (ucGn2108Config.WriteAllApi() < 0)
+                                    writeFail = true;
+
+                                break;
+                        }
+                    }
+
+                    if (writeFail)
+                    {
+                        tbTxConfigReadState.BackColor = Color.Red;
+                        StateUpdated("Write State:\nTxIcConfig...Failed", 89);
+                        errorCount++;
+                    }
+                    else
+                    {
+                        tbTxConfigReadState.BackColor = Color.YellowGreen;
+                        StateUpdated("Write State:\nTxIcConfig...Done", 89);
+                        if (TestMode)
+                            MessageBox.Show("Write State: TxIcConfig...Done");
+                    }
+                    Application.DoEvents();
+                    writeFail = false;
+                }
+
+                if (TestMode)
+                    MessageBox.Show("cbRxIcConfig Check state: " + cbRxIcConfig.CheckState);
+
+                if (cbRxIcConfig.Checked)
+                {
+                    Thread.Sleep(delay);
+                    tbRxConfigReadState.BackColor = Color.SteelBlue;
+                    Application.DoEvents();
+
+                    if (!BypassWriteIcConfig)
+                    {
+                        switch (cbProductSelect.SelectedIndex)
+                        {
+                            case 1: // SAS4.0
+                                if (ucMata37044cConfig.WriteAllApi() < 0)
+                                    writeFail = true;
+
+                                break;
+                            case 2: // PCIe4
+                                if (ucRt145Config.WriteAllApi() < 0)
+                                    writeFail = true;
+
+                                break;
+                            case 3: // QSFP28
+                                if (ucGn2109Config.WriteAllApi() < 0)
+                                    writeFail = true;
+
+                                break;
+                        }
+                    }
+
+                    if (writeFail)
+                    {
+                        tbRxConfigReadState.BackColor = Color.Red;
+                        StateUpdated("Write State:\nRxIcConfig...Failed", 98);
+                        errorCount++;
+                    }
+                    else
+                    {
+                        tbRxConfigReadState.BackColor = Color.YellowGreen;
+                        StateUpdated("Write State:\nRxIcConfig...Done", 98);
+                        if (TestMode)
+                            MessageBox.Show("Write State: RxIcConfig...Done");
+                    }
+
+                    Application.DoEvents();
+                    
+                    /*
+                    if (ExpernalMode)
+                    {
+                        MessageBox.Show("Expernal mode : true");
+                        i2cMaster.DisconnectApi();
+                    }
+                    */
+                }
+            }
+
+            return errorCount;
+        }
+        private int _GlobalWirte_Original()
         {
 
             bool writeFail = false;
             int returnValue;
             int errorCount = 0;
+            int delay = 100;
 
-            StateUpdated("Write State:\nResource preparation...", 62);
+            StateUpdated("Write State:\nPreparing resources...", 62);
 
             if (cbInfomation.Checked)
             {
                 tbInformationReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
+                Thread.Sleep(delay);
 
                 if (ucInformation.WriteApi() < 0)
                 {
@@ -1559,6 +1996,7 @@ namespace IntegratedGuiV2
             {
                 tbDdmReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
+                Thread.Sleep(delay);
 
                 if (ucDigitalDiagnosticsMonitoring.WriteApi() < 0)
                 {
@@ -1582,6 +2020,7 @@ namespace IntegratedGuiV2
             {
                 tbMemDumpReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
+                Thread.Sleep(delay);
 
                 if (ucMemoryDump.WriteApi() < 0)
                 {
@@ -1602,6 +2041,7 @@ namespace IntegratedGuiV2
             {
                 tbCorrectorReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
+                Thread.Sleep(delay);
 
                 if (ucGn1190Corrector.WriteAllApi() < 0)
                 {
@@ -1624,6 +2064,7 @@ namespace IntegratedGuiV2
                 {
                     tbTxConfigReadState.BackColor = Color.SteelBlue;
                     Application.DoEvents();
+                    Thread.Sleep(delay);
 
                     switch (cbProductSelect.SelectedIndex)
                     {
@@ -1664,6 +2105,7 @@ namespace IntegratedGuiV2
                 {
                     tbRxConfigReadState.BackColor = Color.SteelBlue;
                     Application.DoEvents();
+                    Thread.Sleep(delay);
 
                     switch (cbProductSelect.SelectedIndex)
                     {
@@ -1775,11 +2217,6 @@ namespace IntegratedGuiV2
             _UpdateTabPageVisibility();
         }
 
-        private void cbContinuousMode_CheckedChanged(object sender, EventArgs e)
-        {
-            _ContinuousMode();
-        }
-
         private void cbPermission_SelectedIndexChanged(object sender, EventArgs e)
         {
             ConfigUiByXmlApi("settings.xml");
@@ -1787,6 +2224,8 @@ namespace IntegratedGuiV2
 
         private void _MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            //_I2cMasterDisconnect();
+
             if (e.CloseReason == CloseReason.UserClosing)
             {
                 Application.Exit();
@@ -1814,6 +2253,11 @@ namespace IntegratedGuiV2
             Application.Restart();
         }
 
+        private void cbContinuousMode_CheckedChanged(Object sender, EventArgs e)
+        {
+            MessageBox.Show("Function to be confirmed");
+        }
+
         private void bGenerateCfg_Click(object sender, EventArgs e)
         {
             if (bGenerateCfg.Enabled)
@@ -1822,6 +2266,30 @@ namespace IntegratedGuiV2
             _GenerateXmlFileForProject();
             bGenerateCfg.Enabled = true;
         }
+
+        private void cbConnected_CheckedChanged(object sender, EventArgs e)
+        {
+            if (FirstRound)
+            {
+                ProcessingChannel = 1;
+                FirstRound = false;
+            }
+
+            if (cbConnected.Checked == true)
+            {
+                _I2cMasterConnect(true, true);
+                i2cMaster.ChannelSetApi(ProcessingChannel);
+                _UpdateButtonState();
+                gbChannelSwitcher.Enabled = true;
+            }
+            else
+            {
+                _I2cMasterDisconnect();
+                gbChannelSwitcher.Enabled = false;
+            }
+            
+        }
+
     }
 
     public class ComboBoxItem
@@ -1834,7 +2302,5 @@ namespace IntegratedGuiV2
         }
 
     }
-
-   
 
 }
