@@ -108,6 +108,7 @@
             this.tbFilePath.Size = new System.Drawing.Size(281, 25);
             this.tbFilePath.TabIndex = 43;
             this.tbFilePath.Text = "Please click here, to import the Config file...";
+            this.tbFilePath.MouseClick += new System.Windows.Forms.MouseEventHandler(this.tbFilePath_MouseClick);
             this.tbFilePath.Enter += new System.EventHandler(this.tbFilePath_Enter);
             this.tbFilePath.Leave += new System.EventHandler(this.tbFilePath_Leave);
             // 

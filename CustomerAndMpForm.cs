@@ -388,6 +388,7 @@ namespace IntegratedGuiV2
                 {
                     tbFilePath.Text = openFileDialog.FileName;
                     _ParserXmlForProjectInformation(openFileDialog.FileName);
+                    tbFilePath.SelectionStart = tbFilePath.Text.Length;
                 }
             }
         }
@@ -458,8 +459,18 @@ namespace IntegratedGuiV2
             */
 
         }
-       
+
+        private void tbFilePath_MouseClick(object sender, MouseEventArgs e)
+        {
+            _FilePathContentChanges();
+        }
+
         private void tbFilePath_Enter(object sender, EventArgs e)
+        {
+            _FilePathContentChanges();
+        }
+
+        private void _FilePathContentChanges()
         {
             if (tbFilePath.Text == "Please click here, to import the Config file...")
             {
@@ -470,18 +481,14 @@ namespace IntegratedGuiV2
             _LoadXmlFile();
 
             if (lMode.Text == "Customer")
-            {
                 this.Size = new System.Drawing.Size(550, 220);
-            }
             else if (lMode.Text == "MP")
-            {
                 this.Size = new System.Drawing.Size(550, 300);
-            }
         }
 
         private void tbFilePath_Leave(object sender, EventArgs e)
         {
-            if (tbFilePath.Text == "")
+            if (string.IsNullOrEmpty(tbFilePath.Text))
             {
                 tbFilePath.Text = "Please click here, to import the Config file...";
                 tbFilePath.ForeColor = Color.Silver;
@@ -659,7 +666,7 @@ namespace IntegratedGuiV2
 
                 
 
-                /*
+                
                 for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSide ? 2 : 1); ProcessingChannel++)
                 {
                     _RemoteInitial();
@@ -682,7 +689,7 @@ namespace IntegratedGuiV2
                     mainForm.I2cMasterDisconnectApi(); // ReLink-step1 ；觀察有其必要性?
                     mainForm.I2cMasterConnectApi(true, true); // ReLink-step2
                 }
-                */
+                
                 
             }
             finally
@@ -701,7 +708,7 @@ namespace IntegratedGuiV2
                 mainForm.I2cMasterDisconnectApi();
         }
 
-
+       
     }
 }
 

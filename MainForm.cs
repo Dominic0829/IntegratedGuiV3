@@ -60,6 +60,20 @@ namespace IntegratedGuiV2
             ProgressValue?.Invoke(this, value);
         }
 
+        private void SetupControlEvents()
+        {
+            ucNuvotonIcpTool.LinkTextUpdated += new UcNuvotonIcpTool.LinkTextUpdatedEventHandler(ucNuvotonIcp_LinkTextUpdated);
+        }
+
+        private void ucNuvotonIcp_LinkTextUpdated(string text)
+        {
+            
+            if (this.bIcpConnect.InvokeRequired)// 檢查是否需要跨執行緒調用
+                this.bIcpConnect.Invoke(new Action(() => this.bIcpConnect.Text = text));
+            else
+                this.bIcpConnect.Text = text;
+        }
+
         public string GetValueFromUcRt146Config(string comboBoxId)
         {
             return ucRt146Config.GetComboBoxSelectedValue(comboBoxId);
@@ -295,10 +309,29 @@ namespace IntegratedGuiV2
             return ProcessingChannel;
         }
 
-        private void _ChannelSet(int ch)
+        private int _ChannelSet(int ch)
         {
-            i2cMaster.ChannelSetApi(ch);
-            return;
+            if (!I2cConnected)
+            {
+                if (_I2cMasterConnect(true, false) < 0)
+                    return -1;
+
+                I2cConnected = true;
+            }
+
+            Thread.Sleep(10);
+            int result = i2cMaster.ChannelSetApi(ch);
+
+            if (result < 0)
+                return -1; 
+
+            if (ch == 0)
+            {
+                i2cMaster.DisconnectApi();
+                I2cConnected = false;
+            }
+
+            return 0;
         }
 
         public int I2cMasterConnectApi(bool setMode, bool setPassword)
@@ -674,9 +707,28 @@ namespace IntegratedGuiV2
             _I2cLinkInitial(Ch);
         }
         */
+
+        private void UcNuvotonIcpControl_RequestI2cOperation(object sender, I2cOperationEventArgs e)
+        {
+            switch (e.OperationType)
+            {
+                case I2cOperationType.Connect:
+                    _I2cMasterConnect(true, false);
+                    break;
+                case I2cOperationType.Disconnect:
+                    _I2cMasterDisconnect();
+                    break;
+                case I2cOperationType.SetChannel:
+                    _ChannelSet(e.Channel);
+                    _SetAutoReconnectControl(false);
+                    break;
+            }
+        }
+
         public MainForm(bool visible)
         {
             InitializeComponent();
+            SetupControlEvents(); // For IcpTool Button.text update
 
             if (!visible)
             {
@@ -684,6 +736,7 @@ namespace IntegratedGuiV2
             }
 
             this.FormClosing += new FormClosingEventHandler(_MainForm_FormClosing);
+            ucNuvotonIcpTool.RequestI2cOperation += UcNuvotonIcpControl_RequestI2cOperation;
             this.Size = new System.Drawing.Size(1170, 870);
             _InitialStateBar();
             //_EnableIcConfig();
@@ -699,13 +752,14 @@ namespace IntegratedGuiV2
 
             dgvWriteConfig.DataSource = dtWriteConfig;
 
+            /*
             bool tmp = ucNuvotonIcpTool.GetVarBoolState("PublicVariable");
             ucNuvotonIcpTool.SetVarBoolState("PublicVariable", true);
             MessageBox.Show("ucNuvotonIcp_PublicVariable bool: "
                             + "\nBefore: " + tmp
                             + "\nAfter: " + ucNuvotonIcpTool.GetVarBoolState("PublicVariable")
                             );
-
+            */
 
             if (ucInformation.SetI2cReadCBApi(_I2cRead) < 0)
             {
@@ -985,7 +1039,7 @@ namespace IntegratedGuiV2
             bOutterSwitch.Enabled = false;
             bGlobalWrite.Enabled = false;
             bStoreIntoFlash.Enabled = false;
-            ucNuvotonIcpTool.DisableButtonApi();
+            ucNuvotonIcpTool.SetButtonEnable("bLink" , false);
             /*
             tcDdmi.Enabled = false;
             tcIcConfig.Enabled = false;
@@ -1006,7 +1060,7 @@ namespace IntegratedGuiV2
             tcIcConfig.Enabled = true;
             ucGn1190Corrector.EnableButtonApi();
             */
-            ucNuvotonIcpTool.EnableButtonApi();
+            ucNuvotonIcpTool.SetButtonEnable("bLink", true);
             bGlobalWrite2.Enabled = true;
             //bFunctionTest2.Enabled = true;
             bDumpToString.Enabled = true;
@@ -1372,7 +1426,6 @@ namespace IntegratedGuiV2
             if (bOutterSwitch.Enabled == false)
                 bOutterSwitch.Enabled = true;
                 //_EnableButtons(); //為了避免切換期間，限制輸入其他狀態
-
         }
 
         private void bInnerSwitch_Click(object sender, EventArgs e)
@@ -1388,7 +1441,6 @@ namespace IntegratedGuiV2
             bInnerSwitch.Select();
         }
 
-        
         private void _UpdateButtonState()
         {
            
@@ -1410,7 +1462,7 @@ namespace IntegratedGuiV2
 
             System.Windows.Forms.Application.DoEvents();
         }
-
+        /*
         private void _ContinuousMode()
         {
             while(cbContinuousMode.Checked){
@@ -1419,7 +1471,7 @@ namespace IntegratedGuiV2
                 bInnerSwitch_Click(null, null);
             }
         }
-
+        */
         private void _EnableIcConfig()
         {
             if (cbProductSelect.SelectedIndex != 0)
@@ -1503,9 +1555,7 @@ namespace IntegratedGuiV2
         {
             _DisableButtons();
             _InitialStateBar();
-
             _GlobalRead();
-
             FirstRead = true;
             _EnableButtons();
         }
@@ -1515,13 +1565,11 @@ namespace IntegratedGuiV2
             bool readFail = false;
             int errorCount = 0;
             int delay = 10;
-            
             StateUpdated("Read State:\nPreparing resources...", 1);
 
             if (cbInfomation.Checked)
             {
                 Thread.Sleep(delay);
-
                 tbInformationReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -1543,7 +1591,6 @@ namespace IntegratedGuiV2
             if (cbDdm.Checked)
             {
                 Thread.Sleep(delay);
-
                 tbDdmReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -1565,7 +1612,6 @@ namespace IntegratedGuiV2
             if (cbMemDump.Checked)
             {
                 Thread.Sleep(delay);
-
                 tbMemDumpReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -1587,7 +1633,6 @@ namespace IntegratedGuiV2
             if (cbCorrector.Checked)
             {
                 Thread.Sleep(delay);
-
                 tbCorrectorReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
@@ -2290,6 +2335,44 @@ namespace IntegratedGuiV2
             
         }
 
+        private void bIcpConnect_Click(object sender, EventArgs e)
+        {
+            //if (bIcpConnect.Enabled)
+            //    bIcpConnect.Enabled = false;
+
+            ucNuvotonIcpTool.IcpConnectApi();
+
+            //if (!bIcpConnect.Enabled)
+            //    bIcpConnect.Enabled = true;
+        }
+
+        private void _SetAutoReconnectControl(bool ControlState)
+        {
+            ucNuvotonIcpTool.SetVarBoolState("AutoReconnectMode", ControlState);
+            
+            if (ControlState)
+                cbAutoReconnect.Checked = true;
+            else
+                cbAutoReconnect.Checked = false;
+        }
+
+        private bool _GetAutoReconnectControl()
+        {
+            return ucNuvotonIcpTool.GetVarBoolState("AutoReconnectMode");
+        }
+
+        private void cbAutoReconnect_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbAutoReconnect.Checked)
+                _SetAutoReconnectControl(true);
+            else if (!cbAutoReconnect.Checked)
+                _SetAutoReconnectControl(false);
+        }
+
+        private void bCheckState_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("ucNuvotonIcp\nAutoReconnectMode: " + _GetAutoReconnectControl());
+        }
     }
 
     public class ComboBoxItem
