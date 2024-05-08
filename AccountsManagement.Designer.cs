@@ -151,7 +151,7 @@
             this.cbPermissions.Font = new System.Drawing.Font("Nirmala UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.cbPermissions.FormattingEnabled = true;
             this.cbPermissions.Items.AddRange(new object[] {
-            "Operator",
+            "MP Manager",
             "Engineer",
             "Administrator"});
             this.cbPermissions.Location = new System.Drawing.Point(17, 182);

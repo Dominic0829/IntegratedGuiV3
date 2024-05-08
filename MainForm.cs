@@ -1263,12 +1263,17 @@ namespace IntegratedGuiV2
 
         private void _GenerateXmlFileFromUcComponents()
         {
+            string folderPath = System.Windows.Forms.Application.StartupPath;
+            string combinedPath = Path.Combine(folderPath, "XmlFolder");
+            string xmlFilePath = Path.Combine(combinedPath, "Settings.xml");
+            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
+
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Settings");
             xmlDoc.AppendChild(root);
             XmlElement permissionsNode = xmlDoc.CreateElement("Permissions");
             root.AppendChild(permissionsNode);
-            string[] roles = { "Administrator", "Engineer", "Operator" };
+            string[] roles = { "Administrator", "Engineer", "MP Manager" };
 
             foreach (string role in roles)
             {
@@ -1339,7 +1344,7 @@ namespace IntegratedGuiV2
                 }
             }
 
-            xmlDoc.Save("Settings.xml");
+            xmlDoc.Save(xmlFilePath);
         }
 
         private void _GenerateXmlFileForProject()
@@ -1439,7 +1444,13 @@ namespace IntegratedGuiV2
             OpenFileDialog ofdSelectFile = new OpenFileDialog();
             XmlReader xrConfig;
 
-            if (configXml.Length == 0)
+            string folderPath = System.Windows.Forms.Application.StartupPath;
+            string combinedPath = Path.Combine(folderPath, "XmlFolder");
+            string xmlFilePath = Path.Combine(combinedPath, configXml);
+            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
+
+
+            if (xmlFilePath.Length == 0)
             {
                 ofdSelectFile.Title = "Select config file";
                 ofdSelectFile.Filter = "xml files (*.xml)|*.xml";
@@ -1449,7 +1460,7 @@ namespace IntegratedGuiV2
             }
             else
             {
-                xrConfig = XmlReader.Create(configXml);
+                xrConfig = XmlReader.Create(xmlFilePath);
             }
 
             while (xrConfig.Read())
@@ -2453,7 +2464,7 @@ namespace IntegratedGuiV2
 
         private void _MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            //_I2cMasterDisconnect();
+            _I2cMasterDisconnect();
 
             if (e.CloseReason == CloseReason.UserClosing)
             {

@@ -51,7 +51,7 @@
             this.lPathT = new System.Windows.Forms.Label();
             this.lPath = new System.Windows.Forms.Label();
             this.cbBypassW = new System.Windows.Forms.CheckBox();
-            this.cb1 = new System.Windows.Forms.CheckBox();
+            this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
             this.lRssi3 = new System.Windows.Forms.Label();
             this.lRssi2 = new System.Windows.Forms.Label();
@@ -346,27 +346,27 @@
             this.cbBypassW.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbBypassW.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbBypassW.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbBypassW.Location = new System.Drawing.Point(472, 0);
+            this.cbBypassW.Location = new System.Drawing.Point(436, 15);
             this.cbBypassW.Name = "cbBypassW";
-            this.cbBypassW.Size = new System.Drawing.Size(68, 15);
+            this.cbBypassW.Size = new System.Drawing.Size(102, 15);
             this.cbBypassW.TabIndex = 62;
-            this.cbBypassW.Text = "DemoMode";
+            this.cbBypassW.Text = "BypassIcConfigWrite";
             this.cbBypassW.UseVisualStyleBackColor = true;
             // 
-            // cb1
+            // cbI2cConnect
             // 
-            this.cb1.AutoSize = true;
-            this.cb1.Checked = true;
-            this.cb1.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cb1.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
-            this.cb1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cb1.Location = new System.Drawing.Point(472, 16);
-            this.cb1.Name = "cb1";
-            this.cb1.Size = new System.Drawing.Size(39, 15);
-            this.cb1.TabIndex = 63;
-            this.cb1.Text = "Link";
-            this.cb1.UseVisualStyleBackColor = true;
-            this.cb1.CheckedChanged += new System.EventHandler(this.I2cMasterConnect_CheckedChanged);
+            this.cbI2cConnect.AutoSize = true;
+            this.cbI2cConnect.Checked = true;
+            this.cbI2cConnect.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbI2cConnect.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbI2cConnect.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbI2cConnect.Location = new System.Drawing.Point(436, 0);
+            this.cbI2cConnect.Name = "cbI2cConnect";
+            this.cbI2cConnect.Size = new System.Drawing.Size(65, 15);
+            this.cbI2cConnect.TabIndex = 63;
+            this.cbI2cConnect.Text = "ChConnect";
+            this.cbI2cConnect.UseVisualStyleBackColor = true;
+            this.cbI2cConnect.CheckedChanged += new System.EventHandler(this.I2cMasterConnect_CheckedChanged);
             // 
             // gbOperatorMode
             // 
@@ -446,6 +446,7 @@
             // tbRssi1
             // 
             this.tbRssi1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbRssi1.Enabled = false;
             this.tbRssi1.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRssi1.Location = new System.Drawing.Point(332, 36);
             this.tbRssi1.Name = "tbRssi1";
@@ -466,6 +467,7 @@
             // tbRssi0
             // 
             this.tbRssi0.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbRssi0.Enabled = false;
             this.tbRssi0.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRssi0.Location = new System.Drawing.Point(281, 36);
             this.tbRssi0.Name = "tbRssi0";
@@ -521,9 +523,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
-            this.ClientSize = new System.Drawing.Size(536, 264);
+            this.ClientSize = new System.Drawing.Size(536, 311);
             this.Controls.Add(this.gbOperatorMode);
-            this.Controls.Add(this.cb1);
+            this.Controls.Add(this.cbI2cConnect);
             this.Controls.Add(this.cbBypassW);
             this.Controls.Add(this.lPath);
             this.Controls.Add(this.lPathT);
@@ -582,7 +584,7 @@
         private System.Windows.Forms.Label lPathT;
         private System.Windows.Forms.Label lPath;
         private System.Windows.Forms.CheckBox cbBypassW;
-        private System.Windows.Forms.CheckBox cb1;
+        private System.Windows.Forms.CheckBox cbI2cConnect;
         private System.Windows.Forms.GroupBox gbOperatorMode;
         private System.Windows.Forms.Label lVenderSn;
         private System.Windows.Forms.TextBox tbRssi0;

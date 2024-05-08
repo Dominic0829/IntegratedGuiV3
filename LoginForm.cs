@@ -30,8 +30,6 @@ namespace IntegratedGuiV2
 
         private void bLogin_Click(object sender, EventArgs e)
         {
-            loadingForm.Show(this);
-
             dbConnect.Open();
             string login = "SELECT * FROM ConnproMembers WHERE dbId= @dbId AND dbPassword = @dbPassword";
             dbCommand = new OleDbCommand(login, dbConnect);
@@ -40,10 +38,9 @@ namespace IntegratedGuiV2
             OleDbDataReader dbReader = dbCommand.ExecuteReader();
             MainForm mainForm = new MainForm(true);
 
-
-
             if (dbReader.Read())
             {
+                loadingForm.Show(this);
                 string permission = dbReader["dbPermissions"].ToString();
                 mainForm.SetPermissions(permission);
                 mainForm.SetProduct(cbProducts.SelectedItem.ToString());
@@ -53,11 +50,11 @@ namespace IntegratedGuiV2
             }
             else
             {
-                loadingForm.Close();
-                MessageBox.Show("Oops, seems like the account or password is not valid, Please try again.", "Login failed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //loadingForm.Close();
                 tbId.Text = "";
                 tbPassword.Text = "";
                 tbId.Focus();
+                MessageBox.Show("Oops, seems like the account or password is not valid, Please try again.", "Login failed.", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             dbConnect.Close();

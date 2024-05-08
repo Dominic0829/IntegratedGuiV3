@@ -35,6 +35,7 @@ namespace IntegratedGuiV2
         private bool TestMode = false;
         private bool FirstRound = true;
         private bool RxPowerUpdate = false;
+        private bool I2cConnected = false;
 
         private Thread RxPowerUpdateThread;
         private bool ContinueRxPowerUpdate = true;
@@ -90,8 +91,10 @@ namespace IntegratedGuiV2
             this.Load += MainForm_Load;
             this.KeyPreview = true;
             this.KeyDown += _HideKeys_KeyDown;
-            mainForm.I2cMasterConnectApi(true, true); // (bool setMode, bool setPassword)
-            
+           
+            if (!(mainForm.I2cMasterConnectApi(true, true) < 0)) // (bool setMode, bool setPassword)
+                I2cConnected = true;
+
             mainForm.ReadStateUpdated += MainForm_ReadStateUpdated;
             mainForm.ProgressValue += MainForm_ProgressUpdated;
             //ucNuvotonIcpTool.MessageUpdated += UcNuvotonIcpTool_MessageUpdated;
@@ -235,7 +238,8 @@ namespace IntegratedGuiV2
                 SequenceIndexA++;
                 if (CheckSequenceComplete(SequenceIndexA, expectedKeysA))
                 {
-                    mainForm.I2cMasterDisconnectApi();
+                    if (!(mainForm.I2cMasterDisconnectApi() < 0))
+                        I2cConnected = false;
                     OpenLoginForm();
                     ResetSequence();
                 }
@@ -245,7 +249,8 @@ namespace IntegratedGuiV2
                 SequenceIndexB++;
                 if (CheckSequenceComplete(SequenceIndexB, expectedKeysB))
                 {
-                    mainForm.I2cMasterDisconnectApi();
+                    if (!(mainForm.I2cMasterDisconnectApi() < 0))
+                        I2cConnected = false;
                     OpenAdminAuthenticationForm();
                     ResetSequence();
                 }
@@ -254,6 +259,14 @@ namespace IntegratedGuiV2
             {
                 ResetSequence();
             }
+        }
+
+        private void _UpdateButtonState()
+        {
+            if (I2cConnected)
+                cbI2cConnect.Checked = true;
+            else if (!I2cConnected)
+                cbI2cConnect.Checked = false;
         }
 
         private bool CheckSequenceComplete(int currentIndex, Keys[] expectedKeys)
@@ -512,9 +525,11 @@ namespace IntegratedGuiV2
             else if (lMode.Text == "MP")
             {
                 this.Size = new System.Drawing.Size(550, 300);
+                rbSingle.Select();
                 rbSingle.Enabled = false;
                 rbBoth.Enabled = false;
-                mainForm.I2cMasterConnectApi(true, true);
+                if (!(mainForm.I2cMasterConnectApi(true, true) < 0))
+                    I2cConnected = true;
                 mainForm.ChannelSetApi(1);
 
                 ContinueRxPowerUpdate = true;
@@ -645,7 +660,8 @@ namespace IntegratedGuiV2
         {
             if (e.CloseReason == CloseReason.UserClosing)
             {
-                mainForm.I2cMasterDisconnectApi();
+                if (!(mainForm.I2cMasterDisconnectApi() < 0))
+                    I2cConnected = false;
                 Application.Exit();
             }
         }
@@ -769,7 +785,6 @@ namespace IntegratedGuiV2
                     }
                     
                     Application.DoEvents();
-                    //mainForm.I2cMasterDisconnectApi();
                     Thread.Sleep(500);
                 }
             }
@@ -821,8 +836,12 @@ namespace IntegratedGuiV2
                         MessageBox.Show("Switch channel");
 
                     mainForm.ChannelSwitchApi(); // switch
-                    mainForm.I2cMasterDisconnectApi(); // ReLink-step1 ；觀察有其必要性?
-                    mainForm.I2cMasterConnectApi(true, true); // ReLink-step2
+
+                    if (!(mainForm.I2cMasterDisconnectApi() < 0))// ReLink-step1 ；觀察有其必要性?
+                        I2cConnected = false;
+
+                    if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// ReLink-step2
+                        I2cConnected = true;
                 }
 
                 FirstRound = false;
@@ -831,8 +850,12 @@ namespace IntegratedGuiV2
             if (DoubleSide)
             {
                 mainForm.ChannelSwitchApi();
-                mainForm.I2cMasterDisconnectApi(); // ReLink-step1 ；觀察有其必要性?
-                mainForm.I2cMasterConnectApi(true, true); // ReLink-step2
+
+                if (!(mainForm.I2cMasterDisconnectApi() < 0))// ReLink-step1 ；觀察有其必要性?
+                    I2cConnected = false;
+
+                if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// ReLink-step2
+                    I2cConnected = true;
             }
         }
 
@@ -854,19 +877,24 @@ namespace IntegratedGuiV2
             }
             finally
             {
-                mainForm.I2cMasterDisconnectApi();
+                if (!(mainForm.I2cMasterDisconnectApi() < 0))
+                    I2cConnected = false;
+
+                _UpdateButtonState();
                 bStart.Enabled = true;
             }
         }
 
         private void I2cMasterConnect_CheckedChanged(object sender, EventArgs e)
         {
-            if (cb1.Checked)
+            if (cbI2cConnect.Checked)
             {
-                mainForm.I2cMasterConnectApi(true, true);
+                if (!(mainForm.I2cMasterConnectApi(true, true) < 0))
+                    I2cConnected = true;
             }
             else
-                mainForm.I2cMasterDisconnectApi();
+                if (!(mainForm.I2cMasterDisconnectApi() < 0))
+                    I2cConnected = false;
         }
 
         private void _RxPowerUpdate()

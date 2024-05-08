@@ -26,8 +26,6 @@ namespace IntegratedGuiV2
 
         private void bAuthenticate_Click(object sender, EventArgs e)
         {
-            
-
             if (tbAdminPassword.Text == AdminPassword)
             {
                 loadingForm.Show(this);
