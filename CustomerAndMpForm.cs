@@ -11,6 +11,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web.UI;
 using System.Windows.Forms;
 using System.Xml;
 using ComponentFactory.Krypton.Toolkit;
@@ -25,7 +26,7 @@ namespace IntegratedGuiV2
     public partial class CustomerAndMpForm : KryptonForm
     {
         private MainForm mainForm; // Assist processing for i2c communication
-        private UcNuvotonIcpTool ucNuvotonIcpTool; // Only processing firmware flashing
+        private System.Windows.Forms.Timer timer;
         private int SequenceIndexA = 0;
         private int SequenceIndexB = 0;
         private bool DoubleSide = false;
@@ -33,13 +34,55 @@ namespace IntegratedGuiV2
         private bool DemoMode = false;
         private bool TestMode = false;
         private bool FirstRound = true;
+        private bool RxPowerUpdate = false;
+
+        private Thread RxPowerUpdateThread;
+        private bool ContinueRxPowerUpdate = true;
+
+        private void MainForm_MainMessageUpdated(object sender, MessageEventArgs e)
+        {
+            if (ProcessingChannel == 1)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    lCh1Message.Text = e.Message;
+                    cProgressBar1.Value = e.ProgressValue;
+                    cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
+                }));
+            }
+            else if (ProcessingChannel == 2)
+            {
+                BeginInvoke(new Action(() =>
+                {
+                    lCh2Message.Text = e.Message;
+                    cProgressBar2.Value = e.ProgressValue;
+                    cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
+                }));
+            }
+        }
+
+        private void _MessageUpdate(string message, int number)
+        {
+            if (ProcessingChannel == 1)
+            {
+                    lCh1Message.Text = message;
+                    cProgressBar1.Value = number;
+                    cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
+            }
+            else if (ProcessingChannel == 2)
+            {
+                    lCh2Message.Text = message;
+                    cProgressBar2.Value = number;
+                    cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
+            }
+            Application.DoEvents();
+        }
 
         public CustomerAndMpForm()
         {
             InitializeComponent();
            
             mainForm = new MainForm(true);
-            ucNuvotonIcpTool = new UcNuvotonIcpTool();
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
             this.Size = new System.Drawing.Size(550, 220);
             cProgressBar1.Value = 0;
@@ -51,20 +94,21 @@ namespace IntegratedGuiV2
             
             mainForm.ReadStateUpdated += MainForm_ReadStateUpdated;
             mainForm.ProgressValue += MainForm_ProgressUpdated;
-            ucNuvotonIcpTool.MessageUpdated += UcNuvotonIcpTool_MessageUpdated;
-
+            //ucNuvotonIcpTool.MessageUpdated += UcNuvotonIcpTool_MessageUpdated;
+            mainForm.MainMessageUpdated += MainForm_MainMessageUpdated;
+           
             //ucMainForm initial...
             if (TestMode)
             {
-                bool beforeTestMode = ucNuvotonIcpTool.GetVarBoolState("TestMode");
-                ucNuvotonIcpTool.SetVarBoolState("TestMode", true);
+                bool beforeTestMode = mainForm.GetVarBoolStateFromNuvotonIcpApi("TestMode");
+                mainForm.SetVarBoolStateToNuvotonIcpApi("TestMode", true);
                 MessageBox.Show("Icp TestMode state...\n\nBefore: " + beforeTestMode
-                                + "\n\nAfter: " + ucNuvotonIcpTool.GetVarBoolState("TestMode")
+                                + "\n\nAfter: " + mainForm.GetVarBoolStateFromNuvotonIcpApi("TestMode")
                                 );
                 //mainForm?.SelectProduct("SAS4.0"); Force switch
-                mainForm?.SetCheckBoxCheckedByName("cbInfomation", false);
-                mainForm?.SetCheckBoxCheckedByName("cbTxIcConfig", false);
-                mainForm?.SetCheckBoxCheckedByName("cbRxIcConfig", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", false);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", false);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
 
                 var checkBoxStates = mainForm.GetCheckBoxStates();
                 var items = String.Join(", ", mainForm.GetComboBoxItems());
@@ -77,9 +121,9 @@ namespace IntegratedGuiV2
                 var BeforeItems = items;
                 var BeforeSelectedProducts = selectedProduct;
 
-                mainForm?.SetCheckBoxCheckedByName("cbInfomation", true);
-                mainForm?.SetCheckBoxCheckedByName("cbTxIcConfig", true);
-                mainForm?.SetCheckBoxCheckedByName("cbRxIcConfig", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
 
                 checkBoxStates = mainForm.GetCheckBoxStates();
                 MessageBox.Show("CheckBox state...\n\nBefore: "
@@ -96,35 +140,35 @@ namespace IntegratedGuiV2
             }
             else
             {
-                mainForm?.SetCheckBoxCheckedByName("cbInfomation", true);
-                mainForm?.SetCheckBoxCheckedByName("cbDdm", true);
-                mainForm?.SetCheckBoxCheckedByName("cbMemDump", true);
-                mainForm?.SetCheckBoxCheckedByName("cbCorrector", true);
-                mainForm?.SetCheckBoxCheckedByName("cbTxIcConfig", true);
-                mainForm?.SetCheckBoxCheckedByName("cbRxIcConfig", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbMemDump", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
             }
 
             //ucNuvotonICP initial...
             if (TestMode)
             {
                 MessageBox.Show("ReLink and Erase APROM...Done");
-                bool beforeSecurityLock = ucNuvotonIcpTool.GetCheckBoxState("cbSecurityLock");
-                ucNuvotonIcpTool.SetCheckBoxState("cbSecurityLock", false);
-                ucNuvotonIcpTool.UpdateSecurityLockStateApi();
+                bool beforeSecurityLock = mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbSecurityLock");
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false);
+                mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
                 MessageBox.Show("SecurityLock state...\n\nBefore: " + beforeSecurityLock
-                                + "\n\nAfter: " + ucNuvotonIcpTool.GetCheckBoxState("cbSecurityLock")
+                                + "\n\nAfter: " + mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbSecurityLock")
                                 );
 
-                var BeforecbLDROM = ucNuvotonIcpTool.GetCheckBoxState("cbLDROM");
-                var BeforecbAPROM = ucNuvotonIcpTool.GetCheckBoxState("cbAPROM");
-                var BeforecbDATAROM = ucNuvotonIcpTool.GetCheckBoxState("cbDataFlash");
-                string pathLDROM = ucNuvotonIcpTool.GetTextBoxText("tbLDROM");
-                string pathAPROM = ucNuvotonIcpTool.GetTextBoxText("tbAPROM");
-                string pathDATAROM = ucNuvotonIcpTool.GetTextBoxText("tbDataFlash");
+                var BeforecbLDROM = mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbLDROM");
+                var BeforecbAPROM = mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbAPROM");
+                var BeforecbDATAROM = mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbDataFlash");
+                string pathLDROM = mainForm.GetTextBoxTextFromNuvotonIcpApi("tbLDROM");
+                string pathAPROM = mainForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM");
+                string pathDATAROM = mainForm.GetTextBoxTextFromNuvotonIcpApi("tbDataFlash");
 
-                ucNuvotonIcpTool.SetCheckBoxState("cbLDROM", false);
-                ucNuvotonIcpTool.SetCheckBoxState("cbAPROM", true);
-                ucNuvotonIcpTool.SetCheckBoxState("cbDataFlash", false);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
 
                 MessageBox.Show("Flashing checkBox state...\n\nBefore: "
                                 + "\n   cbLDROM: " + BeforecbLDROM
@@ -133,20 +177,20 @@ namespace IntegratedGuiV2
                                 + "\n   tbLDROM: " + pathLDROM
                                 + "\n   tbAPROM: " + pathAPROM
                                 + "\n   tbcbDataFlash: " + pathDATAROM
-                                + "\n\nAfter:\n   cbLDROM: " + ucNuvotonIcpTool.GetCheckBoxState("cbLDROM")
-                                + "\n   cbAPROM: " + ucNuvotonIcpTool.GetCheckBoxState("cbAPROM")
-                                + "\n   cbDataFlash: " + ucNuvotonIcpTool.GetCheckBoxState("cbDataFlash")
+                                + "\n\nAfter:\n   cbLDROM: " + mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbLDROM")
+                                + "\n   cbAPROM: " + mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbAPROM")
+                                + "\n   cbDataFlash: " + mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbDataFlash")
                                 );
             }
             else
             {
-                ucNuvotonIcpTool.SetCheckBoxState("cbLDROM", false);
-                ucNuvotonIcpTool.SetCheckBoxState("cbAPROM", true);
-                ucNuvotonIcpTool.SetCheckBoxState("cbDataFlash", false);
-                ucNuvotonIcpTool.SetCheckBoxState("cbSecurityLock", true);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true);
             }
 
-            ucNuvotonIcpTool.UpdateSecurityLockStateApi();
+            mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
         }
         
         private void MainForm_Load(object sender, EventArgs e)
@@ -303,50 +347,28 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void UcNuvotonIcpTool_MessageUpdated(object sender, MessageEventArgs e)
-        {
-            if (ProcessingChannel == 1)
-            {
-                BeginInvoke(new Action(() =>
-                {
-                        lCh1Message.Text = e.Message;
-                        cProgressBar1.Value = e.ProgressValue;
-                        cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
-                }));
-            }
-            else if (ProcessingChannel == 2)
-            {
-                BeginInvoke(new Action(() =>
-                {
-                    lCh2Message.Text = e.Message;
-                    cProgressBar2.Value = e.ProgressValue;
-                    cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
-                }));
-            }
-        }
-
         private void _RemoteInitial()
         {
             if (cbBypassW.Checked)
-                mainForm.SetVarBoolState("BypassWriteIcConfig", true);
+                mainForm.SetVarBoolStateToMainFormApi("BypassWriteIcConfig", true);
 
             string selectedProduct = lProduct.Text;
-            mainForm?.SelectProduct(selectedProduct);
+            mainForm?.SelectProductApi(selectedProduct);
 
-            mainForm?.SetCheckBoxCheckedByName("cbInfomation", true);
-            mainForm?.SetCheckBoxCheckedByName("cbDdm", true);
-            mainForm?.SetCheckBoxCheckedByName("cbMemDump", true);
-            mainForm?.SetCheckBoxCheckedByName("cbCorrector", true);
-            mainForm?.SetCheckBoxCheckedByName("cbTxIcConfig", true);
-            mainForm?.SetCheckBoxCheckedByName("cbRxIcConfig", true);
+            mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+            mainForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
+            mainForm?.SetCheckBoxCheckedByNameApi("cbMemDump", true);
+            mainForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
+            mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", true);
+            mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
 
-            ucNuvotonIcpTool.tbAPROM.Text = lPath.Text;
-            ucNuvotonIcpTool.SetVarIntState("LinkState", 0);
-            ucNuvotonIcpTool.SetCheckBoxState("cbLDROM", false);
-            ucNuvotonIcpTool.SetCheckBoxState("cbAPROM", true);
-            ucNuvotonIcpTool.SetCheckBoxState("cbDataFlash", false);
-            ucNuvotonIcpTool.SetCheckBoxState("cbSecurityLock", true); // Dominic
-            ucNuvotonIcpTool.UpdateSecurityLockStateApi();
+            mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", lPath.Text);
+            mainForm.SetVarIntStateToNuvotonIcpApi("LinkState", 0);
+            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
+            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
+            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true); // Dominic
+            mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
             Thread.Sleep(100);
         }
 
@@ -481,11 +503,99 @@ namespace IntegratedGuiV2
             _LoadXmlFile();
 
             if (lMode.Text == "Customer")
+            {
                 this.Size = new System.Drawing.Size(550, 220);
+                rbSingle.Enabled = true;
+                rbBoth.Enabled = true;
+            }
+                
             else if (lMode.Text == "MP")
+            {
                 this.Size = new System.Drawing.Size(550, 300);
+                rbSingle.Enabled = false;
+                rbBoth.Enabled = false;
+                mainForm.I2cMasterConnectApi(true, true);
+                mainForm.ChannelSetApi(1);
+
+                ContinueRxPowerUpdate = true;
+                if (RxPowerUpdateThread == null || !RxPowerUpdateThread.IsAlive)
+                {
+                    RxPowerUpdateThread = new Thread(new ThreadStart(_RxPowerUpdateThread));
+                    RxPowerUpdateThread.IsBackground = true;
+                    RxPowerUpdateThread.Start();
+                }
+            }
         }
 
+        private void _RxPowerUpdateThread()
+        {
+            int currentState = 1;
+            mainForm.RxPowerReadApiFromDdmApi();
+
+            while (ContinueRxPowerUpdate)
+            {
+                Invoke(new Action(() =>
+                {
+                    switch (currentState)
+                    {
+                        case 1:
+                            tbRssi0.Text = "0";
+                            tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
+                            tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
+                            tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+                            break;
+                        case 2:
+                            tbRssi0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
+                            tbRssi1.Text = "0";
+                            tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
+                            tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+                            break;
+                        case 3:
+                            tbRssi0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
+                            tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
+                            tbRssi2.Text = "0";
+                            tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+                            break;
+                        case 4:
+                            tbRssi0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
+                            tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
+                            tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
+                            tbRssi3.Text = "0";
+                            break;
+                        default:
+                            break;
+                    }
+
+                    currentState = currentState < 4 ? currentState + 1 : 1;
+                }));
+
+                Thread.Sleep(100); // 使線程休眠1秒
+            }
+        }
+
+        public void StopRxPowerUpdateThread()
+        {
+            if (RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive)
+            {
+                ContinueRxPowerUpdate = false; // 標記為 false 通知線程退出循環
+                RxPowerUpdateThread.Join(); // 等待線程結束
+                RxPowerUpdateThread = null; // 設為 null，以便可以重新啟動
+            }
+        }
+        /*
+        private void _RxPowerUpdateThread()
+        {
+            while (true)
+            {
+                Invoke(new Action(() =>
+                {
+                    _RxPowerUpdate();
+                }));
+
+                Thread.Sleep(1000); // 使線程休眠1秒
+            }
+        }
+        */
         private void tbFilePath_Leave(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(tbFilePath.Text))
@@ -610,14 +720,22 @@ namespace IntegratedGuiV2
                         lCh2EC.Text = $"R:{errorCountCh2R} ";
 
                     if (TestMode)
-                    {
                         MessageBox.Show("GlobalRead...Done");
+
+                    mainForm.SetAutoReconnectApi(true); //Initial mode state before Connect module
+                    mainForm.SetBypassEraseAllCheckModeApi(true);
+
+                    if (TestMode)
+                    {
+                        MessageBox.Show("AutoReconnec mode: " + mainForm.GetAutoReconnectApi()
+                                   + "\nBypassEraseAll mode " + mainForm.GetBypassEraseAllCheckModeApi()
+                                   );
                     }
-                
-                    ucNuvotonIcpTool.ConnectSingleApi(); // Link DUT and EraseAPROM
+
+                    mainForm.ForceConnectSingleApi(); // Link DUT and EraseAPROM
                     Thread.Sleep(10);
 
-                    ucNuvotonIcpTool.StartFlashingApi(); // Firmware update
+                    mainForm.StartFlashingApi(); // Firmware update
                     Thread.Sleep(10);
                     
                     if (TestMode)
@@ -657,43 +775,86 @@ namespace IntegratedGuiV2
             }
         }
 
+        private void _MpModeProcessor()
+        {
+            _MessageUpdate("Preparing resources...", 0);
+            mainForm.InformationReadApi();
+            string VenderSn = mainForm.GetVendorSnFromDdmiApi();
+            string DateCode = mainForm.GetDateCodeFromDdmiApi();
+            mainForm.SetVendorSnToDdmiApi(tbVenderSn.Text);
+            mainForm.SetDataCodeToDdmiApi(tbDateCode.Text);
+
+            MessageBox.Show("Information check"
+                            + "\nBefore:\n"
+                            + "VenderSn: " + VenderSn
+                            + "\nDateCode: " + DateCode
+                            + "\n\nAfter:\n"
+                            + "VerderSn: " + mainForm.GetVendorSnFromDdmiApi()
+                            + "\nDateCode:" + mainForm.GetDateCodeFromDdmiApi()
+                            );
+
+            _MessageUpdate("Writing...", 30);
+            lCh1Message.Text = "Writing...";
+            mainForm.InformationWriteApi();
+            Thread.Sleep(10);
+            _MessageUpdate("Write...Done", 50);
+            mainForm.InformationStoreIntoFlashApi();
+            Thread.Sleep(10);
+            _MessageUpdate("Store into flash...", 70);
+            //StopRxPowerUpdateThread();
+            Thread.Sleep(10);
+            _MessageUpdate("Finished", 100);
+        }
+        
+        private void _CustomerModeProcessor()
+        {
+            _InitialUi();
+
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSide ? 2 : 1); ProcessingChannel++)
+            {
+                _RemoteInitial();
+                _RemoteControl();
+
+                if (ProcessingChannel == 1 && DoubleSide)
+                {
+                    if (TestMode)
+                        MessageBox.Show("Switch channel");
+
+                    mainForm.ChannelSwitchApi(); // switch
+                    mainForm.I2cMasterDisconnectApi(); // ReLink-step1 ；觀察有其必要性?
+                    mainForm.I2cMasterConnectApi(true, true); // ReLink-step2
+                }
+
+                FirstRound = false;
+            }
+
+            if (DoubleSide)
+            {
+                mainForm.ChannelSwitchApi();
+                mainForm.I2cMasterDisconnectApi(); // ReLink-step1 ；觀察有其必要性?
+                mainForm.I2cMasterConnectApi(true, true); // ReLink-step2
+            }
+        }
+
         private void bStart_Click(object sender, EventArgs e)
         {
             try
             {
                 bStart.Enabled = false;
-                _InitialUi();
-
-                
-
-                
-                for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSide ? 2 : 1); ProcessingChannel++)
+               
+                if(lMode.Text == "Customer")
                 {
-                    _RemoteInitial();
-                    _RemoteControl();
-
-                    if (ProcessingChannel == 1 && DoubleSide)
-                    {
-                        MessageBox.Show("Switch channel");
-                        mainForm.ChannelSwitchApi(); // switch
-                        mainForm.I2cMasterDisconnectApi(); // ReLink-step1 ；觀察有其必要性?
-                        mainForm.I2cMasterConnectApi(true, true); // ReLink-step2
-                    }
-
-                    FirstRound = false;
+                    _CustomerModeProcessor();
                 }
-
-                if (DoubleSide)
+                else if (lMode.Text == "MP")
                 {
-                    mainForm.ChannelSwitchApi();
-                    mainForm.I2cMasterDisconnectApi(); // ReLink-step1 ；觀察有其必要性?
-                    mainForm.I2cMasterConnectApi(true, true); // ReLink-step2
+                    _MpModeProcessor();
                 }
-                
                 
             }
             finally
             {
+                mainForm.I2cMasterDisconnectApi();
                 bStart.Enabled = true;
             }
         }
@@ -708,7 +869,14 @@ namespace IntegratedGuiV2
                 mainForm.I2cMasterDisconnectApi();
         }
 
-       
+        private void _RxPowerUpdate()
+        {
+            mainForm.RxPowerReadApiFromDdmApi();
+            tbRssi0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
+            tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
+            tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
+            tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+        }
     }
 }
 

@@ -53,16 +53,16 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cb1 = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.textBox3 = new System.Windows.Forms.TextBox();
-            this.textBox2 = new System.Windows.Forms.TextBox();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.lRssi3 = new System.Windows.Forms.Label();
+            this.lRssi2 = new System.Windows.Forms.Label();
+            this.lRssi1 = new System.Windows.Forms.Label();
+            this.tbRssi3 = new System.Windows.Forms.TextBox();
+            this.tbRssi2 = new System.Windows.Forms.TextBox();
+            this.tbRssi1 = new System.Windows.Forms.TextBox();
             this.lVenderSn = new System.Windows.Forms.Label();
             this.tbRssi0 = new System.Windows.Forms.TextBox();
             this.tbVenderSn = new System.Windows.Forms.TextBox();
-            this.lRssi = new System.Windows.Forms.Label();
+            this.lRssi0 = new System.Windows.Forms.Label();
             this.lDateCode = new System.Windows.Forms.Label();
             this.tbDateCode = new System.Windows.Forms.TextBox();
             this.gbOperatorMode.SuspendLayout();
@@ -370,16 +370,16 @@
             // 
             // gbOperatorMode
             // 
-            this.gbOperatorMode.Controls.Add(this.label3);
-            this.gbOperatorMode.Controls.Add(this.label2);
-            this.gbOperatorMode.Controls.Add(this.label1);
-            this.gbOperatorMode.Controls.Add(this.textBox3);
-            this.gbOperatorMode.Controls.Add(this.textBox2);
-            this.gbOperatorMode.Controls.Add(this.textBox1);
+            this.gbOperatorMode.Controls.Add(this.lRssi3);
+            this.gbOperatorMode.Controls.Add(this.lRssi2);
+            this.gbOperatorMode.Controls.Add(this.lRssi1);
+            this.gbOperatorMode.Controls.Add(this.tbRssi3);
+            this.gbOperatorMode.Controls.Add(this.tbRssi2);
+            this.gbOperatorMode.Controls.Add(this.tbRssi1);
             this.gbOperatorMode.Controls.Add(this.lVenderSn);
             this.gbOperatorMode.Controls.Add(this.tbRssi0);
             this.gbOperatorMode.Controls.Add(this.tbVenderSn);
-            this.gbOperatorMode.Controls.Add(this.lRssi);
+            this.gbOperatorMode.Controls.Add(this.lRssi0);
             this.gbOperatorMode.Controls.Add(this.lDateCode);
             this.gbOperatorMode.Controls.Add(this.tbDateCode);
             this.gbOperatorMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
@@ -390,69 +390,74 @@
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "MP information";
             // 
-            // label3
+            // lRssi3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.ForeColor = System.Drawing.Color.White;
-            this.label3.Location = new System.Drawing.Point(432, 21);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(39, 13);
-            this.label3.TabIndex = 75;
-            this.label3.Text = "RSSI-4";
+            this.lRssi3.AutoSize = true;
+            this.lRssi3.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssi3.ForeColor = System.Drawing.Color.White;
+            this.lRssi3.Location = new System.Drawing.Point(432, 21);
+            this.lRssi3.Name = "lRssi3";
+            this.lRssi3.Size = new System.Drawing.Size(39, 13);
+            this.lRssi3.TabIndex = 75;
+            this.lRssi3.Text = "RSSI-4";
             // 
-            // label2
+            // lRssi2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(381, 21);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(39, 13);
-            this.label2.TabIndex = 74;
-            this.label2.Text = "RSSI-3";
+            this.lRssi2.AutoSize = true;
+            this.lRssi2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssi2.ForeColor = System.Drawing.Color.White;
+            this.lRssi2.Location = new System.Drawing.Point(381, 21);
+            this.lRssi2.Name = "lRssi2";
+            this.lRssi2.Size = new System.Drawing.Size(39, 13);
+            this.lRssi2.TabIndex = 74;
+            this.lRssi2.Text = "RSSI-3";
             // 
-            // label1
+            // lRssi1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(330, 21);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(39, 13);
-            this.label1.TabIndex = 73;
-            this.label1.Text = "RSSI-2";
+            this.lRssi1.AutoSize = true;
+            this.lRssi1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssi1.ForeColor = System.Drawing.Color.White;
+            this.lRssi1.Location = new System.Drawing.Point(330, 21);
+            this.lRssi1.Name = "lRssi1";
+            this.lRssi1.Size = new System.Drawing.Size(39, 13);
+            this.lRssi1.TabIndex = 73;
+            this.lRssi1.Text = "RSSI-2";
             // 
-            // textBox3
+            // tbRssi3
             // 
-            this.textBox3.Enabled = false;
-            this.textBox3.Location = new System.Drawing.Point(434, 36);
-            this.textBox3.Name = "textBox3";
-            this.textBox3.Size = new System.Drawing.Size(45, 26);
-            this.textBox3.TabIndex = 72;
+            this.tbRssi3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbRssi3.Enabled = false;
+            this.tbRssi3.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRssi3.Location = new System.Drawing.Point(434, 36);
+            this.tbRssi3.Name = "tbRssi3";
+            this.tbRssi3.Size = new System.Drawing.Size(45, 23);
+            this.tbRssi3.TabIndex = 72;
             // 
-            // textBox2
+            // tbRssi2
             // 
-            this.textBox2.Enabled = false;
-            this.textBox2.Location = new System.Drawing.Point(383, 36);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(45, 26);
-            this.textBox2.TabIndex = 71;
+            this.tbRssi2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbRssi2.Enabled = false;
+            this.tbRssi2.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRssi2.Location = new System.Drawing.Point(383, 36);
+            this.tbRssi2.Name = "tbRssi2";
+            this.tbRssi2.Size = new System.Drawing.Size(45, 23);
+            this.tbRssi2.TabIndex = 71;
             // 
-            // textBox1
+            // tbRssi1
             // 
-            this.textBox1.Enabled = false;
-            this.textBox1.Location = new System.Drawing.Point(332, 36);
-            this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(45, 26);
-            this.textBox1.TabIndex = 70;
+            this.tbRssi1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbRssi1.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRssi1.Location = new System.Drawing.Point(332, 36);
+            this.tbRssi1.Name = "tbRssi1";
+            this.tbRssi1.Size = new System.Drawing.Size(45, 23);
+            this.tbRssi1.TabIndex = 70;
             // 
             // lVenderSn
             // 
             this.lVenderSn.AutoSize = true;
             this.lVenderSn.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lVenderSn.ForeColor = System.Drawing.Color.White;
-            this.lVenderSn.Location = new System.Drawing.Point(8, 21);
+            this.lVenderSn.Location = new System.Drawing.Point(8, 19);
             this.lVenderSn.Name = "lVenderSn";
             this.lVenderSn.Size = new System.Drawing.Size(64, 13);
             this.lVenderSn.TabIndex = 64;
@@ -460,10 +465,11 @@
             // 
             // tbRssi0
             // 
-            this.tbRssi0.Enabled = false;
+            this.tbRssi0.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbRssi0.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRssi0.Location = new System.Drawing.Point(281, 36);
             this.tbRssi0.Name = "tbRssi0";
-            this.tbRssi0.Size = new System.Drawing.Size(45, 26);
+            this.tbRssi0.Size = new System.Drawing.Size(45, 23);
             this.tbRssi0.TabIndex = 69;
             // 
             // tbVenderSn
@@ -477,23 +483,23 @@
             this.tbVenderSn.Enter += new System.EventHandler(this.tbVenderSn_Enter);
             this.tbVenderSn.Leave += new System.EventHandler(this.tbVenderSn_Leave);
             // 
-            // lRssi
+            // lRssi0
             // 
-            this.lRssi.AutoSize = true;
-            this.lRssi.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lRssi.ForeColor = System.Drawing.Color.White;
-            this.lRssi.Location = new System.Drawing.Point(279, 21);
-            this.lRssi.Name = "lRssi";
-            this.lRssi.Size = new System.Drawing.Size(39, 13);
-            this.lRssi.TabIndex = 68;
-            this.lRssi.Text = "RSSI-1";
+            this.lRssi0.AutoSize = true;
+            this.lRssi0.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssi0.ForeColor = System.Drawing.Color.White;
+            this.lRssi0.Location = new System.Drawing.Point(279, 21);
+            this.lRssi0.Name = "lRssi0";
+            this.lRssi0.Size = new System.Drawing.Size(39, 13);
+            this.lRssi0.TabIndex = 68;
+            this.lRssi0.Text = "RSSI-1";
             // 
             // lDateCode
             // 
             this.lDateCode.AutoSize = true;
             this.lDateCode.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lDateCode.ForeColor = System.Drawing.Color.White;
-            this.lDateCode.Location = new System.Drawing.Point(131, 21);
+            this.lDateCode.Location = new System.Drawing.Point(131, 19);
             this.lDateCode.Name = "lDateCode";
             this.lDateCode.Size = new System.Drawing.Size(62, 13);
             this.lDateCode.TabIndex = 66;
@@ -581,14 +587,14 @@
         private System.Windows.Forms.Label lVenderSn;
         private System.Windows.Forms.TextBox tbRssi0;
         private System.Windows.Forms.TextBox tbVenderSn;
-        private System.Windows.Forms.Label lRssi;
+        private System.Windows.Forms.Label lRssi0;
         private System.Windows.Forms.Label lDateCode;
         private System.Windows.Forms.TextBox tbDateCode;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox textBox3;
-        private System.Windows.Forms.TextBox textBox2;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.Label lRssi3;
+        private System.Windows.Forms.Label lRssi2;
+        private System.Windows.Forms.Label lRssi1;
+        private System.Windows.Forms.TextBox tbRssi3;
+        private System.Windows.Forms.TextBox tbRssi2;
+        private System.Windows.Forms.TextBox tbRssi1;
     }
 }

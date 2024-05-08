@@ -26,10 +26,11 @@ namespace IntegratedGuiV2
 
         private void bAuthenticate_Click(object sender, EventArgs e)
         {
-            loadingForm.Show(this);
+            
 
             if (tbAdminPassword.Text == AdminPassword)
             {
+                loadingForm.Show(this);
                 accountsManagement.Show();
                 accountsManagement.BringToFront();
 
@@ -39,10 +40,10 @@ namespace IntegratedGuiV2
             }
             else
             {
-                loadingForm.Close();
-                MessageBox.Show("Incorrect Administrator Password. Please try again.", "Authentication Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //loadingForm.Close();
                 tbAdminPassword.Text = "";
                 tbAdminPassword.Focus();
+                MessageBox.Show("Incorrect Administrator Password. Please try again.", "Authentication Failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

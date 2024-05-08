@@ -23,12 +23,12 @@ using System.IO;
 using System.Threading.Tasks;
 using NuvotonIcpTool;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 
 namespace IntegratedGuiV2
 {
     public partial class MainForm : KryptonForm
     {
-       
         private I2cMaster i2cMaster = new I2cMaster();
         private DataTable dtWriteConfig = new DataTable();
 
@@ -53,6 +53,8 @@ namespace IntegratedGuiV2
 
         public event EventHandler<string> ReadStateUpdated;
         public event EventHandler<int> ProgressValue;
+        public event EventHandler<MessageEventArgs> MainMessageUpdated;
+        public event EventHandler<TextBoxTextEventArgs> TextBoxTextChanged;
 
         protected virtual void StateUpdated(string message, int value)
         {
@@ -99,13 +101,9 @@ namespace IntegratedGuiV2
         public string GetSelectedProduct()
         {
             if (cbProductSelect.InvokeRequired)
-            {
                 return (string)cbProductSelect.Invoke(new Func<string>(() => (string)cbProductSelect.SelectedItem));
-            }
             else
-            {
                 return (string)cbProductSelect.SelectedItem;
-            }
         }
 
         public Dictionary<string, bool> GetCheckBoxStates()
@@ -121,7 +119,7 @@ namespace IntegratedGuiV2
             };
         }
 
-        public void SelectProduct(string selectedProduct)
+        public void SelectProductApi(string selectedProduct)
         {
             if (cbProductSelect.InvokeRequired)
                 cbProductSelect.Invoke(new Action(() => CheckAndSelectProduct(selectedProduct)));
@@ -137,7 +135,7 @@ namespace IntegratedGuiV2
                 MessageBox.Show("Product not found in the ComboBox.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
-        public void SetCheckboxChecked(CheckBox checkbox, bool value)
+        public void SetCheckboxCheckedApi(CheckBox checkbox, bool value)
         {
             if (checkbox.InvokeRequired)
                 checkbox.Invoke(new Action(() => checkbox.Checked = value));
@@ -145,14 +143,14 @@ namespace IntegratedGuiV2
                 checkbox.Checked = value;
         }
 
-        public void SetCheckBoxCheckedByName(string checkBoxName, bool value)
+        public void SetCheckBoxCheckedByNameApi(string checkBoxName, bool value)
         {
             CheckBox checkBox = GetCheckBoxByName(checkBoxName);
             if (checkBox != null)
-                SetCheckboxChecked(checkBox, value);
+                SetCheckboxCheckedApi(checkBox, value);
         }
 
-        public bool GetVarBoolState(string varName)
+        public bool GetVarBoolStateApi(string varName)
         {
             Type type = this.GetType();
 
@@ -168,7 +166,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        public void SetVarBoolState(string varName, bool value)
+        public void SetVarBoolStateToMainFormApi(string varName, bool value)
         {
             Type type = this.GetType();
             FieldInfo field = type.GetField(varName, BindingFlags.NonPublic | BindingFlags.Instance);
@@ -183,30 +181,174 @@ namespace IntegratedGuiV2
             }
         }
 
-        /*
-        public void SwitchChannelApi()
+        public void ForceConnectSingleApi() // Used for MpForm
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(_channelSwitch));
+                this.Invoke(new Action(() => ucNuvotonIcpTool.ForceConnectSingleApi()));
             else
-                _channelSwitch();
-        }
-                
-        public void I2cReLinkApi()
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(_I2cReLink));
-            else
-                _I2cReLink();
+                ucNuvotonIcpTool.ForceConnectSingleApi();
         }
 
-        private void _I2cReLink()
+        public void StartFlashingApi() // Used for MpForm
         {
-            i2cMaster.DisconnectApi();
-            Thread.Sleep(10);
-            _I2cLinkInitialWithoutSwtichCh();
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucNuvotonIcpTool.StartFlashingApi()));
+            else
+                ucNuvotonIcpTool.StartFlashingApi();
         }
-        */
+
+        public void InformationWriteApi() // Used for MpForm
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucInformation.WriteApi()));
+            else
+                ucInformation.WriteApi();
+        }
+
+        public void InformationStoreIntoFlashApi() // Used for MpForm
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
+            else
+                ucInformation.StoreIntoFlashApi();
+        }
+
+        public void InformationReadApi() // Used for MpForm
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucInformation.ReadApi()));
+            else
+                ucInformation.ReadApi();
+        }
+
+        public void SetAutoReconnectApi(bool Mode)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _SetAutoReconnectControl(Mode)));
+            else
+                _SetAutoReconnectControl(Mode);
+        }
+
+        public void SetBypassEraseAllCheckModeApi(bool Mode)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _SetBypassEraseAllControl(Mode)));
+            else
+                _SetBypassEraseAllControl(Mode);
+        }
+
+        public bool GetAutoReconnectApi()
+        {
+            if (this.InvokeRequired)
+                return (bool)this.Invoke(new Action(()  => _GetAutoReconnectControl()));
+            else
+                return _GetAutoReconnectControl();
+        }
+
+        public bool GetBypassEraseAllCheckModeApi()
+        {
+            if (this.InvokeRequired)
+                return (bool)this.Invoke(new Action(() => _GetBypassEraseAllControl()));
+            else
+                return _GetBypassEraseAllControl();
+        }
+
+        public void SetVarBoolStateToNuvotonIcpApi(string varName, bool value)
+        {
+            ucNuvotonIcpTool.SetVarBoolState(varName, value);
+        }
+
+        
+        public void SetVarIntStateToNuvotonIcpApi(string varName, int value)
+        {
+            ucNuvotonIcpTool.SetVarIntState(varName, value);
+        }
+
+        public void SetCheckBoxStateToNuvotonIcpApi(string checkBoxId, bool state)
+        {
+            ucNuvotonIcpTool.SetCheckBoxState(checkBoxId, state);
+        }
+
+        public bool GetVarBoolStateFromNuvotonIcpApi(string varName)
+        {
+            return ucNuvotonIcpTool.GetVarBoolState(varName);
+        }
+
+        public int GetVarIntStateFromNuvotonIcpApi(string varName)
+        {
+            return ucNuvotonIcpTool.GetVarIntState(varName);
+        }
+
+        public bool GetCheckBoxStateFromNuvotonIcpApi(string checkBoxId)
+        {
+            return ucNuvotonIcpTool.GetCheckBoxState(checkBoxId);
+        }
+
+        public void SetTextBoxTextToNuvotonIcpApi(string textBoxId, string newText)
+        {
+            ucNuvotonIcpTool.SetTextBoxText(textBoxId, newText);
+        }
+
+        public string GetTextBoxTextFromNuvotonIcpApi(string checkBoxId)
+        {
+            return ucNuvotonIcpTool.GetTextBoxText(checkBoxId);
+        }
+
+        public string GetTextBoxTextFromDdmiApi(string checkBoxId)
+        {
+            return ucInformation.GetTextBoxText(checkBoxId);
+        }
+
+        public void SetVendorSnToDdmiApi(string text)
+        {
+            ucInformation.SetVendorSnApi(text);
+        }
+
+        public void SetDataCodeToDdmiApi(string text)
+        {
+            ucInformation.SetDateCodeApi(text);
+        }
+
+        public string GetVendorSnFromDdmiApi()
+        {
+            return ucInformation.GetVendorSnApi();
+        }
+
+        public string GetDateCodeFromDdmiApi()
+        {
+            return ucInformation.GetDateCodeApi();
+        }
+
+        public void SetVarBoolStateToDdmApi(string varName, bool value)
+        {
+            ucDigitalDiagnosticsMonitoring.SetVarBoolState(varName, value);
+        }
+
+        public bool GetVarBoolStateFromDdmApi(string varName)
+        {
+            return ucDigitalDiagnosticsMonitoring.GetVarBoolState(varName);
+        }
+
+        public string GetTextBoxTextFromDdmApi(string textBoxId)
+        {
+            return ucDigitalDiagnosticsMonitoring.GetTextBoxText(textBoxId);
+        }
+
+        public void RxPowerReadApiFromDdmApi()
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucDigitalDiagnosticsMonitoring.RxPowerReadApi()));
+            else
+                ucDigitalDiagnosticsMonitoring.RxPowerReadApi();
+        }
+
+        public void UpdateSecurityLockStateFromNuvotonIcpApi()
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(ucNuvotonIcpTool.UpdateSecurityLockStateApi));
+            else
+                ucNuvotonIcpTool.UpdateSecurityLockStateApi();
+        }
 
         private CheckBox GetCheckBoxByName(string name)
         {
@@ -708,6 +850,36 @@ namespace IntegratedGuiV2
         }
         */
 
+        private void _SetAutoReconnectControl(bool ControlState)
+        {
+            ucNuvotonIcpTool.SetVarBoolState("AutoReconnectMode", ControlState);
+
+            if (ControlState)
+                cbAutoReconnect.Checked = true;
+            else
+                cbAutoReconnect.Checked = false;
+        }
+
+        private bool _GetAutoReconnectControl()
+        {
+            return ucNuvotonIcpTool.GetVarBoolState("AutoReconnectMode");
+        }
+
+        private void _SetBypassEraseAllControl(bool ControlState)
+        {
+            ucNuvotonIcpTool.SetVarBoolState("BypassEraseAllCheckMode", ControlState);
+
+            if (ControlState)
+                cbBypassEraseAllCheck.Checked = true;
+            else
+                cbBypassEraseAllCheck.Checked = false;
+        }
+
+        private bool _GetBypassEraseAllControl()
+        {
+            return ucNuvotonIcpTool.GetVarBoolState("BypassEraseAllCheckMode");
+        }
+
         private void UcNuvotonIcpControl_RequestI2cOperation(object sender, I2cOperationEventArgs e)
         {
             switch (e.OperationType)
@@ -725,6 +897,16 @@ namespace IntegratedGuiV2
             }
         }
 
+        private void UcNuvotonIcpTool_MessageUpdated(object sender, MessageEventArgs e)
+        {
+            // UC-B data updated，觸發UC-A的MainMessageUpdated event，將Message傳遞給MainForm-UI
+            MainMessageUpdated?.Invoke(this, e);
+        }
+        private void ucDigitalDiagnosticsMonitoring_TextBoxTextChanged(object sender, TextBoxTextEventArgs e)
+        {
+            TextBoxTextChanged?.Invoke(this, e);
+        }
+
         public MainForm(bool visible)
         {
             InitializeComponent();
@@ -736,7 +918,9 @@ namespace IntegratedGuiV2
             }
 
             this.FormClosing += new FormClosingEventHandler(_MainForm_FormClosing);
+            ucNuvotonIcpTool.MessageUpdated += UcNuvotonIcpTool_MessageUpdated;
             ucNuvotonIcpTool.RequestI2cOperation += UcNuvotonIcpControl_RequestI2cOperation;
+            ucDigitalDiagnosticsMonitoring.TextBoxTextChanged += ucDigitalDiagnosticsMonitoring_TextBoxTextChanged;
             this.Size = new System.Drawing.Size(1170, 870);
             _InitialStateBar();
             //_EnableIcConfig();
@@ -1011,7 +1195,7 @@ namespace IntegratedGuiV2
             sAcConfig = "//Write,DevAddr,RegAddr,Value\n" + "//Read,DevAddr,RegAddr,Value\n" +
                 "//Delay10mSec,Time\n";
 
-            ucInformation._bWrite_Click(null,null);
+            ucInformation.WriteApi();
             ucDigitalDiagnosticsMonitoring.bWrite_Click(null, null);
             ucMemoryDump.bWrite_Click(null, null);
 
@@ -1573,7 +1757,7 @@ namespace IntegratedGuiV2
                 tbInformationReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
-                if (ucInformation.ReadAllApi() < 0)
+                if (ucInformation.ReadApi() < 0)
                 {
                     tbInformationReadState.BackColor = Color.Red;
                     StateUpdated("Read State:\nInformation...Failed", 3);
@@ -2193,7 +2377,7 @@ namespace IntegratedGuiV2
         private void bStoreIntoFlash_Click(object sender, EventArgs e)
         {
             _DisableButtons();
-            ucInformation.bStoreIntoFlash_Click(null, null);
+            ucInformation.StoreIntoFlashApi();
             _EnableButtons();
         }
 
@@ -2346,21 +2530,6 @@ namespace IntegratedGuiV2
             //    bIcpConnect.Enabled = true;
         }
 
-        private void _SetAutoReconnectControl(bool ControlState)
-        {
-            ucNuvotonIcpTool.SetVarBoolState("AutoReconnectMode", ControlState);
-            
-            if (ControlState)
-                cbAutoReconnect.Checked = true;
-            else
-                cbAutoReconnect.Checked = false;
-        }
-
-        private bool _GetAutoReconnectControl()
-        {
-            return ucNuvotonIcpTool.GetVarBoolState("AutoReconnectMode");
-        }
-
         private void cbAutoReconnect_CheckedChanged(object sender, EventArgs e)
         {
             if (cbAutoReconnect.Checked)
@@ -2369,10 +2538,24 @@ namespace IntegratedGuiV2
                 _SetAutoReconnectControl(false);
         }
 
-        private void bCheckState_Click(object sender, EventArgs e)
+        private void bAutoReconnectStateCheck_Click(object sender, EventArgs e)
         {
             MessageBox.Show("ucNuvotonIcp\nAutoReconnectMode: " + _GetAutoReconnectControl());
         }
+        
+        private void cbBypassEraseAllCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbBypassEraseAllCheck.Checked)
+                _SetBypassEraseAllControl(true);
+            else if (!cbBypassEraseAllCheck.Checked)
+                _SetBypassEraseAllControl(false);
+        }
+
+        private void bBypassEraseAllStateCheck_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show("ucNuvotonIcp\nBypassEraseAllMode: " + _GetBypassEraseAllControl());
+        }
+
     }
 
     public class ComboBoxItem
