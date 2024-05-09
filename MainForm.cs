@@ -181,6 +181,14 @@ namespace IntegratedGuiV2
             }
         }
 
+        public void MemDumpExprotCsvApi(string fileName)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _ExprotMemToCsv(fileName)));
+            else
+                _ExprotMemToCsv(fileName);
+        }
+
         public void ForceConnectSingleApi() // Used for MpForm
         {
             if (this.InvokeRequired)
@@ -220,7 +228,7 @@ namespace IntegratedGuiV2
             else
                 ucInformation.ReadApi();
         }
-
+                
         public void SetAutoReconnectApi(bool Mode)
         {
             if (this.InvokeRequired)
@@ -257,7 +265,6 @@ namespace IntegratedGuiV2
         {
             ucNuvotonIcpTool.SetVarBoolState(varName, value);
         }
-
         
         public void SetVarIntStateToNuvotonIcpApi(string varName, int value)
         {
@@ -825,30 +832,19 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        /*
-        private void _I2cLinkInitial(int Ch)
+        private int _ExprotMemToCsv(string fileName)
         {
-            if (_I2cMasterConnect(true) < 0)
-                return;
-            _WriteModulePassword(); //LowPage password
-            //i2cMaster.ChannelSetApi(Ch);
-            gbChannelSwitcher.Enabled = true;
-            ProcessingChannel = Ch;
-        }
+            fileName = fileName.Replace(" ", "") + ".csv";
+            string folderPath = System.Windows.Forms.Application.StartupPath;
+            string exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
+            //string exportFilePath = Path.Combine(combinedPath, "sn.csv");
+            exportFilePath = exportFilePath.Replace("\\\\", "\\");
 
-        private void _I2cLinkInitialWithoutSwtichCh()
-        {
-            if (_I2cMasterConnect(true) < 0)
-                return;
-            _WriteModulePassword(); //LowPage password
-            gbChannelSwitcher.Enabled = true;
+            if (!(ucMemoryDump.ExportAllPagesData(exportFilePath) < 0))
+                return -1;
+
+            return 0;
         }
-        
-        internal void I2cLinkInitalApi(int Ch)
-        {
-            _I2cLinkInitial(Ch);
-        }
-        */
 
         private void _SetAutoReconnectControl(bool ControlState)
         {
@@ -1974,7 +1970,7 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
-        internal int _GlobalWrite(bool ExpernalMode)
+        internal int _GlobalWrite(bool ExternalMode)
         {
             bool writeFail = false;
             int returnValue = 0;
@@ -2188,14 +2184,6 @@ namespace IntegratedGuiV2
                     }
 
                     Application.DoEvents();
-                    
-                    /*
-                    if (ExpernalMode)
-                    {
-                        MessageBox.Show("Expernal mode : true");
-                        i2cMaster.DisconnectApi();
-                    }
-                    */
                 }
             }
 
@@ -2401,7 +2389,14 @@ namespace IntegratedGuiV2
                 File.WriteAllText(filePath, string.Empty);
 
             writeToFile = true;
-            bGlobalWrite_Click(sender, e);
+            _DisableButtons();
+            _InitialStateBar();
+            _GlobalWrite(false);
+            _EnableButtons();
+            // 切割範圍, 切割方式
+            // ConfigFile檔案優化
+            // ConfigFile寫入及驗證
+
             writeToFile = false;
 
             _EnableButtons();
@@ -2567,6 +2562,12 @@ namespace IntegratedGuiV2
             MessageBox.Show("ucNuvotonIcp\nBypassEraseAllMode: " + _GetBypassEraseAllControl());
         }
 
+        private void bExportCsv_Click(object sender, EventArgs e)
+        {
+            _ExprotMemToCsv("Test");
+        }
+
+        
     }
 
     public class ComboBoxItem

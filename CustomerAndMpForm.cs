@@ -91,9 +91,16 @@ namespace IntegratedGuiV2
             this.Load += MainForm_Load;
             this.KeyPreview = true;
             this.KeyDown += _HideKeys_KeyDown;
-           
+
             if (!(mainForm.I2cMasterConnectApi(true, true) < 0)) // (bool setMode, bool setPassword)
                 I2cConnected = true;
+            else
+            {
+                MessageBox.Show("I2c master connection failed.\nPlease check if the hardware configuration or UI is activated.",
+                                "I2c master connection failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
+            }
+                
 
             mainForm.ReadStateUpdated += MainForm_ReadStateUpdated;
             mainForm.ProgressValue += MainForm_ProgressUpdated;
@@ -428,6 +435,24 @@ namespace IntegratedGuiV2
             }
         }
 
+        private void _SetCsvFilePath()
+        {
+            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog())
+            {
+                folderBrowserDialog.Description = "Select a Folder";
+                folderBrowserDialog.RootFolder = Environment.SpecialFolder.LocalApplicationData;
+                folderBrowserDialog.SelectedPath = initialDirectory;
+
+                if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                {
+                    tbLogFIlePath.Text = folderBrowserDialog.SelectedPath;
+                    tbLogFIlePath.SelectionStart = tbLogFIlePath.Text.Length;
+                }
+            }
+        }
+
         private void _ParserXmlForProjectInformation(string filePath)
         {
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -495,17 +520,54 @@ namespace IntegratedGuiV2
 
         }
 
+        private void _LogFilePathChanges()
+        {
+            if (tbFilePath.Text == "Please click here to set the export file path.")
+            {
+                tbFilePath.Text = "";
+                tbFilePath.ForeColor = Color.MidnightBlue;
+            }
+
+            _LoadXmlFile();
+
+            if (lMode.Text == "Customer")
+            {
+                this.Size = new System.Drawing.Size(550, 220);
+                rbSingle.Enabled = true;
+                rbBoth.Enabled = true;
+            }
+
+            else if (lMode.Text == "MP")
+            {
+                this.Size = new System.Drawing.Size(550, 300);
+                rbSingle.Select();
+                rbSingle.Enabled = false;
+                rbBoth.Enabled = false;
+                if (!(mainForm.I2cMasterConnectApi(true, true) < 0))
+                    I2cConnected = true;
+                mainForm.ChannelSetApi(1);
+
+                ContinueRxPowerUpdate = true;
+                if (RxPowerUpdateThread == null || !RxPowerUpdateThread.IsAlive)
+                {
+                    RxPowerUpdateThread = new Thread(new ThreadStart(_RxPowerUpdateThread));
+                    RxPowerUpdateThread.IsBackground = true;
+                    RxPowerUpdateThread.Start();
+                }
+            }
+        }
+
         private void tbFilePath_MouseClick(object sender, MouseEventArgs e)
         {
-            _FilePathContentChanges();
+            _ConfigFilePathChanges();
         }
 
         private void tbFilePath_Enter(object sender, EventArgs e)
         {
-            _FilePathContentChanges();
+            _ConfigFilePathChanges();
         }
 
-        private void _FilePathContentChanges()
+        private void _ConfigFilePathChanges()
         {
             if (tbFilePath.Text == "Please click here, to import the Config file...")
             {
@@ -545,10 +607,11 @@ namespace IntegratedGuiV2
         private void _RxPowerUpdateThread()
         {
             int currentState = 1;
-            mainForm.RxPowerReadApiFromDdmApi();
 
             while (ContinueRxPowerUpdate)
             {
+                mainForm.RxPowerReadApiFromDdmApi();
+
                 Invoke(new Action(() =>
                 {
                     switch (currentState)
@@ -584,7 +647,7 @@ namespace IntegratedGuiV2
                     currentState = currentState < 4 ? currentState + 1 : 1;
                 }));
 
-                Thread.Sleep(100); // 使線程休眠1秒
+                Thread.Sleep(100); 
             }
         }
 
@@ -796,6 +859,7 @@ namespace IntegratedGuiV2
             mainForm.InformationReadApi();
             string VenderSn = mainForm.GetVendorSnFromDdmiApi();
             string DateCode = mainForm.GetDateCodeFromDdmiApi();
+            string LogFileName = VenderSn + DateCode;
             mainForm.SetVendorSnToDdmiApi(tbVenderSn.Text);
             mainForm.SetDataCodeToDdmiApi(tbDateCode.Text);
 
@@ -817,6 +881,7 @@ namespace IntegratedGuiV2
             Thread.Sleep(10);
             _MessageUpdate("Store into flash...", 70);
             //StopRxPowerUpdateThread();
+            mainForm.MemDumpExprotCsvApi(LogFileName);
             Thread.Sleep(10);
             _MessageUpdate("Finished", 100);
         }
@@ -866,13 +931,9 @@ namespace IntegratedGuiV2
                 bStart.Enabled = false;
                
                 if(lMode.Text == "Customer")
-                {
                     _CustomerModeProcessor();
-                }
                 else if (lMode.Text == "MP")
-                {
                     _MpModeProcessor();
-                }
                 
             }
             finally
@@ -891,6 +952,12 @@ namespace IntegratedGuiV2
             {
                 if (!(mainForm.I2cMasterConnectApi(true, true) < 0))
                     I2cConnected = true;
+                else
+                {
+                    MessageBox.Show("I2c master connection failed.\nPlease check if the hardware configuration or UI is activated.",
+                                    "I2c master connection failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Application.Exit();
+                }
             }
             else
                 if (!(mainForm.I2cMasterDisconnectApi() < 0))
@@ -904,6 +971,11 @@ namespace IntegratedGuiV2
             tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
             tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
             tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+        }
+
+        private void tbLogFilePath(object sender, EventArgs e)
+        {
+            _SetCsvFilePath();
         }
     }
 }

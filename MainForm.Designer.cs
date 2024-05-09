@@ -40,6 +40,7 @@ namespace IntegratedGuiV2
             this.tabPage12 = new System.Windows.Forms.TabPage();
             this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
             this.tabPage13 = new System.Windows.Forms.TabPage();
+            this.bExportCsv = new System.Windows.Forms.Button();
             this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.ucGn1190Corrector = new Gn1190Corrector.UcGn1190CorrectorLite();
@@ -237,6 +238,7 @@ namespace IntegratedGuiV2
             // 
             // tabPage13
             // 
+            this.tabPage13.Controls.Add(this.bExportCsv);
             this.tabPage13.Controls.Add(this.ucMemoryDump);
             this.tabPage13.Location = new System.Drawing.Point(4, 22);
             this.tabPage13.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -246,6 +248,17 @@ namespace IntegratedGuiV2
             this.tabPage13.TabIndex = 2;
             this.tabPage13.Text = "MemDump";
             this.tabPage13.UseVisualStyleBackColor = true;
+            // 
+            // bExportCsv
+            // 
+            this.bExportCsv.Location = new System.Drawing.Point(832, 252);
+            this.bExportCsv.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.bExportCsv.Name = "bExportCsv";
+            this.bExportCsv.Size = new System.Drawing.Size(56, 18);
+            this.bExportCsv.TabIndex = 1;
+            this.bExportCsv.Text = "ExprotCsv";
+            this.bExportCsv.UseVisualStyleBackColor = true;
+            this.bExportCsv.Click += new System.EventHandler(this.bExportCsv_Click);
             // 
             // ucMemoryDump
             // 
@@ -1022,7 +1035,6 @@ namespace IntegratedGuiV2
             this.bGlobalWrite2.TabIndex = 1017;
             this.bGlobalWrite2.Text = "GWrite2";
             this.bGlobalWrite2.UseVisualStyleBackColor = false;
-            this.bGlobalWrite2.Visible = false;
             this.bGlobalWrite2.Click += new System.EventHandler(this.bGlobalWrite2_Click);
             // 
             // tbPasswordB3
@@ -1125,7 +1137,6 @@ namespace IntegratedGuiV2
             this.bDumpToString.TabIndex = 1029;
             this.bDumpToString.Text = "SaveToCfg for Write";
             this.bDumpToString.UseVisualStyleBackColor = false;
-            this.bDumpToString.Visible = false;
             this.bDumpToString.Click += new System.EventHandler(this.bSaveToCfg_Click);
             // 
             // gbPermissions
@@ -1447,6 +1458,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Button bAutoReconnectStateCheck;
         private System.Windows.Forms.CheckBox cbBypassEraseAllCheck;
         private System.Windows.Forms.Button bBypassEraseAllStateCheck;
+        private System.Windows.Forms.Button bExportCsv;
     }
 }
 

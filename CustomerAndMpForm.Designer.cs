@@ -53,7 +53,9 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
+            this.tbLogFIlePath = new System.Windows.Forms.TextBox();
             this.lRssi3 = new System.Windows.Forms.Label();
+            this.lLogFilePath = new System.Windows.Forms.Label();
             this.lRssi2 = new System.Windows.Forms.Label();
             this.lRssi1 = new System.Windows.Forms.Label();
             this.tbRssi3 = new System.Windows.Forms.TextBox();
@@ -119,9 +121,9 @@
             this.lFilePath.ForeColor = System.Drawing.Color.White;
             this.lFilePath.Location = new System.Drawing.Point(16, 23);
             this.lFilePath.Name = "lFilePath";
-            this.lFilePath.Size = new System.Drawing.Size(70, 19);
+            this.lFilePath.Size = new System.Drawing.Size(118, 19);
             this.lFilePath.TabIndex = 42;
-            this.lFilePath.Text = "File path:";
+            this.lFilePath.Text = "Config File path:";
             // 
             // lLogin
             // 
@@ -370,7 +372,9 @@
             // 
             // gbOperatorMode
             // 
+            this.gbOperatorMode.Controls.Add(this.tbLogFIlePath);
             this.gbOperatorMode.Controls.Add(this.lRssi3);
+            this.gbOperatorMode.Controls.Add(this.lLogFilePath);
             this.gbOperatorMode.Controls.Add(this.lRssi2);
             this.gbOperatorMode.Controls.Add(this.lRssi1);
             this.gbOperatorMode.Controls.Add(this.tbRssi3);
@@ -385,10 +389,24 @@
             this.gbOperatorMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
             this.gbOperatorMode.Location = new System.Drawing.Point(23, 193);
             this.gbOperatorMode.Name = "gbOperatorMode";
-            this.gbOperatorMode.Size = new System.Drawing.Size(486, 69);
+            this.gbOperatorMode.Size = new System.Drawing.Size(486, 151);
             this.gbOperatorMode.TabIndex = 70;
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "MP information";
+            // 
+            // tbLogFIlePath
+            // 
+            this.tbLogFIlePath.BackColor = System.Drawing.Color.White;
+            this.tbLogFIlePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbLogFIlePath.Font = new System.Drawing.Font("Nirmala UI", 10F);
+            this.tbLogFIlePath.ForeColor = System.Drawing.Color.Silver;
+            this.tbLogFIlePath.Location = new System.Drawing.Point(10, 117);
+            this.tbLogFIlePath.Name = "tbLogFIlePath";
+            this.tbLogFIlePath.Size = new System.Drawing.Size(281, 25);
+            this.tbLogFIlePath.TabIndex = 72;
+            this.tbLogFIlePath.Text = "Please click here to set the export file path.";
+            this.tbLogFIlePath.Visible = false;
+            this.tbLogFIlePath.Click += new System.EventHandler(this.tbLogFilePath);
             // 
             // lRssi3
             // 
@@ -400,6 +418,18 @@
             this.lRssi3.Size = new System.Drawing.Size(39, 13);
             this.lRssi3.TabIndex = 75;
             this.lRssi3.Text = "RSSI-4";
+            // 
+            // lLogFilePath
+            // 
+            this.lLogFilePath.AutoSize = true;
+            this.lLogFilePath.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lLogFilePath.ForeColor = System.Drawing.Color.White;
+            this.lLogFilePath.Location = new System.Drawing.Point(6, 101);
+            this.lLogFilePath.Name = "lLogFilePath";
+            this.lLogFilePath.Size = new System.Drawing.Size(76, 13);
+            this.lLogFilePath.TabIndex = 71;
+            this.lLogFilePath.Text = "Log file path:";
+            this.lLogFilePath.Visible = false;
             // 
             // lRssi2
             // 
@@ -425,30 +455,27 @@
             // 
             // tbRssi3
             // 
-            this.tbRssi3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbRssi3.Enabled = false;
             this.tbRssi3.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssi3.Location = new System.Drawing.Point(434, 36);
+            this.tbRssi3.Location = new System.Drawing.Point(434, 37);
             this.tbRssi3.Name = "tbRssi3";
             this.tbRssi3.Size = new System.Drawing.Size(45, 23);
             this.tbRssi3.TabIndex = 72;
             // 
             // tbRssi2
             // 
-            this.tbRssi2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbRssi2.Enabled = false;
             this.tbRssi2.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssi2.Location = new System.Drawing.Point(383, 36);
+            this.tbRssi2.Location = new System.Drawing.Point(383, 37);
             this.tbRssi2.Name = "tbRssi2";
             this.tbRssi2.Size = new System.Drawing.Size(45, 23);
             this.tbRssi2.TabIndex = 71;
             // 
             // tbRssi1
             // 
-            this.tbRssi1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbRssi1.Enabled = false;
             this.tbRssi1.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssi1.Location = new System.Drawing.Point(332, 36);
+            this.tbRssi1.Location = new System.Drawing.Point(332, 37);
             this.tbRssi1.Name = "tbRssi1";
             this.tbRssi1.Size = new System.Drawing.Size(45, 23);
             this.tbRssi1.TabIndex = 70;
@@ -466,10 +493,9 @@
             // 
             // tbRssi0
             // 
-            this.tbRssi0.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbRssi0.Enabled = false;
             this.tbRssi0.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssi0.Location = new System.Drawing.Point(281, 36);
+            this.tbRssi0.Location = new System.Drawing.Point(281, 37);
             this.tbRssi0.Name = "tbRssi0";
             this.tbRssi0.Size = new System.Drawing.Size(45, 23);
             this.tbRssi0.TabIndex = 69;
@@ -523,7 +549,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
-            this.ClientSize = new System.Drawing.Size(536, 311);
+            this.ClientSize = new System.Drawing.Size(536, 391);
             this.Controls.Add(this.gbOperatorMode);
             this.Controls.Add(this.cbI2cConnect);
             this.Controls.Add(this.cbBypassW);
@@ -598,5 +624,7 @@
         private System.Windows.Forms.TextBox tbRssi3;
         private System.Windows.Forms.TextBox tbRssi2;
         private System.Windows.Forms.TextBox tbRssi1;
+        private System.Windows.Forms.TextBox tbLogFIlePath;
+        private System.Windows.Forms.Label lLogFilePath;
     }
 }
