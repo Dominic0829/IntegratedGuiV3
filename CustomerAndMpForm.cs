@@ -29,7 +29,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Timer timer;
         private int SequenceIndexA = 0;
         private int SequenceIndexB = 0;
-        private bool DoubleSide = false;
+        private bool DoubleSideMode = false;
         private int ProcessingChannel = 1;
         private bool DemoMode = false;
         private bool TestMode = false;
@@ -85,7 +85,7 @@ namespace IntegratedGuiV2
            
             mainForm = new MainForm(true);
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
-            this.Size = new System.Drawing.Size(550, 220);
+            this.Size = new System.Drawing.Size(550, 240);
             cProgressBar1.Value = 0;
             cProgressBar2.Value = 0;
             this.Load += MainForm_Load;
@@ -367,29 +367,66 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _RemoteInitial()
+        private int _RemoteInitial(bool cutomerMode) // True: Customer Mode, Flase: MP mode
         {
             if (cbBypassW.Checked)
                 mainForm.SetVarBoolStateToMainFormApi("BypassWriteIcConfig", true);
 
-            string selectedProduct = lProduct.Text;
-            mainForm?.SelectProductApi(selectedProduct);
+            if ((string.IsNullOrEmpty(lProduct.Text)))
+            {
+                MessageBox.Show("The configuration file format is incorrect.");
+                return -1;
+            }
+                
+            else
+            {
+                string selectedProduct = lProduct.Text;
+                mainForm?.SelectProductApi(selectedProduct);
+            }
 
-            mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
-            mainForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
-            mainForm?.SetCheckBoxCheckedByNameApi("cbMemDump", true);
-            mainForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
-            mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", true);
-            mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
+            if (cutomerMode) // Customer Mode
+            {
+                mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbMemDump", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", false);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", false);
+            }
+            else // Mp Mode
+            {
+                mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbDdm", false);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbMemDump", false);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", false);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", false);
+            }
 
-            mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", lPath.Text);
-            mainForm.SetVarIntStateToNuvotonIcpApi("LinkState", 0);
+            if (!(string.IsNullOrEmpty(lAPPath.Text) || lAPPath.Text == "_"))
+            {
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+                mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", lAPPath.Text);
+            }
+            else
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", false);
+
+            if (!(string.IsNullOrEmpty(lDataPath.Text) || lDataPath.Text == "_"))
+            {
+
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", true);
+                mainForm.SetTextBoxTextToNuvotonIcpApi("tbDataFlash", lDataPath.Text);
+            }
+            else
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
+
             mainForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
-            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
-            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
-            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true); // Dominic
+            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false); // Dominic
+            mainForm.SetVarIntStateToNuvotonIcpApi("LinkState", 0);
             mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
-            Thread.Sleep(100);
+            Thread.Sleep(10);
+
+            return 0;
         }
 
         private void _SwitchOrNot()
@@ -402,7 +439,7 @@ namespace IntegratedGuiV2
                 lCh2Message.Visible = false;
                 lCh1EC.Visible = true;
                 lCh2EC.Visible = false;
-                DoubleSide = false;
+                DoubleSideMode = false;
             }
             else if ( rbBoth.Checked == true)
             {
@@ -412,7 +449,7 @@ namespace IntegratedGuiV2
                 lCh2Message.Visible = true;
                 lCh1EC.Visible = true;
                 lCh2EC.Visible = true;
-                DoubleSide = true;
+                DoubleSideMode = true;
             }
         }
 
@@ -456,23 +493,29 @@ namespace IntegratedGuiV2
         private void _ParserXmlForProjectInformation(string filePath)
         {
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            lAPPath.Text = "...";
+            lDataPath.Text = "...";
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(filePath);
-
             XmlNode permissionsNode = xmlDoc.SelectSingleNode("//Premissions");
             string role = permissionsNode.Attributes["role"].Value;
-
             XmlNode productNode = xmlDoc.SelectSingleNode("//Product");
             string productName = productNode.Attributes["name"].Value;
-
-            XmlNode binFileNode = xmlDoc.SelectSingleNode("//BinFile");
-            string binFileName = binFileNode.Attributes["name"].Value;
+            XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
+            string APROMName = APROMNode.Attributes["name"].Value;
+            XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
+            string DARAROMName = DATAROMNode.Attributes["name"].Value;
 
             lMode.Text = role;
             lProduct.Text = productName;
-            binFileName = currentDirectory + binFileName;
-            lPath.Text = binFileName;
+
+            if (!(APROMName == "" || APROMName == null))
+                lAPPath.Text = currentDirectory + APROMName;
+
+            if (!(DARAROMName == "" || DARAROMName == null))
+                lDataPath.Text = currentDirectory + DARAROMName;
+           
         }
 
         private bool _PathCheck(System.Windows.Forms.Label lable)
@@ -484,11 +527,11 @@ namespace IntegratedGuiV2
                 if (Path.GetExtension(filePath).Equals(".bin", StringComparison.OrdinalIgnoreCase))
                     return true;
                 else
+                {
                     MessageBox.Show("Please verify if there is an error in the format of the Config file.");
+                    return false;
+                }                    
             }
-            else
-                MessageBox.Show("No file path specified. Please choose the file again.", "Config file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
 
             return false;
         }
@@ -520,43 +563,6 @@ namespace IntegratedGuiV2
 
         }
 
-        private void _LogFilePathChanges()
-        {
-            if (tbFilePath.Text == "Please click here to set the export file path.")
-            {
-                tbFilePath.Text = "";
-                tbFilePath.ForeColor = Color.MidnightBlue;
-            }
-
-            _LoadXmlFile();
-
-            if (lMode.Text == "Customer")
-            {
-                this.Size = new System.Drawing.Size(550, 220);
-                rbSingle.Enabled = true;
-                rbBoth.Enabled = true;
-            }
-
-            else if (lMode.Text == "MP")
-            {
-                this.Size = new System.Drawing.Size(550, 300);
-                rbSingle.Select();
-                rbSingle.Enabled = false;
-                rbBoth.Enabled = false;
-                if (!(mainForm.I2cMasterConnectApi(true, true) < 0))
-                    I2cConnected = true;
-                mainForm.ChannelSetApi(1);
-
-                ContinueRxPowerUpdate = true;
-                if (RxPowerUpdateThread == null || !RxPowerUpdateThread.IsAlive)
-                {
-                    RxPowerUpdateThread = new Thread(new ThreadStart(_RxPowerUpdateThread));
-                    RxPowerUpdateThread.IsBackground = true;
-                    RxPowerUpdateThread.Start();
-                }
-            }
-        }
-
         private void tbFilePath_MouseClick(object sender, MouseEventArgs e)
         {
             _ConfigFilePathChanges();
@@ -579,17 +585,17 @@ namespace IntegratedGuiV2
 
             if (lMode.Text == "Customer")
             {
-                this.Size = new System.Drawing.Size(550, 220);
-                rbSingle.Enabled = true;
-                rbBoth.Enabled = true;
+                this.Size = new System.Drawing.Size(550, 238);
+               // rbSingle.Enabled = true;
+                //rbBoth.Enabled = true;
             }
                 
             else if (lMode.Text == "MP")
             {
-                this.Size = new System.Drawing.Size(550, 300);
+                this.Size = new System.Drawing.Size(550, 400);
                 rbSingle.Select();
-                rbSingle.Enabled = false;
-                rbBoth.Enabled = false;
+                //rbSingle.Enabled = false;
+                //rbBoth.Enabled = false;
                 if (!(mainForm.I2cMasterConnectApi(true, true) < 0))
                     I2cConnected = true;
                 mainForm.ChannelSetApi(1);
@@ -651,6 +657,18 @@ namespace IntegratedGuiV2
             }
         }
 
+      
+        private void _StopRxPowerUpdateThread()
+        {
+            // 設置該標誌為false將會在下一個迴圈迭代中停止執行緒
+            if (ContinueRxPowerUpdate && RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive)
+            {
+                ContinueRxPowerUpdate = false; // 這會導致 RxPowerUpdateThread 中的 while 迴圈停止
+                RxPowerUpdateThread.Join(); // 等待執行緒結束
+            }
+        }
+        /*
+         
         public void StopRxPowerUpdateThread()
         {
             if (RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive)
@@ -660,7 +678,7 @@ namespace IntegratedGuiV2
                 RxPowerUpdateThread = null; // 設為 null，以便可以重新啟動
             }
         }
-        /*
+
         private void _RxPowerUpdateThread()
         {
             while (true)
@@ -674,6 +692,7 @@ namespace IntegratedGuiV2
             }
         }
         */
+
         private void tbFilePath_Leave(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(tbFilePath.Text))
@@ -729,14 +748,20 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _RemoteControl()
+        private int _RemoteControl()
         {
             string errorCountCh1R = "", errorCountCh1W = "";
             string errorCountCh2R = "", errorCountCh2W = "";
             string txCrossPoint0 = "X", txCrossPoint1 = "X", txIbias0 = "X", txIbias1 = "X";
             string rxLosTh0 = "X", rxLosTh1 = "X", rxDeEmphasis0 = "X", rxDeEmphasis1 = "X";
 
-            if ((_PathCheck(lPath)))
+            if (!((_PathCheck(lAPPath)) || (_PathCheck(lDataPath))))
+            {
+                MessageBox.Show("No file path specified. Please choose the file again.", "Config file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return -1;
+            }
+
+            else
             {
                 // Processing FW update...
                 if (DemoMode)
@@ -768,11 +793,13 @@ namespace IntegratedGuiV2
                         rxLosTh0 = mainForm.GetValueFromUcRt145Config("cbLosThresholdCh0");
                         rxDeEmphasis0 = mainForm.GetValueFromUcRt145Config("cbDeEmphasisCh0");
                     }
-                    
+
                     if (ProcessingChannel == 1)
                         errorCountCh1R = mainForm._GlobalRead().ToString(); // Tack out DUT data
                     else if (ProcessingChannel == 2)
-                        errorCountCh2R = mainForm._GlobalRead().ToString(); // Tack out DUT data
+                        errorCountCh2R = mainForm._GlobalRead().ToString();
+                    else
+                        return -1;
 
                     if (TestMode)
                     {
@@ -801,8 +828,8 @@ namespace IntegratedGuiV2
                     if (TestMode)
                         MessageBox.Show("GlobalRead...Done");
 
-                    mainForm.SetAutoReconnectApi(true); //Initial mode state before Connect module
-                    mainForm.SetBypassEraseAllCheckModeApi(true);
+                    mainForm.SetAutoReconnectApi(true); // An automatic connection to MCU will be initiated.
+                    mainForm.SetBypassEraseAllCheckModeApi(true); // Avoid the intervention of MessgaeBox
 
                     if (TestMode)
                     {
@@ -851,11 +878,69 @@ namespace IntegratedGuiV2
                     Thread.Sleep(500);
                 }
             }
+
+            return 0;
         }
 
-        private void _MpModeProcessor()
+        private void _WriteSnDatecode(int ch)
         {
-            _MessageUpdate("Preparing resources...", 0);
+            string venderSn = tbVenderSn.Text;
+            string datacode = tbDateCode.Text;
+            string LogFileName = venderSn + datacode;
+            string originalVenderSn = "", originalDateCode = "";
+
+            if (TestMode)
+            {
+                mainForm.InformationReadApi();
+                originalVenderSn = mainForm.GetVendorSnFromDdmiApi();
+                originalDateCode = mainForm.GetDateCodeFromDdmiApi();
+                mainForm.SetVendorSnToDdmiApi(venderSn);
+                mainForm.SetDataCodeToDdmiApi(datacode);
+                MessageBox.Show("Information check"
+                            + "\nBefore:\n"
+                            + "VenderSn: " + originalVenderSn
+                            + "\nDateCode: " + originalDateCode
+                            + "\n\nAfter:\n"
+                            + "VerderSn: " + mainForm.GetVendorSnFromDdmiApi()
+                            + "\nDateCode:" + mainForm.GetDateCodeFromDdmiApi()
+                            );
+            }
+            else
+            {
+                mainForm.SetVendorSnToDdmiApi(venderSn);
+                mainForm.SetDataCodeToDdmiApi(datacode);
+            }
+
+            _UpdateMessage(ch, "SN, Datecode writing");
+            mainForm.InformationWriteApi();
+            Thread.Sleep(10);
+            _UpdateMessage(ch, "Write...Done");
+            mainForm.InformationStoreIntoFlashApi();
+            Thread.Sleep(10);
+            _UpdateMessage(ch, "Store into flash...Done");
+            mainForm.MemDumpExprotCsvApi(LogFileName);
+            Thread.Sleep(10);
+            _UpdateMessage(ch, "Log file has been exported");
+
+        }
+
+        private void _UpdateMessage(int channel, string message)
+        {
+            string msgLabel = channel == 1 ? "lCh1Message" : "lCh2Message";
+            switch (msgLabel)
+            {
+                case "lCh1Message":
+                    lCh1Message.Text = message;
+                    break;
+                case "lCh2Message":
+                    lCh2Message.Text = message;
+                    break;
+            }
+        }
+        /*
+        private void _SnDatecodeWritingProcess(int ch)
+        {
+            //_MessageUpdate("Preparing resources...", 0);
             mainForm.InformationReadApi();
             string VenderSn = mainForm.GetVendorSnFromDdmiApi();
             string DateCode = mainForm.GetDateCodeFromDdmiApi();
@@ -863,7 +948,9 @@ namespace IntegratedGuiV2
             mainForm.SetVendorSnToDdmiApi(tbVenderSn.Text);
             mainForm.SetDataCodeToDdmiApi(tbDateCode.Text);
 
-            MessageBox.Show("Information check"
+            if (TestMode)
+            {
+                MessageBox.Show("Information check"
                             + "\nBefore:\n"
                             + "VenderSn: " + VenderSn
                             + "\nDateCode: " + DateCode
@@ -871,57 +958,108 @@ namespace IntegratedGuiV2
                             + "VerderSn: " + mainForm.GetVendorSnFromDdmiApi()
                             + "\nDateCode:" + mainForm.GetDateCodeFromDdmiApi()
                             );
+            }
 
-            _MessageUpdate("Writing...", 30);
-            lCh1Message.Text = "Writing...";
+            //_MessageUpdate("Writing...", 30);
+            if (ch == 1)
+            {
+                lCh1Message.Text = "SN, Datecode writing";
+            }
+            else if (ch == 2)
+            {
+                lCh2Message.Text = "SN, Datecode writing";
+            }
+            
             mainForm.InformationWriteApi();
             Thread.Sleep(10);
-            _MessageUpdate("Write...Done", 50);
+
+            if (ch == 1)
+            {
+                lCh1Message.Text = "Write...Done";
+            }
+            else if (ch == 2)
+            {
+                lCh2Message.Text = "Write...Done";
+            }
+
+            //_MessageUpdate("Write...Done", 50);
             mainForm.InformationStoreIntoFlashApi();
             Thread.Sleep(10);
-            _MessageUpdate("Store into flash...", 70);
+
+            if (ch == 1)
+            {
+                lCh1Message.Text = "Store into flash...Done";
+            }
+            else if (ch == 2)
+            {
+                lCh2Message.Text = "Store into flash...Done";
+            }
+
+            //_MessageUpdate("Store into flash...", 70);
             //StopRxPowerUpdateThread();
             mainForm.MemDumpExprotCsvApi(LogFileName);
             Thread.Sleep(10);
-            _MessageUpdate("Finished", 100);
+
+            if (ch == 1)
+            {
+                lCh1Message.Text = "Log file has been exproted";
+            }
+            else if (ch == 2)
+            {
+                lCh2Message.Text = "Log file has been exproted";
+            }
+            //_MessageUpdate("Finished", 100);
         }
-        
-        private void _CustomerModeProcessor()
+        */
+        private int _Processor(bool customerMode) // True: Customer Mode, Flase: MP mode
         {
             _InitialUi();
 
-            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSide ? 2 : 1); ProcessingChannel++)
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++)
             {
-                _RemoteInitial();
-                _RemoteControl();
+                _StopRxPowerUpdateThread(); // Stop...RxPowerUpdateThread
 
-                if (ProcessingChannel == 1 && DoubleSide)
+                if (_RemoteInitial(customerMode) < 0)
+                    return -1;
+
+                if (_RemoteControl() < 0) 
+                    return -1;
+
+                if (!customerMode)
+                {
+                    // Writing SN and DateCode, then export csv file.
+                    _WriteSnDatecode(ProcessingChannel);
+                }
+
+                if (ProcessingChannel == 1 && DoubleSideMode)
                 {
                     if (TestMode)
                         MessageBox.Show("Switch channel");
 
-                    mainForm.ChannelSwitchApi(); // switch
+                    mainForm.ChannelSwitchApi(); // switch to ch2
 
-                    if (!(mainForm.I2cMasterDisconnectApi() < 0))// ReLink-step1 ；觀察有其必要性?
+                    if (!(mainForm.I2cMasterDisconnectApi() < 0))// Reconnect-step1； 必要性?
                         I2cConnected = false;
 
-                    if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// ReLink-step2
+                    if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// Reconnect-step2
                         I2cConnected = true;
                 }
 
                 FirstRound = false;
             }
 
-            if (DoubleSide)
+            if (DoubleSideMode)
             {
-                mainForm.ChannelSwitchApi();
+                mainForm.ChannelSwitchApi(); // return to ch1
 
-                if (!(mainForm.I2cMasterDisconnectApi() < 0))// ReLink-step1 ；觀察有其必要性?
+                if (!(mainForm.I2cMasterDisconnectApi() < 0))// Reconnect-step1； 必要性?
                     I2cConnected = false;
 
-                if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// ReLink-step2
+                if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// Reconnect-step2
                     I2cConnected = true;
             }
+
+            return 0;
         }
 
         private void bStart_Click(object sender, EventArgs e)
@@ -929,12 +1067,14 @@ namespace IntegratedGuiV2
             try
             {
                 bStart.Enabled = false;
-               
-                if(lMode.Text == "Customer")
-                    _CustomerModeProcessor();
-                else if (lMode.Text == "MP")
-                    _MpModeProcessor();
-                
+                bool isCustomerMode = lMode.Text == "Customer";
+
+                if ((isCustomerMode || lMode.Text == "MP") && _Processor(isCustomerMode) < 0)
+                {
+                    MessageBox.Show("There are some problems");
+                    return;
+                }
+
             }
             finally
             {

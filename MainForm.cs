@@ -38,13 +38,14 @@ namespace IntegratedGuiV2
         private bool FirstRead = false;
         private bool AutoSelectIcConfig = false;
         private string sAcConfig;
-        private string BinFilePath;
+        private string APROMPath, DATAROMPath;
         private bool writeToFile = false;
         private string fileName = "3234.cfg";
         private bool TestMode = false;
         private bool I2cConnected = false;
         private bool BypassWriteIcConfig = false;
         private bool FirstRound = true;
+
 
         public bool InformationReadState { get; private set; }
         public bool DdmReadState { get; private set; }
@@ -849,11 +850,7 @@ namespace IntegratedGuiV2
         private void _SetAutoReconnectControl(bool ControlState)
         {
             ucNuvotonIcpTool.SetVarBoolState("AutoReconnectMode", ControlState);
-
-            if (ControlState)
-                cbAutoReconnect.Checked = true;
-            else
-                cbAutoReconnect.Checked = false;
+            cbAutoReconnect.Checked = ControlState;
         }
 
         private bool _GetAutoReconnectControl()
@@ -864,11 +861,7 @@ namespace IntegratedGuiV2
         private void _SetBypassEraseAllControl(bool ControlState)
         {
             ucNuvotonIcpTool.SetVarBoolState("BypassEraseAllCheckMode", ControlState);
-
-            if (ControlState)
-                cbBypassEraseAllCheck.Checked = true;
-            else
-                cbBypassEraseAllCheck.Checked = false;
+            cbBypassEraseAllCheck.Checked = ControlState;
         }
 
         private bool _GetBypassEraseAllControl()
@@ -1370,9 +1363,13 @@ namespace IntegratedGuiV2
             productNode.SetAttribute("name", cbProductSelect.SelectedItem.ToString());
             permissionsNode.AppendChild(productNode);
 
-            XmlElement binFileNode = xmlDoc.CreateElement("BinFile");
-            binFileNode.SetAttribute("name", lBinFilePath.Text);
-            permissionsNode.AppendChild(binFileNode);
+            XmlElement APROMNode = xmlDoc.CreateElement("APROM");
+            APROMNode.SetAttribute("name", APROMPath);
+            permissionsNode.AppendChild(APROMNode);
+
+            XmlElement DATAROMNode = xmlDoc.CreateElement("DATAROM");
+            DATAROMNode.SetAttribute("name", DATAROMPath);
+            permissionsNode.AppendChild(DATAROMNode);
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK)
             {
@@ -1928,7 +1925,7 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
-        private bool _LoadFilesPosition()
+        private bool _LoadFilesPosition(string fileType)
         {
             string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
@@ -1940,13 +1937,28 @@ namespace IntegratedGuiV2
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    lBinFilePath.Text = Path.GetFileName(openFileDialog.FileName);
-                    cbBinFilePath.Checked = true;
+                    if (fileType == "APROM")
+                    {
+                        APROMPath = Path.GetFileName(openFileDialog.FileName);
+                        cbAPPath.Checked = true;
+                    }
+
+                    if (fileType == "DATAROM")
+                    {
+                        DATAROMPath = Path.GetFileName(openFileDialog.FileName);
+                        cbDAPath.Checked = true;
+                    }
+                    
                     return true;  
                 }
                 else
                 {
-                    cbBinFilePath.Checked = false;
+                    if (fileType == "APROM")
+                        cbAPPath.Checked = false;
+
+                    if (fileType == "DATAROM")
+                        cbDAPath.Checked = false;
+
                     return false;  
                 }
             }
@@ -1954,7 +1966,7 @@ namespace IntegratedGuiV2
 
         private void _GenerateCfgButtonState()
         {
-            if (cbBinFilePath.Checked && (rbCustomerMode.Checked || rbMpMode.Checked))
+            if ((cbAPPath.Checked || cbDAPath.Checked) && (rbCustomerMode.Checked || rbMpMode.Checked))
                 bGenerateCfg.Enabled = true;
             else
                 bGenerateCfg.Enabled = false;
@@ -2467,12 +2479,6 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void cbBinFilePath_CheckedChanged(object sender, EventArgs e)
-        {
-            _LoadFilesPosition();
-            _GenerateCfgButtonState();
-        }
-
         private void rbCustomerMode_CheckedChanged(object sender, EventArgs e)
         {
             _GenerateCfgButtonState();
@@ -2567,7 +2573,33 @@ namespace IntegratedGuiV2
             _ExprotMemToCsv("Test");
         }
 
-        
+        private void cbAPPath_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbAPPath.Checked)
+            {
+                _LoadFilesPosition("APROM");
+                _GenerateCfgButtonState();
+            }
+            else if (!cbAPPath.Checked)
+            {
+                APROMPath = "";
+            }
+            
+        }
+
+        private void cbDAPath_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbDAPath.Checked)
+            {
+                _LoadFilesPosition("DATAROM");
+                _GenerateCfgButtonState();
+            }
+            else if (!cbDAPath.Checked)
+            {
+                DATAROMPath = "";
+            }
+            
+        }
     }
 
     public class ComboBoxItem
