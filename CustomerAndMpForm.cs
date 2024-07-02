@@ -32,7 +32,7 @@ namespace IntegratedGuiV2
         private bool DoubleSideMode = false;
         private int ProcessingChannel = 1;
         private bool DemoMode = false;
-        private bool TestMode = false;
+        private bool DebugMode = false;
         private bool FirstRound = true;
         private bool RxPowerUpdate = false;
         private bool I2cConnected = false;
@@ -85,7 +85,7 @@ namespace IntegratedGuiV2
            
             mainForm = new MainForm(true);
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
-            this.Size = new System.Drawing.Size(550, 240);
+            this.Size = new System.Drawing.Size(550, 270);
             cProgressBar1.Value = 0;
             cProgressBar2.Value = 0;
             this.Load += MainForm_Load;
@@ -108,7 +108,7 @@ namespace IntegratedGuiV2
             mainForm.MainMessageUpdated += MainForm_MainMessageUpdated;
            
             //ucMainForm initial...
-            if (TestMode)
+            if (DebugMode)
             {
                 bool beforeTestMode = mainForm.GetVarBoolStateFromNuvotonIcpApi("TestMode");
                 mainForm.SetVarBoolStateToNuvotonIcpApi("TestMode", true);
@@ -159,7 +159,7 @@ namespace IntegratedGuiV2
             }
 
             //ucNuvotonICP initial...
-            if (TestMode)
+            if (DebugMode)
             {
                 MessageBox.Show("ReLink and Erase APROM...Done");
                 bool beforeSecurityLock = mainForm.GetCheckBoxStateFromNuvotonIcpApi("cbSecurityLock");
@@ -218,12 +218,16 @@ namespace IntegratedGuiV2
             cProgressBar2.Text = "Ch2";
             cProgressBar1.Value = 0;
             cProgressBar2.Value = 0;
+            tbVersionCodeCh1.Text = "";
+            tbVersionCodeCh2.Text = "";
+            tbVersionCodeCheckCh1.Text = "";
+            tbVersionCodeCheckCh2.Text = "";
             bStart.Select();
             Application.DoEvents();
             
             if (!FirstRound)
             {
-                for (int i = 100; i > 0 ; i--)// For ProgressBar renew
+                for (int i = 100; i > -1 ; i-=5)// For ProgressBar renew
                 {
                     cProgressBar1.Value = i;
                     cProgressBar1.Text = "" + i + "%";
@@ -396,8 +400,8 @@ namespace IntegratedGuiV2
             else // Mp Mode
             {
                 mainForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
-                mainForm?.SetCheckBoxCheckedByNameApi("cbDdm", false);
-                mainForm?.SetCheckBoxCheckedByNameApi("cbMemDump", false);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
+                mainForm?.SetCheckBoxCheckedByNameApi("cbMemDump", true);
                 mainForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
                 mainForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", false);
                 mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", false);
@@ -409,7 +413,11 @@ namespace IntegratedGuiV2
                 mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", lAPPath.Text);
             }
             else
-                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", false);
+            {
+                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+                
 
             if (!(string.IsNullOrEmpty(lDataPath.Text) || lDataPath.Text == "_"))
             {
@@ -421,7 +429,14 @@ namespace IntegratedGuiV2
                 mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
 
             mainForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
-            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false); // Dominic
+
+            if (cbSecurityLock.Checked) {
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true); // Dominic
+            }
+            else {
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false);
+            }
+            
             mainForm.SetVarIntStateToNuvotonIcpApi("LinkState", 0);
             mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
             Thread.Sleep(10);
@@ -440,6 +455,8 @@ namespace IntegratedGuiV2
                 lCh1EC.Visible = true;
                 lCh2EC.Visible = false;
                 DoubleSideMode = false;
+                tbVersionCodeCh2.Visible = false;
+                tbVersionCodeCheckCh2.Visible = false;
             }
             else if ( rbBoth.Checked == true)
             {
@@ -450,6 +467,8 @@ namespace IntegratedGuiV2
                 lCh1EC.Visible = true;
                 lCh2EC.Visible = true;
                 DoubleSideMode = true;
+                tbVersionCodeCh2.Visible = true;
+                tbVersionCodeCheckCh2.Visible = true;
             }
         }
 
@@ -493,8 +512,8 @@ namespace IntegratedGuiV2
         private void _ParserXmlForProjectInformation(string filePath)
         {
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            lAPPath.Text = "...";
-            lDataPath.Text = "...";
+            lAPPath.Text = "_";
+            lDataPath.Text = "_";
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(filePath);
@@ -512,6 +531,8 @@ namespace IntegratedGuiV2
 
             if (!(APROMName == "" || APROMName == null))
                 lAPPath.Text = currentDirectory + APROMName;
+            else
+                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
             if (!(DARAROMName == "" || DARAROMName == null))
                 lDataPath.Text = currentDirectory + DARAROMName;
@@ -585,14 +606,14 @@ namespace IntegratedGuiV2
 
             if (lMode.Text == "Customer")
             {
-                this.Size = new System.Drawing.Size(550, 238);
+                this.Size = new System.Drawing.Size(550, 270);
                // rbSingle.Enabled = true;
                 //rbBoth.Enabled = true;
             }
                 
             else if (lMode.Text == "MP")
             {
-                this.Size = new System.Drawing.Size(550, 400);
+                this.Size = new System.Drawing.Size(550, 450);
                 rbSingle.Select();
                 //rbSingle.Enabled = false;
                 //rbBoth.Enabled = false;
@@ -614,9 +635,16 @@ namespace IntegratedGuiV2
         {
             int currentState = 1;
 
+            if (mainForm.I2cMasterConnectApi(true,true) < 0) {
+                return;
+            }
+            
             while (ContinueRxPowerUpdate)
             {
-                mainForm.RxPowerReadApiFromDdmApi();
+                if (mainForm.RxPowerReadApiFromDdmApi() < 0) {
+                    MessageBox.Show("Please check the module plugin status");
+                    return;
+                }
 
                 Invoke(new Action(() =>
                 {
@@ -656,15 +684,14 @@ namespace IntegratedGuiV2
                 Thread.Sleep(100); 
             }
         }
-
       
         private void _StopRxPowerUpdateThread()
         {
-            // 設置該標誌為false將會在下一個迴圈迭代中停止執行緒
             if (ContinueRxPowerUpdate && RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive)
             {
-                ContinueRxPowerUpdate = false; // 這會導致 RxPowerUpdateThread 中的 while 迴圈停止
-                RxPowerUpdateThread.Join(); // 等待執行緒結束
+                ContinueRxPowerUpdate = false; // Stop the while loop
+                RxPowerUpdateThread.Join(); // Waiting for thread to finish execution.
+                //RxPowerUpdateThread = null;
             }
         }
         /*
@@ -748,7 +775,32 @@ namespace IntegratedGuiV2
             }
         }
 
-        private int _RemoteControl()
+        private void _DisableButtons()
+        {
+            tbFilePath.Enabled = false;
+            bStart.Enabled = false;
+            rbSingle.Enabled = false;
+            rbBoth.Enabled = false;
+            cbSecurityLock.Enabled = false;
+            cbI2cConnect.Enabled = false;
+            cbBypassW.Enabled = false;
+            gbOperatorMode.Enabled = false;
+
+        }
+
+        private void _EnableButtons()
+        {
+            tbFilePath.Enabled = true;
+            bStart.Enabled = true;
+            rbSingle.Enabled = true;
+            rbBoth.Enabled = true;
+            cbSecurityLock.Enabled = true;
+            cbI2cConnect.Enabled = true;
+            cbBypassW.Enabled = true;
+            gbOperatorMode.Enabled = true;
+        }
+
+        private int _RemoteControl() 
         {
             string errorCountCh1R = "", errorCountCh1W = "";
             string errorCountCh2R = "", errorCountCh2W = "";
@@ -786,7 +838,7 @@ namespace IntegratedGuiV2
                 }
                 else 
                 {
-                    if (TestMode)
+                    if (DebugMode)
                     {
                         txCrossPoint0 = mainForm.GetValueFromUcRt146Config("cbCrossPointCh0");
                         txIbias0 = mainForm.GetValueFromUcRt146Config("cbIbiasCurrentCh0");
@@ -801,7 +853,7 @@ namespace IntegratedGuiV2
                     else
                         return -1;
 
-                    if (TestMode)
+                    if (DebugMode)
                     {
                         txCrossPoint1 = mainForm.GetValueFromUcRt146Config("cbCrossPointCh0");
                         txIbias1 = mainForm.GetValueFromUcRt146Config("cbIbiasCurrentCh0");
@@ -820,18 +872,25 @@ namespace IntegratedGuiV2
                     }
                                          
                     Thread.Sleep(10);
-                    if (ProcessingChannel == 1)
-                        lCh1EC.Text = $"R:{errorCountCh1R} ";
-                    else if (ProcessingChannel == 2)
-                        lCh2EC.Text = $"R:{errorCountCh2R} ";
 
-                    if (TestMode)
+                    if (ProcessingChannel == 1) {
+                        mainForm.SetToChannle2Api(false);
+                        lCh1EC.Text = $"R:{errorCountCh1R} ";
+                        tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+                    }
+                    else if (ProcessingChannel == 2) {
+                        mainForm.SetToChannle2Api(true);
+                        lCh2EC.Text = $"R:{errorCountCh2R} ";
+                        tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
+                    }
+
+                    if (DebugMode)
                         MessageBox.Show("GlobalRead...Done");
 
                     mainForm.SetAutoReconnectApi(true); // An automatic connection to MCU will be initiated.
                     mainForm.SetBypassEraseAllCheckModeApi(true); // Avoid the intervention of MessgaeBox
 
-                    if (TestMode)
+                    if (DebugMode)
                     {
                         MessageBox.Show("AutoReconnec mode: " + mainForm.GetAutoReconnectApi()
                                    + "\nBypassEraseAll mode " + mainForm.GetBypassEraseAllCheckModeApi()
@@ -844,7 +903,7 @@ namespace IntegratedGuiV2
                     mainForm.StartFlashingApi(); // Firmware update
                     Thread.Sleep(10);
                     
-                    if (TestMode)
+                    if (DebugMode)
                         MessageBox.Show("Firmware burning...Done");
 
                     if (ProcessingChannel == 1)
@@ -858,7 +917,7 @@ namespace IntegratedGuiV2
                         lCh2EC.Text = $"R:{errorCountCh2R} /W:{errorCountCh2W} ";
                     }
 
-                    if (TestMode)
+                    if (DebugMode)
                         MessageBox.Show("GlobalWrite...Done");
 
                     if (ProcessingChannel == 1)
@@ -866,12 +925,14 @@ namespace IntegratedGuiV2
                         lCh1Message.Text = "Update completed.";
                         cProgressBar1.Value = 100;
                         cProgressBar1.Text = "100%";
+                        tbVersionCodeCheckCh1.Text = mainForm.GetFirmwareVersionCodeApi();
                     }
                     else if (ProcessingChannel == 2)
                     {
                         lCh2Message.Text = "Update completed.";
                         cProgressBar2.Value = 100;
                         cProgressBar2.Text = "100%";
+                        tbVersionCodeCheckCh2.Text = mainForm.GetFirmwareVersionCodeApi();
                     }
                     
                     Application.DoEvents();
@@ -889,7 +950,7 @@ namespace IntegratedGuiV2
             string LogFileName = venderSn + datacode;
             string originalVenderSn = "", originalDateCode = "";
 
-            if (TestMode)
+            if (DebugMode)
             {
                 mainForm.InformationReadApi();
                 originalVenderSn = mainForm.GetVendorSnFromDdmiApi();
@@ -918,7 +979,7 @@ namespace IntegratedGuiV2
             mainForm.InformationStoreIntoFlashApi();
             Thread.Sleep(10);
             _UpdateMessage(ch, "Store into flash...Done");
-            mainForm.MemDumpExprotCsvApi(LogFileName);
+            mainForm.ExprotLogfileToCsvApi(LogFileName);
             Thread.Sleep(10);
             _UpdateMessage(ch, "Log file has been exported");
 
@@ -1017,23 +1078,21 @@ namespace IntegratedGuiV2
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++)
             {
-                _StopRxPowerUpdateThread(); // Stop...RxPowerUpdateThread
+                if(!customerMode)
+                    _StopRxPowerUpdateThread();
 
                 if (_RemoteInitial(customerMode) < 0)
                     return -1;
 
-                if (_RemoteControl() < 0) 
+                if (_RemoteControl() < 0)
                     return -1;
 
                 if (!customerMode)
-                {
-                    // Writing SN and DateCode, then export csv file.
-                    _WriteSnDatecode(ProcessingChannel);
-                }
+                    _WriteSnDatecode(ProcessingChannel); // Writing SN and DateCode, then export csv file.
 
                 if (ProcessingChannel == 1 && DoubleSideMode)
                 {
-                    if (TestMode)
+                    if (DebugMode)
                         MessageBox.Show("Switch channel");
 
                     mainForm.ChannelSwitchApi(); // switch to ch2
@@ -1043,6 +1102,7 @@ namespace IntegratedGuiV2
 
                     if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// Reconnect-step2
                         I2cConnected = true;
+
                 }
 
                 FirstRound = false;
@@ -1059,6 +1119,7 @@ namespace IntegratedGuiV2
                     I2cConnected = true;
             }
 
+            ProcessingChannel = 1;
             return 0;
         }
 
@@ -1066,23 +1127,27 @@ namespace IntegratedGuiV2
         {
             try
             {
-                bStart.Enabled = false;
+                _DisableButtons();
                 bool isCustomerMode = lMode.Text == "Customer";
 
-                if ((isCustomerMode || lMode.Text == "MP") && _Processor(isCustomerMode) < 0)
+                if ((isCustomerMode || lMode.Text == "MP") && 
+                    _Processor(isCustomerMode) < 0)
                 {
-                    MessageBox.Show("There are some problems");
+                    MessageBox.Show("There are some problems","Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     return;
                 }
+
 
             }
             finally
             {
+                /*
                 if (!(mainForm.I2cMasterDisconnectApi() < 0))
                     I2cConnected = false;
 
                 _UpdateButtonState();
-                bStart.Enabled = true;
+                */
+                _EnableButtons();
             }
         }
 
@@ -1116,6 +1181,13 @@ namespace IntegratedGuiV2
         private void tbLogFilePath(object sender, EventArgs e)
         {
             _SetCsvFilePath();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            mainForm._GlobalRead();
+            string LogFileName = "20240702";
+            mainForm.ExprotLogfileToCsvApi(LogFileName);
         }
     }
 }

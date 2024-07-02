@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using NuvotonIcpTool;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
+using Gn1190Corrector;
 
 namespace IntegratedGuiV2
 {
@@ -41,16 +42,17 @@ namespace IntegratedGuiV2
         private string APROMPath, DATAROMPath;
         private bool writeToFile = false;
         private string fileName = "3234.cfg";
-        private bool TestMode = false;
+        private bool DebugMode = false;
         private bool I2cConnected = false;
         private bool BypassWriteIcConfig = false;
         private bool FirstRound = true;
-
+        private bool FlagFwUpdated = false;
 
         public bool InformationReadState { get; private set; }
         public bool DdmReadState { get; private set; }
         public bool MemDumpReadState { get; private set; }
         public bool CorrectorReadState { get; private set; }
+        public string FwVersionCode, FwVersionCodeCheck;
 
         public event EventHandler<string> ReadStateUpdated;
         public event EventHandler<int> ProgressValue;
@@ -85,6 +87,11 @@ namespace IntegratedGuiV2
         public string GetValueFromUcRt145Config(string comboBoxId)
         {
             return ucRt145Config.GetComboBoxSelectedValue(comboBoxId);
+        }
+
+        public string GetFirmwareVersionCodeApi()
+        {
+            return _GetFirmwareVersionCode();
         }
 
         public List<string> GetComboBoxItems()
@@ -182,12 +189,12 @@ namespace IntegratedGuiV2
             }
         }
 
-        public void MemDumpExprotCsvApi(string fileName)
+        public void ExprotLogfileToCsvApi(string fileName)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExprotMemToCsv(fileName)));
+                this.Invoke(new Action(() => _ExprotLogfileToCsv(fileName)));
             else
-                _ExprotMemToCsv(fileName);
+                _ExprotLogfileToCsv(fileName);
         }
 
         public void ForceConnectSingleApi() // Used for MpForm
@@ -229,7 +236,15 @@ namespace IntegratedGuiV2
             else
                 ucInformation.ReadApi();
         }
-                
+
+        public void SetToChannle2Api(bool mode)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _SetToChannel2(mode)));
+            else
+                _SetToChannel2(mode);
+        }
+
         public void SetAutoReconnectApi(bool Mode)
         {
             if (this.InvokeRequired)
@@ -307,6 +322,11 @@ namespace IntegratedGuiV2
             return ucInformation.GetTextBoxText(checkBoxId);
         }
 
+        public string GetTextBoxTextFromCorrectorApi(string checkBoxId)
+        {
+            return (checkBoxId);
+        }
+
         public void SetVendorSnToDdmiApi(string text)
         {
             ucInformation.SetVendorSnApi(text);
@@ -342,12 +362,12 @@ namespace IntegratedGuiV2
             return ucDigitalDiagnosticsMonitoring.GetTextBoxText(textBoxId);
         }
 
-        public void RxPowerReadApiFromDdmApi()
+        public int RxPowerReadApiFromDdmApi()
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucDigitalDiagnosticsMonitoring.RxPowerReadApi()));
+                return (int)this.Invoke(new Action(() => ucDigitalDiagnosticsMonitoring.RxPowerReadApi()));
             else
-                ucDigitalDiagnosticsMonitoring.RxPowerReadApi();
+                return ucDigitalDiagnosticsMonitoring.RxPowerReadApi();
         }
 
         public void UpdateSecurityLockStateFromNuvotonIcpApi()
@@ -489,11 +509,10 @@ namespace IntegratedGuiV2
             int result = -1;
 
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => result = _I2cMasterConnect(setMode, setPassword)));
+                return (int)this.Invoke(new Action(() => _I2cMasterConnect(setMode, setPassword)));
             else
-                result = _I2cMasterConnect(setMode, setPassword);
-
-            return result;
+                return _I2cMasterConnect(setMode, setPassword);
+            
         }
 
         public int I2cMasterDisconnectApi()
@@ -829,22 +848,56 @@ namespace IntegratedGuiV2
             }
            
             //MessageBox.Show("_WritePassword2 rv: " + i2cWriteCB(80, 123, 4, data));
-
             return 0;
         }
 
-        private int _ExprotMemToCsv(string fileName)
+        private int _ExprotLogfileToCsv(string fileName)
         {
             fileName = fileName.Replace(" ", "") + ".csv";
             string folderPath = System.Windows.Forms.Application.StartupPath;
             string exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
-            //string exportFilePath = Path.Combine(combinedPath, "sn.csv");
             exportFilePath = exportFilePath.Replace("\\\\", "\\");
 
-            if (!(ucMemoryDump.ExportAllPagesData(exportFilePath) < 0))
+            //Temporary file for logfile appendant
+            string tempExportFilePath = Path.Combine(folderPath, "LogFolder", "temp_" + fileName);
+            tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
+
+            AppendVendorInfo(exportFilePath);
+            AppendMoreInfo(exportFilePath);
+
+            if (ucMemoryDump.ExportAllPagesData(tempExportFilePath) < 0)
                 return -1;
 
+            AppendFileContentToAnother(tempExportFilePath, exportFilePath);
+
+            if (File.Exists(tempExportFilePath))
+                File.Delete(tempExportFilePath);
+
             return 0;
+        }
+        
+
+        private void AppendVendorInfo(string exportFilePath)
+        {
+            string vendorInfo = ucInformation.GetVendorInfo();
+            File.AppendAllText(exportFilePath, vendorInfo);
+        }
+
+        private void AppendMoreInfo(string exportFilePath)
+        {
+            string additionalVendorInfo = ucDigitalDiagnosticsMonitoring.GetMoreInfo();
+            File.AppendAllText(exportFilePath, additionalVendorInfo + Environment.NewLine);
+        }
+
+        private void AppendFileContentToAnother(string sourceFilePath, string destinationFilePath)
+        {
+            var lines = File.ReadAllLines(sourceFilePath);
+            File.AppendAllLines(destinationFilePath, lines);
+        }
+
+        private void _SetToChannel2(bool mode) 
+        {
+            ucNuvotonIcpTool.SetVarBoolState("SetToChannel2", mode);
         }
 
         private void _SetAutoReconnectControl(bool ControlState)
@@ -1609,7 +1662,7 @@ namespace IntegratedGuiV2
                 //_DisableButtons(); //為了避免切換期間，限制輸入其他狀態
 
             _ChannelSwitch();
-            bOutterSwitch.Select();
+            bGlobalRead.Select();
 
             if (bOutterSwitch.Enabled == false)
                 bOutterSwitch.Enabled = true;
@@ -1737,6 +1790,35 @@ namespace IntegratedGuiV2
                     tcIcConfig.TabPages.Add(tabPage33);
                 }
             }
+        }
+
+        private string _GetFirmwareVersionCode()
+        {
+            byte[] data = new byte[10];
+            byte[] bATmp = new byte[2];
+
+            data[0] = 0xAA;
+            if (_I2cWrite(80, 127, 1, data) < 0)
+                return "-1";
+
+            if (_I2cRead(80, 165, 10, data) < 0)
+                return "-1";
+
+            if ((data[0] == 0) && (data[1] == 0) && (data[2] == 0) && (data[3] == 0) &&
+                (data[4] == 0) && (data[5] == 0) && (data[6] == 0) && (data[7] == 0) &&
+                (data[8] == 0) && (data[9] == 0)) {
+                data[0] = 32;
+                if (_I2cWrite(80, 127, 1, data) < 0)
+                    return "-1";
+
+                if (_I2cRead(80, 165, 10, data) < 0)
+                    return "-1";
+            }
+            
+            bATmp = new byte[8];
+            System.Buffer.BlockCopy(data, 2, bATmp, 0, 8);
+            
+            return Encoding.Default.GetString(bATmp);
         }
 
         private void bGlobalRead_Click(object sender, EventArgs e)
@@ -1966,7 +2048,7 @@ namespace IntegratedGuiV2
 
         private void _GenerateCfgButtonState()
         {
-            if ((cbAPPath.Checked || cbDAPath.Checked) && (rbCustomerMode.Checked || rbMpMode.Checked))
+            if ((cbAPPath.Checked) && (rbCustomerMode.Checked || rbMpMode.Checked))
                 bGenerateCfg.Enabled = true;
             else
                 bGenerateCfg.Enabled = false;
@@ -1992,7 +2074,7 @@ namespace IntegratedGuiV2
             StateUpdated("Write State:\nPreparing resources...", 62);
             Application.DoEvents();
 
-            if (TestMode)
+            if (DebugMode)
                 MessageBox.Show("cbInfomation Check state: " + cbInfomation.CheckState);
 
             
@@ -2012,13 +2094,13 @@ namespace IntegratedGuiV2
                 {
                     tbInformationReadState.BackColor = Color.YellowGreen;
                     StateUpdated("Write State:\nInformation...Done", 65);
-                    if (TestMode)
+                    if (DebugMode)
                         MessageBox.Show("Write State: Information...Done");
                 }
                 Application.DoEvents();
             }
 
-            if (TestMode)
+            if (DebugMode)
                 MessageBox.Show("cbDdm Check state: " + cbDdm.CheckState);
 
             if (cbDdm.Checked)
@@ -2040,13 +2122,13 @@ namespace IntegratedGuiV2
                 {
                     tbDdmReadState.BackColor = Color.YellowGreen;
                     StateUpdated("Write State:\nDdm...Done", 68);
-                    if (TestMode)
+                    if (DebugMode)
                         MessageBox.Show("Write State: Ddm...Done");
                 }
                 Application.DoEvents();
             }
 
-            if (TestMode)
+            if (DebugMode)
                 MessageBox.Show("cbMemDump Check state: " + cbMemDump.CheckState);
 
             if (cbMemDump.Checked)
@@ -2065,13 +2147,13 @@ namespace IntegratedGuiV2
                 {
                     tbMemDumpReadState.BackColor = Color.YellowGreen;
                     StateUpdated("Write State:\nMemoryDump...Done", 70);
-                    if (TestMode)
+                    if (DebugMode)
                         MessageBox.Show("Write State: MemoryDump...Done");
                 }
                 Application.DoEvents();
             }
 
-            if (TestMode)
+            if (DebugMode)
                 MessageBox.Show("cbCorrector Check state: " + cbCorrector.CheckState);
 
             if (cbCorrector.Checked)
@@ -2090,13 +2172,13 @@ namespace IntegratedGuiV2
                 {
                     tbCorrectorReadState.BackColor = Color.YellowGreen;
                     StateUpdated("Write State:\nCorrector...Done", 80);
-                    if (TestMode)
+                    if (DebugMode)
                         MessageBox.Show("Write State: Corrector...Done");
                 }
                 Application.DoEvents();
             }
 
-            if (TestMode)
+            if (DebugMode)
             {
                 MessageBox.Show("cbTxIcConfig Check state: " + cbTxIcConfig.CheckState
                                 + "\ncbProductSelect state: " + cbProductSelect.Text
@@ -2143,14 +2225,14 @@ namespace IntegratedGuiV2
                     {
                         tbTxConfigReadState.BackColor = Color.YellowGreen;
                         StateUpdated("Write State:\nTxIcConfig...Done", 89);
-                        if (TestMode)
+                        if (DebugMode)
                             MessageBox.Show("Write State: TxIcConfig...Done");
                     }
                     Application.DoEvents();
                     writeFail = false;
                 }
 
-                if (TestMode)
+                if (DebugMode)
                     MessageBox.Show("cbRxIcConfig Check state: " + cbRxIcConfig.CheckState);
 
                 if (cbRxIcConfig.Checked)
@@ -2191,7 +2273,7 @@ namespace IntegratedGuiV2
                     {
                         tbRxConfigReadState.BackColor = Color.YellowGreen;
                         StateUpdated("Write State:\nRxIcConfig...Done", 98);
-                        if (TestMode)
+                        if (DebugMode)
                             MessageBox.Show("Write State: RxIcConfig...Done");
                     }
 
@@ -2570,7 +2652,7 @@ namespace IntegratedGuiV2
 
         private void bExportCsv_Click(object sender, EventArgs e)
         {
-            _ExprotMemToCsv("Test");
+            _ExprotLogfileToCsv("Test");
         }
 
         private void cbAPPath_CheckedChanged(object sender, EventArgs e)
