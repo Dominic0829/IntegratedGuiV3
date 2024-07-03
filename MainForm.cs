@@ -38,6 +38,7 @@ namespace IntegratedGuiV2
         private int ProcessingChannel = 0;
         private bool FirstRead = false;
         private bool AutoSelectIcConfig = false;
+        private int ErrorState = 0;
         private string sAcConfig;
         private string APROMPath, DATAROMPath;
         private bool writeToFile = false;
@@ -187,6 +188,14 @@ namespace IntegratedGuiV2
             {
                 throw new ArgumentException("Invalid Var Name or Var is not a bool type");
             }
+        }
+
+        public void ExprotRegisterToCsvApi(string fileName)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _ExprotRegisterToCsv(fileName)));
+            else
+                _ExprotRegisterToCsv(fileName);
         }
 
         public void ExprotLogfileToCsvApi(string fileName)
@@ -565,11 +574,15 @@ namespace IntegratedGuiV2
                 rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
                 if (rv < 0)
                 {
-                    MessageBox.Show("TRx module no response!!");
+                    //MessageBox.Show("TRx module no response!!");
                     _I2cMasterDisconnect();
+                    ErrorState = -2;
                 }
-                else if (rv != length)
-                    MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                else if (rv != length) {
+                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                    ErrorState = -1;
+                }
+                    
 
                 return rv;
             }
@@ -851,6 +864,92 @@ namespace IntegratedGuiV2
             return 0;
         }
 
+        private int _ExprotRegisterToCsv(string fileName)
+        {
+            if (File.Exists(fileName))
+                File.Delete(fileName);
+
+            fileName = fileName.Replace(" ", "") + ".csv";
+            string folderPath = System.Windows.Forms.Application.StartupPath;
+            string exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
+            exportFilePath = exportFilePath.Replace("\\\\", "\\");
+
+            AppendRxRegisterContents(exportFilePath);
+            AppendTxRegisterContents(exportFilePath);
+
+            return 0;
+        }
+
+        private void AppendRxRegisterContents(string exportFilePath)
+        {
+            string vendorInfo;
+            string ChipId;
+                
+            ChipId = "37044_";
+            ChipId += ucMata37044cConfig.GetChipId();
+
+            if (ErrorState >= 0) {
+                vendorInfo = ucMata37044cConfig.ReadAllRegisterApi();
+                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                File.AppendAllText(exportFilePath, vendorInfo);
+                ErrorState = 0;
+                return;
+            }
+
+            ErrorState = 0;
+            ChipId = "RT145_";
+            ChipId += ucRt145Config.GetChipId();
+
+            if (ErrorState >= 0) {
+                vendorInfo = ucRt145Config.ReadAllRegisterApi();
+                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                File.AppendAllText(exportFilePath, vendorInfo);
+                ErrorState = 0;
+                return;
+            }
+
+            /*
+            if (ErrorState < 0) {
+                if (ErrorState == -2)
+                    lMessage.Text = "Module no response.";
+                else if (ErrorState == -1)
+                    lMessage.Text = "Target is not Macom_370xx";
+
+                ErrorState = 0;
+            }
+            */
+                        
+        }
+
+        private void AppendTxRegisterContents(string exportFilePath)
+        {
+            string vendorInfo;
+            string ChipId;
+
+            ChipId = "37045_";
+            ChipId += ucMald37045cConfig.GetChipId();
+
+            if (ErrorState >= 0) {
+                vendorInfo = ucMald37045cConfig.ReadAllRegisterApi();
+                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                File.AppendAllText(exportFilePath, vendorInfo);
+                ErrorState = 0;
+                return;
+            }
+
+            ErrorState = 0;
+            ChipId = "RT146_";
+            ChipId += ucRt146Config.GetChipId();
+
+            if (ErrorState >= 0) {
+                vendorInfo = ucRt146Config.ReadAllRegisterApi();
+                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                File.AppendAllText(exportFilePath, vendorInfo);
+                ErrorState = 0;
+                return;
+            }
+        }
+
         private int _ExprotLogfileToCsv(string fileName)
         {
             fileName = fileName.Replace(" ", "") + ".csv";
@@ -869,6 +968,8 @@ namespace IntegratedGuiV2
                 return -1;
 
             AppendFileContentToAnother(tempExportFilePath, exportFilePath);
+            AppendRxRegisterContents(exportFilePath);
+            AppendTxRegisterContents(exportFilePath);
 
             if (File.Exists(tempExportFilePath))
                 File.Delete(tempExportFilePath);
@@ -2652,7 +2753,8 @@ namespace IntegratedGuiV2
 
         private void bExportCsv_Click(object sender, EventArgs e)
         {
-            _ExprotLogfileToCsv("Test");
+            //_ExprotRegisterToCsv("RegisterFile");
+            //_ExprotLogfileToCsv("Test");
         }
 
         private void cbAPPath_CheckedChanged(object sender, EventArgs e)

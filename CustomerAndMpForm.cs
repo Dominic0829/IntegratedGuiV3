@@ -1185,9 +1185,12 @@ namespace IntegratedGuiV2
 
         private void button1_Click(object sender, EventArgs e)
         {
+            
             mainForm._GlobalRead();
             string LogFileName = "20240702";
             mainForm.ExprotLogfileToCsvApi(LogFileName);
+            
+            //mainForm.ExprotRegisterToCsvApi("RegisterFile");
         }
     }
 }
