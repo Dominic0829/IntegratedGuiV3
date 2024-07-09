@@ -18,9 +18,9 @@ namespace IntegratedGuiV2
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new MainForm(true));
+            Application.Run(new MainForm(true));
             //Application.Run(new LoginForm());
-            Application.Run(new CustomerAndMpForm());
+            //Application.Run(new CustomerAndMpForm());
         }
 
     }

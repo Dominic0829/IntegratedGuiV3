@@ -77,6 +77,7 @@
             this.tbVersionCodeCh2 = new System.Windows.Forms.TextBox();
             this.cbSecurityLock = new System.Windows.Forms.CheckBox();
             this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
             this.gbOperatorMode.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -667,12 +668,28 @@
             this.button1.UseVisualStyleBackColor = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
+            // button2
+            // 
+            this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.button2.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.button2.FlatAppearance.BorderSize = 0;
+            this.button2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.button2.ForeColor = System.Drawing.Color.White;
+            this.button2.Location = new System.Drawing.Point(102, 131);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(76, 29);
+            this.button2.TabIndex = 82;
+            this.button2.Text = "TestButton";
+            this.button2.UseVisualStyleBackColor = false;
+            this.button2.Click += new System.EventHandler(this.button2_Click);
+            // 
             // CustomerAndMpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
             this.ClientSize = new System.Drawing.Size(536, 391);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.cbSecurityLock);
             this.Controls.Add(this.tbVersionCodeCheckCh2);
@@ -769,5 +786,6 @@
         private System.Windows.Forms.TextBox tbVersionCodeCh2;
         private System.Windows.Forms.CheckBox cbSecurityLock;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button button2;
     }
 }

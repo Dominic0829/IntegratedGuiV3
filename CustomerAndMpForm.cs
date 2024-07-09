@@ -785,7 +785,8 @@ namespace IntegratedGuiV2
             cbI2cConnect.Enabled = false;
             cbBypassW.Enabled = false;
             gbOperatorMode.Enabled = false;
-
+            button1.Enabled = false;
+            button2.Enabled = false;
         }
 
         private void _EnableButtons()
@@ -798,6 +799,8 @@ namespace IntegratedGuiV2
             cbI2cConnect.Enabled = true;
             cbBypassW.Enabled = true;
             gbOperatorMode.Enabled = true;
+            button1.Enabled = true;
+            button2.Enabled = true;
         }
 
         private int _RemoteControl() 
@@ -838,47 +841,44 @@ namespace IntegratedGuiV2
                 }
                 else 
                 {
-                    if (DebugMode)
-                    {
-                        txCrossPoint0 = mainForm.GetValueFromUcRt146Config("cbCrossPointCh0");
-                        txIbias0 = mainForm.GetValueFromUcRt146Config("cbIbiasCurrentCh0");
-                        rxLosTh0 = mainForm.GetValueFromUcRt145Config("cbLosThresholdCh0");
-                        rxDeEmphasis0 = mainForm.GetValueFromUcRt145Config("cbDeEmphasisCh0");
-                    }
-
-                    if (ProcessingChannel == 1)
-                        errorCountCh1R = mainForm._GlobalRead().ToString(); // Tack out DUT data
-                    else if (ProcessingChannel == 2)
-                        errorCountCh2R = mainForm._GlobalRead().ToString();
-                    else
-                        return -1;
-
-                    if (DebugMode)
-                    {
-                        txCrossPoint1 = mainForm.GetValueFromUcRt146Config("cbCrossPointCh0");
-                        txIbias1 = mainForm.GetValueFromUcRt146Config("cbIbiasCurrentCh0");
-                        rxLosTh1 = mainForm.GetValueFromUcRt145Config("cbLosThresholdCh0");
-                        rxDeEmphasis1 = mainForm.GetValueFromUcRt145Config("cbDeEmphasisCh0");
-                        MessageBox.Show("Read IcConfig...\n\nBefore: "
-                                   + "\n   txCrossPoint0: " + txCrossPoint0
-                                   + "\n   txIbias0: " + txIbias0
-                                   + "\n   rxLosTh0: " + rxLosTh0
-                                   + "\n   rxDeEmphasis0: " + rxDeEmphasis0
-                                   + "\n\nAfter:\n   txCrossPoint1: " + txCrossPoint1
-                                   + "\n   txIbias1: " + txIbias1
-                                   + "\n   rxLosTh1: " + rxLosTh1
-                                   + "\n   rxDeEmphasis1: " + rxDeEmphasis1
-                                   );
-                    }
-                                         
-                    Thread.Sleep(10);
-
                     if (ProcessingChannel == 1) {
+
+                        if (DebugMode) {
+                            txCrossPoint0 = mainForm.GetValueFromUcRt146Config("cbCrossPointCh0");
+                            txIbias0 = mainForm.GetValueFromUcRt146Config("cbIbiasCurrentCh0");
+                            rxLosTh0 = mainForm.GetValueFromUcRt145Config("cbLosThresholdCh0");
+                            rxDeEmphasis0 = mainForm.GetValueFromUcRt145Config("cbDeEmphasisCh0");
+                        }
+
+                        errorCountCh1R = mainForm._GlobalRead().ToString(); // Tack out DUT data
+                        
+                        if (DebugMode) {
+                            txCrossPoint1 = mainForm.GetValueFromUcRt146Config("cbCrossPointCh0");
+                            txIbias1 = mainForm.GetValueFromUcRt146Config("cbIbiasCurrentCh0");
+                            rxLosTh1 = mainForm.GetValueFromUcRt145Config("cbLosThresholdCh0");
+                            rxDeEmphasis1 = mainForm.GetValueFromUcRt145Config("cbDeEmphasisCh0");
+                            MessageBox.Show("Read IcConfig...\n\nBefore: "
+                                       + "\n   txCrossPoint0: " + txCrossPoint0
+                                       + "\n   txIbias0: " + txIbias0
+                                       + "\n   rxLosTh0: " + rxLosTh0
+                                       + "\n   rxDeEmphasis0: " + rxDeEmphasis0
+                                       + "\n\nAfter:\n   txCrossPoint1: " + txCrossPoint1
+                                       + "\n   txIbias1: " + txIbias1
+                                       + "\n   rxLosTh1: " + rxLosTh1
+                                       + "\n   rxDeEmphasis1: " + rxDeEmphasis1
+                                       );
+                        }
+                        MessageBox.Show("Check point1");
+                        string LogFileName = "TempRegister ";
+                        mainForm.ExprotLogfileToCsvApi(LogFileName, true);
+                        
+                        MessageBox.Show("Check point2");
                         mainForm.SetToChannle2Api(false);
                         lCh1EC.Text = $"R:{errorCountCh1R} ";
                         tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
                     }
                     else if (ProcessingChannel == 2) {
+                        errorCountCh2R = mainForm._GlobalRead().ToString();
                         mainForm.SetToChannle2Api(true);
                         lCh2EC.Text = $"R:{errorCountCh2R} ";
                         tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
@@ -908,6 +908,12 @@ namespace IntegratedGuiV2
 
                     if (ProcessingChannel == 1)
                     {
+                        //Write Up00, Up03, Up80, Up81
+                        mainForm.WriteRegisterPageApi("Up 00h", 10);
+
+                        //Write LddConfig
+
+                        //Write TiaConfig
                         errorCountCh1W = mainForm._GlobalWrite(true).ToString(); // Write the previous parameter into Flash
                         lCh1EC.Text = $"R:{errorCountCh1R} /W:{errorCountCh1W} ";
                     }
@@ -979,7 +985,7 @@ namespace IntegratedGuiV2
             mainForm.InformationStoreIntoFlashApi();
             Thread.Sleep(10);
             _UpdateMessage(ch, "Store into flash...Done");
-            mainForm.ExprotLogfileToCsvApi(LogFileName);
+            mainForm.ExprotLogfileToCsvApi(LogFileName, true);
             Thread.Sleep(10);
             _UpdateMessage(ch, "Log file has been exported");
 
@@ -1185,12 +1191,44 @@ namespace IntegratedGuiV2
 
         private void button1_Click(object sender, EventArgs e)
         {
-            
+            _DisableButtons();
+
             mainForm._GlobalRead();
-            string LogFileName = "20240702";
-            mainForm.ExprotLogfileToCsvApi(LogFileName);
-            
+            string LogFileName = "BeforeFlasing";
+            mainForm.ExprotLogfileToCsvApi(LogFileName, true);
             //mainForm.ExprotRegisterToCsvApi("RegisterFile");
+
+            _EnableButtons();
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+
+            mainForm.WriteRegisterPageApi("Up 00h", 10);
+            mainForm.WriteRegisterPageApi("Up 03h", 10);
+            mainForm.WriteRegisterPageApi("80h", 200);
+            mainForm.WriteRegisterPageApi("81h", 200);
+            mainForm.WriteRegisterPageApi("Rx", 1000);
+            mainForm.WriteRegisterPageApi("Tx", 1000);
+
+            mainForm.StoreIntoFlashApi();
+
+            mainForm._GlobalRead();
+            string LogFileName = "AfterFlasing";
+            mainForm.ExprotLogfileToCsvApi(LogFileName, true);
+
+            /*
+            string[] commands = { "Up 00h", "Up 03h", "80h", "81h", "Tx", "Rx" };
+            
+            foreach(var command in commands) {
+                mainForm.WriteRegisterPageApi(command);
+                Thread.Sleep(500);
+            }
+            */
+
+            _EnableButtons();
+
         }
     }
 }

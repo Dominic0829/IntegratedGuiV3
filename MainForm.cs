@@ -25,6 +25,8 @@ using NuvotonIcpTool;
 using System.Reflection;
 using System.Runtime.Remoting.Messaging;
 using Gn1190Corrector;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
+using System.Globalization;
 
 namespace IntegratedGuiV2
 {
@@ -48,6 +50,7 @@ namespace IntegratedGuiV2
         private bool BypassWriteIcConfig = false;
         private bool FirstRound = true;
         private bool FlagFwUpdated = false;
+        private string userRole = "";
 
         public bool InformationReadState { get; private set; }
         public bool DdmReadState { get; private set; }
@@ -60,6 +63,7 @@ namespace IntegratedGuiV2
         public event EventHandler<MessageEventArgs> MainMessageUpdated;
         public event EventHandler<TextBoxTextEventArgs> TextBoxTextChanged;
 
+        
         protected virtual void StateUpdated(string message, int value)
         {
             ReadStateUpdated?.Invoke(this, message);
@@ -198,12 +202,12 @@ namespace IntegratedGuiV2
                 _ExprotRegisterToCsv(fileName);
         }
 
-        public void ExprotLogfileToCsvApi(string fileName)
+        public void ExprotLogfileToCsvApi(string fileName, bool logFileMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExprotLogfileToCsv(fileName)));
+                this.Invoke(new Action(() => _ExprotLogfileToCsv(fileName, logFileMode)));
             else
-                _ExprotLogfileToCsv(fileName);
+                _ExprotLogfileToCsv(fileName, logFileMode);
         }
 
         public void ForceConnectSingleApi() // Used for MpForm
@@ -220,6 +224,14 @@ namespace IntegratedGuiV2
                 this.Invoke(new Action(() => ucNuvotonIcpTool.StartFlashingApi()));
             else
                 ucNuvotonIcpTool.StartFlashingApi();
+        }
+
+        public void StoreIntoFlashApi()
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
+            else
+                ucInformation.StoreIntoFlashApi();
         }
 
         public void InformationWriteApi() // Used for MpForm
@@ -285,6 +297,15 @@ namespace IntegratedGuiV2
             else
                 return _GetBypassEraseAllControl();
         }
+
+        public void WriteRegisterPageApi(string targetPage, int delayTime)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _WriteRegisterPage(targetPage, delayTime)));
+            else
+                _WriteRegisterPage(targetPage, delayTime);
+        }
+
 
         public void SetVarBoolStateToNuvotonIcpApi(string varName, bool value)
         {
@@ -890,7 +911,7 @@ namespace IntegratedGuiV2
 
             if (ErrorState >= 0) {
                 vendorInfo = ucMata37044cConfig.ReadAllRegisterApi();
-                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
                 File.AppendAllText(exportFilePath, vendorInfo);
                 ErrorState = 0;
                 return;
@@ -902,7 +923,7 @@ namespace IntegratedGuiV2
 
             if (ErrorState >= 0) {
                 vendorInfo = ucRt145Config.ReadAllRegisterApi();
-                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
                 File.AppendAllText(exportFilePath, vendorInfo);
                 ErrorState = 0;
                 return;
@@ -931,7 +952,7 @@ namespace IntegratedGuiV2
 
             if (ErrorState >= 0) {
                 vendorInfo = ucMald37045cConfig.ReadAllRegisterApi();
-                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
                 File.AppendAllText(exportFilePath, vendorInfo);
                 ErrorState = 0;
                 return;
@@ -943,19 +964,55 @@ namespace IntegratedGuiV2
 
             if (ErrorState >= 0) {
                 vendorInfo = ucRt146Config.ReadAllRegisterApi();
-                File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
+                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
                 File.AppendAllText(exportFilePath, vendorInfo);
                 ErrorState = 0;
                 return;
             }
         }
 
-        private int _ExprotLogfileToCsv(string fileName)
+        private void _WriteRegisterPage (string targetPage, int delayTime)
         {
+
+            switch (targetPage) {
+                case "Up 00h":
+                case "Up 03h":
+                case "80h":
+                case "81h":
+                    ucMemoryDump.WriteRegisterPageApi(targetPage, delayTime);
+                    break;
+
+                case "Tx":
+                    ucMald37045cConfig.WriteAllRegisterApi("Tx", delayTime);
+                    break;
+
+                case "Rx":
+                    ucMata37044cConfig.WriteAllRegisterApi("Rx", delayTime);
+                    break;
+
+                default:
+                    break;
+            }
+
+        }
+        
+        private int _ExprotLogfileToCsv(string fileName, bool logFileMode)
+        {
+            string folderPath;
+            string exportFilePath;
+
             fileName = fileName.Replace(" ", "") + ".csv";
-            string folderPath = System.Windows.Forms.Application.StartupPath;
-            string exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
+            folderPath = Application.StartupPath;
+            
+            if (logFileMode)
+                exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
+            else
+                exportFilePath = Path.Combine(folderPath, fileName);
+
             exportFilePath = exportFilePath.Replace("\\\\", "\\");
+
+            if (File.Exists(exportFilePath))
+                File.Delete(exportFilePath);
 
             //Temporary file for logfile appendant
             string tempExportFilePath = Path.Combine(folderPath, "LogFolder", "temp_" + fileName);
@@ -964,7 +1021,7 @@ namespace IntegratedGuiV2
             AppendVendorInfo(exportFilePath);
             AppendMoreInfo(exportFilePath);
 
-            if (ucMemoryDump.ExportAllPagesData(tempExportFilePath) < 0)
+            if (ucMemoryDump.ExportAllPagesDataApi(tempExportFilePath) < 0)
                 return -1;
 
             AppendFileContentToAnother(tempExportFilePath, exportFilePath);
@@ -1068,7 +1125,7 @@ namespace IntegratedGuiV2
             _InitialStateBar();
             //_EnableIcConfig();
             //_UpdateTabPageVisibility();
-            
+
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             cbProductSelect.SelectedIndex = 0;
 
@@ -1340,7 +1397,7 @@ namespace IntegratedGuiV2
 
             ucInformation.WriteApi();
             ucDigitalDiagnosticsMonitoring.bWrite_Click(null, null);
-            ucMemoryDump.bWrite_Click(null, null);
+            ucMemoryDump.WriteApi();
 
             sfdSelectFile.Filter = "cfg files (*.cfg)|*.cfg";
             if (sfdSelectFile.ShowDialog() != DialogResult.OK)
@@ -1649,7 +1706,7 @@ namespace IntegratedGuiV2
                             string userControlName = reader.GetAttribute("name");
 
                             reader.Read(); // Move to the Components element within the UserControl
-
+                            
                             while (reader.IsStartElement() && reader.Name == "Components")
                             {
                                 reader.Read(); // Move to the first Component element
@@ -1986,7 +2043,7 @@ namespace IntegratedGuiV2
                 tbMemDumpReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
-                if (ucMemoryDump.ReadAllApi() < 0)
+                if (ucMemoryDump.ReadAllApi(null) < 0)
                 {
                     tbMemDumpReadState.BackColor = Color.Red;
                     StateUpdated("Read State:\nMemDump...Failed", 10);
@@ -2384,6 +2441,7 @@ namespace IntegratedGuiV2
 
             return errorCount;
         }
+
         private int _GlobalWirte_Original()
         {
 
@@ -2577,6 +2635,21 @@ namespace IntegratedGuiV2
 
         private void bSaveToCfg_Click(object sender, EventArgs e)
         {
+            string LogFileName = "RegisterFile";
+
+            _DisableButtons();
+
+            _GlobalWrite(false);
+            _InitialStateBar();
+            
+            _ExprotLogfileToCsv(LogFileName, false);
+
+            _EnableButtons();
+        }
+
+        /*
+        private void bSaveToCfg_Click(object sender, EventArgs e)
+        {
             _DisableButtons();
             string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
 
@@ -2596,7 +2669,7 @@ namespace IntegratedGuiV2
 
             _EnableButtons();
         }
-        /*
+        
         private async void bGlobalWrite2_Click(object sender, EventArgs e)
 {
             _DisableButtons();
@@ -2606,7 +2679,7 @@ namespace IntegratedGuiV2
 
             _EnableButtons();
         }
-        */
+        
 
         private void bGlobalWrite2_Click(object sender, EventArgs e)
         {
@@ -2615,6 +2688,47 @@ namespace IntegratedGuiV2
             if (_SetWriteConfig() < 0)
                 MessageBox.Show("Something went wrong, please check detail");
             
+            _EnableButtons();
+        }
+        */
+
+        private void bGlobalWrite2_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+
+            progressBar1.Value = 0;
+            _ConnectI2c();
+            Thread.Sleep(500);
+            _ConnectI2c();
+
+            //Write data from RegisterFile
+            progressBar1.Value = 10;
+            WriteRegisterPageApi("Up 00h", 10);
+            progressBar1.Value = 10;
+            WriteRegisterPageApi("Up 03h", 10);
+            progressBar1.Value = 20;
+            WriteRegisterPageApi("80h", 200);
+            progressBar1.Value = 30;
+            WriteRegisterPageApi("81h", 200);
+            progressBar1.Value = 40;
+            WriteRegisterPageApi("Rx", 1000);
+            progressBar1.Value = 50;
+            WriteRegisterPageApi("Tx", 1000);
+            progressBar1.Value = 60;
+
+            StoreIntoFlashApi();
+            progressBar1.Value = 80;
+
+            _ConnectI2c();
+            Thread.Sleep(500);
+            _ConnectI2c();
+
+            progressBar1.Value = 90;
+            _InitialStateBar();
+            _GlobalRead();
+
+            progressBar1.Value = 100;
+
             _EnableButtons();
         }
 
@@ -2693,36 +2807,40 @@ namespace IntegratedGuiV2
 
         private void cbConnected_CheckedChanged(object sender, EventArgs e)
         {
+            _DisableButtons();
+
             if (FirstRound)
             {
                 ProcessingChannel = 1;
                 FirstRound = false;
             }
 
-            if (cbConnected.Checked == true)
-            {
+            _ConnectI2c();
+            _EnableButtons();
+        }
+
+        private void _ConnectI2c()
+        {
+            if (cbConnected.Checked == true) {
                 _I2cMasterConnect(true, true);
                 i2cMaster.ChannelSetApi(ProcessingChannel);
                 _UpdateButtonState();
                 gbChannelSwitcher.Enabled = true;
             }
-            else
-            {
+            else {
                 _I2cMasterDisconnect();
                 gbChannelSwitcher.Enabled = false;
             }
-            
         }
 
         private void bIcpConnect_Click(object sender, EventArgs e)
         {
-            //if (bIcpConnect.Enabled)
-            //    bIcpConnect.Enabled = false;
+            bIcpConnect.Enabled = false;
 
             ucNuvotonIcpTool.IcpConnectApi();
 
             //if (!bIcpConnect.Enabled)
-            //    bIcpConnect.Enabled = true;
+            bIcpConnect.Enabled = true;
         }
 
         private void cbAutoReconnect_CheckedChanged(object sender, EventArgs e)
@@ -2749,12 +2867,6 @@ namespace IntegratedGuiV2
         private void bBypassEraseAllStateCheck_Click(object sender, EventArgs e)
         {
             MessageBox.Show("ucNuvotonIcp\nBypassEraseAllMode: " + _GetBypassEraseAllControl());
-        }
-
-        private void bExportCsv_Click(object sender, EventArgs e)
-        {
-            //_ExprotRegisterToCsv("RegisterFile");
-            //_ExprotLogfileToCsv("Test");
         }
 
         private void cbAPPath_CheckedChanged(object sender, EventArgs e)
