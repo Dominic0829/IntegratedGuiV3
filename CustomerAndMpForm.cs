@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,6 +37,7 @@ namespace IntegratedGuiV2
         private bool FirstRound = true;
         private bool RxPowerUpdate = false;
         private bool I2cConnected = false;
+        private CancellationTokenSource cancellationTokenSource;
 
         private Thread RxPowerUpdateThread;
         private bool ContinueRxPowerUpdate = true;
@@ -222,7 +224,7 @@ namespace IntegratedGuiV2
             tbVersionCodeCh2.Text = "";
             tbVersionCodeCheckCh1.Text = "";
             tbVersionCodeCheckCh2.Text = "";
-            bStart.Select();
+            //bStart.Select();
             Application.DoEvents();
             
             if (!FirstRound)
@@ -373,6 +375,9 @@ namespace IntegratedGuiV2
 
         private int _RemoteInitial(bool cutomerMode) // True: Customer Mode, Flase: MP mode
         {
+            string apromPath, dataromPath;
+            string directoryPath;
+
             if (cbBypassW.Checked)
                 mainForm.SetVarBoolStateToMainFormApi("BypassWriteIcConfig", true);
 
@@ -407,23 +412,27 @@ namespace IntegratedGuiV2
                 mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", false);
             }
 
-            if (!(string.IsNullOrEmpty(lAPPath.Text) || lAPPath.Text == "_"))
+            if (!(string.IsNullOrEmpty(lApName.Text) || lApName.Text == "_"))
             {
                 mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
-                mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", lAPPath.Text);
+                directoryPath = Path.GetDirectoryName(tbFilePath.Text);
+                apromPath = Path.Combine(directoryPath, lApName.Text);
+                mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", apromPath);
+                //MessageBox.Show("APROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM"));
             }
             else
             {
                 MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return -1;
             }
-                
 
-            if (!(string.IsNullOrEmpty(lDataPath.Text) || lDataPath.Text == "_"))
+            if (!(string.IsNullOrEmpty(lDataName.Text) || lDataName.Text == "_"))
             {
-
                 mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", true);
-                mainForm.SetTextBoxTextToNuvotonIcpApi("tbDataFlash", lDataPath.Text);
+                directoryPath = Path.GetDirectoryName(tbFilePath.Text);
+                dataromPath = Path.Combine(directoryPath, lDataName.Text);
+                mainForm.SetTextBoxTextToNuvotonIcpApi("tbDataFlash", dataromPath);
+                //MessageBox.Show("DATAROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbDataFlash"));
             }
             else
                 mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
@@ -512,8 +521,8 @@ namespace IntegratedGuiV2
         private void _ParserXmlForProjectInformation(string filePath)
         {
             string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            lAPPath.Text = "_";
-            lDataPath.Text = "_";
+            lApName.Text = "_";
+            lDataName.Text = "_";
 
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.Load(filePath);
@@ -529,14 +538,18 @@ namespace IntegratedGuiV2
             lMode.Text = role;
             lProduct.Text = productName;
 
-            if (!(APROMName == "" || APROMName == null))
-                lAPPath.Text = currentDirectory + APROMName;
+            if (!(APROMName == "" || APROMName == null)) {
+                lApName.Text = APROMName;
+                //lAPPath.Text = currentDirectory + APROMName;
+            }
             else
                 MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                
 
-            if (!(DARAROMName == "" || DARAROMName == null))
-                lDataPath.Text = currentDirectory + DARAROMName;
-           
+            if (!(DARAROMName == "" || DARAROMName == null)) {
+                lDataName.Text = DARAROMName;
+                //lDataPath.Text = currentDirectory + DARAROMName;
+            }
         }
 
         private bool _PathCheck(System.Windows.Forms.Label lable)
@@ -621,26 +634,25 @@ namespace IntegratedGuiV2
                     I2cConnected = true;
                 mainForm.ChannelSetApi(1);
 
-                ContinueRxPowerUpdate = true;
-                if (RxPowerUpdateThread == null || !RxPowerUpdateThread.IsAlive)
-                {
-                    RxPowerUpdateThread = new Thread(new ThreadStart(_RxPowerUpdateThread));
+                cancellationTokenSource = new CancellationTokenSource();
+
+                if (RxPowerUpdateThread == null || !RxPowerUpdateThread.IsAlive) {
+                    RxPowerUpdateThread = new Thread(() => _RxPowerUpdateThread(cancellationTokenSource.Token));
                     RxPowerUpdateThread.IsBackground = true;
                     RxPowerUpdateThread.Start();
                 }
             }
         }
 
-        private void _RxPowerUpdateThread()
+        private void _RxPowerUpdateThread(CancellationToken token)
         {
             int currentState = 1;
 
             if (mainForm.I2cMasterConnectApi(true,true) < 0) {
                 return;
             }
-            
-            while (ContinueRxPowerUpdate)
-            {
+
+            while (!token.IsCancellationRequested) {
                 if (mainForm.RxPowerReadApiFromDdmApi() < 0) {
                     MessageBox.Show("Please check the module plugin status");
                     return;
@@ -684,16 +696,30 @@ namespace IntegratedGuiV2
                 Thread.Sleep(100); 
             }
         }
-      
+
         private void _StopRxPowerUpdateThread()
         {
-            if (ContinueRxPowerUpdate && RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive)
-            {
+            if (ContinueRxPowerUpdate && RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive) {
+                cancellationTokenSource.Cancel();
+            }
+            else
+                MessageBox.Show("Error");
+        }
+        /*
+        private void _StopRxPowerUpdateThread()
+        {
+            if (ContinueRxPowerUpdate && RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive) {
                 ContinueRxPowerUpdate = false; // Stop the while loop
                 RxPowerUpdateThread.Join(); // Waiting for thread to finish execution.
                 //RxPowerUpdateThread = null;
             }
+            else
+                MessageBox.Show("Error");
+
         }
+        */
+
+
         /*
          
         public void StopRxPowerUpdateThread()
@@ -810,7 +836,7 @@ namespace IntegratedGuiV2
             string txCrossPoint0 = "X", txCrossPoint1 = "X", txIbias0 = "X", txIbias1 = "X";
             string rxLosTh0 = "X", rxLosTh1 = "X", rxDeEmphasis0 = "X", rxDeEmphasis1 = "X";
 
-            if (!((_PathCheck(lAPPath)) || (_PathCheck(lDataPath))))
+            if (!((_PathCheck(lApName)) || (_PathCheck(lDataName))))
             {
                 MessageBox.Show("No file path specified. Please choose the file again.", "Config file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return -1;
@@ -870,7 +896,7 @@ namespace IntegratedGuiV2
                         }
                         MessageBox.Show("Check point1");
                         string LogFileName = "TempRegister ";
-                        mainForm.ExprotLogfileToCsvApi(LogFileName, true);
+                        mainForm.ExportLogfileToCsvApi(LogFileName, true);
                         
                         MessageBox.Show("Check point2");
                         mainForm.SetToChannle2Api(false);
@@ -985,7 +1011,7 @@ namespace IntegratedGuiV2
             mainForm.InformationStoreIntoFlashApi();
             Thread.Sleep(10);
             _UpdateMessage(ch, "Store into flash...Done");
-            mainForm.ExprotLogfileToCsvApi(LogFileName, true);
+            mainForm.ExportLogfileToCsvApi(LogFileName, true);
             Thread.Sleep(10);
             _UpdateMessage(ch, "Log file has been exported");
 
@@ -1081,12 +1107,12 @@ namespace IntegratedGuiV2
         private int _Processor(bool customerMode) // True: Customer Mode, Flase: MP mode
         {
             _InitialUi();
-
+            
+            if (!customerMode) 
+                _StopRxPowerUpdateThread();
+            
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++)
             {
-                if(!customerMode)
-                    _StopRxPowerUpdateThread();
-
                 if (_RemoteInitial(customerMode) < 0)
                     return -1;
 
@@ -1175,6 +1201,7 @@ namespace IntegratedGuiV2
                     I2cConnected = false;
         }
 
+        /*
         private void _RxPowerUpdate()
         {
             mainForm.RxPowerReadApiFromDdmApi();
@@ -1183,6 +1210,7 @@ namespace IntegratedGuiV2
             tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
             tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
         }
+        */
 
         private void tbLogFilePath(object sender, EventArgs e)
         {
@@ -1195,7 +1223,7 @@ namespace IntegratedGuiV2
 
             mainForm._GlobalRead();
             string LogFileName = "BeforeFlasing";
-            mainForm.ExprotLogfileToCsvApi(LogFileName, true);
+            mainForm.ExportLogfileToCsvApi(LogFileName, true);
             //mainForm.ExprotRegisterToCsvApi("RegisterFile");
 
             _EnableButtons();
@@ -1216,7 +1244,7 @@ namespace IntegratedGuiV2
 
             mainForm._GlobalRead();
             string LogFileName = "AfterFlasing";
-            mainForm.ExprotLogfileToCsvApi(LogFileName, true);
+            mainForm.ExportLogfileToCsvApi(LogFileName, true);
 
             /*
             string[] commands = { "Up 00h", "Up 03h", "80h", "81h", "Tx", "Rx" };

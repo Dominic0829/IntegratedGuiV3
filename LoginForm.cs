@@ -23,7 +23,7 @@ namespace IntegratedGuiV2
         public LoginForm()
         {
             InitializeComponent();
-            cbProducts.SelectedIndex = 2;
+            cbProducts.SelectedIndex = 1;
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
         }
         WaitFormFunc loadingForm = new WaitFormFunc();

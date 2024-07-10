@@ -51,6 +51,7 @@ namespace IntegratedGuiV2
         private bool FirstRound = true;
         private bool FlagFwUpdated = false;
         private string userRole = "";
+        private string lastUsedDirectory;
 
         public bool InformationReadState { get; private set; }
         public bool DdmReadState { get; private set; }
@@ -194,20 +195,20 @@ namespace IntegratedGuiV2
             }
         }
 
-        public void ExprotRegisterToCsvApi(string fileName)
+        public void ExportRegisterToCsvApi(string fileName)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExprotRegisterToCsv(fileName)));
+                this.Invoke(new Action(() => _ExportRegisterToCsv(fileName)));
             else
-                _ExprotRegisterToCsv(fileName);
+                _ExportRegisterToCsv(fileName);
         }
 
-        public void ExprotLogfileToCsvApi(string fileName, bool logFileMode)
+        public void ExportLogfileToCsvApi(string fileName, bool logFileMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExprotLogfileToCsv(fileName, logFileMode)));
+                this.Invoke(new Action(() => _ExportLogfileToCsv(fileName, logFileMode)));
             else
-                _ExprotLogfileToCsv(fileName, logFileMode);
+                _ExportLogfileToCsv(fileName, logFileMode);
         }
 
         public void ForceConnectSingleApi() // Used for MpForm
@@ -885,7 +886,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _ExprotRegisterToCsv(string fileName)
+        private int _ExportRegisterToCsv(string fileName)
         {
             if (File.Exists(fileName))
                 File.Delete(fileName);
@@ -996,27 +997,38 @@ namespace IntegratedGuiV2
 
         }
         
-        private int _ExprotLogfileToCsv(string fileName, bool logFileMode)
+        private int _ExportLogfileToCsv(string fileName, bool logFileMode)
         {
             string folderPath;
             string exportFilePath;
+            string tempExportFilePath;
+
+            if (logFileMode) {
+                lastUsedDirectory = Application.StartupPath;
+                folderPath = Path.Combine(lastUsedDirectory, "LogFolder");
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+            }
+            else {
+                folderPath = lastUsedDirectory;
+            }
 
             fileName = fileName.Replace(" ", "") + ".csv";
-            folderPath = Application.StartupPath;
             
-            if (logFileMode)
+            if (logFileMode) {
                 exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
-            else
+                tempExportFilePath = Path.Combine(folderPath, "LogFolder", "temp_" + fileName);
+            }
+            else {
                 exportFilePath = Path.Combine(folderPath, fileName);
-
+                tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
+            }
+                
             exportFilePath = exportFilePath.Replace("\\\\", "\\");
+            tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
 
             if (File.Exists(exportFilePath))
                 File.Delete(exportFilePath);
-
-            //Temporary file for logfile appendant
-            string tempExportFilePath = Path.Combine(folderPath, "LogFolder", "temp_" + fileName);
-            tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
 
             AppendVendorInfo(exportFilePath);
             AppendMoreInfo(exportFilePath);
@@ -1430,6 +1442,7 @@ namespace IntegratedGuiV2
             ucGn1190Corrector.DisableButtonApi();
             */
             bGlobalWrite2.Enabled = false;
+            bGenerateCfg.Enabled = false;
             //bFunctionTest2.Enabled = false;
             bDumpToString.Enabled = false;
         }
@@ -1446,6 +1459,7 @@ namespace IntegratedGuiV2
             */
             ucNuvotonIcpTool.SetButtonEnable("bLink", true);
             bGlobalWrite2.Enabled = true;
+            bGenerateCfg.Enabled = true;
             //bFunctionTest2.Enabled = true;
             bDumpToString.Enabled = true;
 
@@ -1549,43 +1563,65 @@ namespace IntegratedGuiV2
 
         private void _GenerateXmlFileForProject()
         {
+            string destinationFilePath;
+
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Project");
             xmlDoc.AppendChild(root);
             SaveFileDialog saveFileDialog = new SaveFileDialog();
             saveFileDialog.Filter = "XML Files|*.xml";
             saveFileDialog.Title = "Save XML File";
-            saveFileDialog.FileName = "Project.xml"; // 預設檔案名稱
 
             XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
 
-            if (rbCustomerMode.Checked)
-            {
+            if (rbCustomerMode.Checked) {
                 permissionsNode.SetAttribute("role", "Customer");
             }
-            else if (rbMpMode.Checked)
-            {
+            else if (rbMpMode.Checked) {
                 permissionsNode.SetAttribute("role", "MP");
             }
 
             root.AppendChild(permissionsNode);
 
-            XmlElement productNode = xmlDoc.CreateElement("Product");
-            productNode.SetAttribute("name", cbProductSelect.SelectedItem.ToString());
-            permissionsNode.AppendChild(productNode);
+            // Check produc selected
+            if (cbProductSelect.SelectedItem != null) {
+                XmlElement productNode = xmlDoc.CreateElement("Product");
+                productNode.SetAttribute("name", cbProductSelect.SelectedItem.ToString());
+                permissionsNode.AppendChild(productNode);
+            }
+            else {
+                MessageBox.Show("Please select a product.");
+                return;
+            }
 
-            XmlElement APROMNode = xmlDoc.CreateElement("APROM");
-            APROMNode.SetAttribute("name", APROMPath);
-            permissionsNode.AppendChild(APROMNode);
+            // Check APROM, DATAROM filepath
+            if (!string.IsNullOrWhiteSpace(APROMPath) && !string.IsNullOrWhiteSpace(DATAROMPath)) {
+                XmlElement APROMNode = xmlDoc.CreateElement("APROM");
+                APROMNode.SetAttribute("name", Path.GetFileName(APROMPath));
+                permissionsNode.AppendChild(APROMNode);
 
-            XmlElement DATAROMNode = xmlDoc.CreateElement("DATAROM");
-            DATAROMNode.SetAttribute("name", DATAROMPath);
-            permissionsNode.AppendChild(DATAROMNode);
+                XmlElement DATAROMNode = xmlDoc.CreateElement("DATAROM");
+                DATAROMNode.SetAttribute("name", Path.GetFileName(DATAROMPath));
+                permissionsNode.AppendChild(DATAROMNode);
+            }
+            else {
+                MessageBox.Show("APROM or DATAROM path is not set.");
+                return;
+            }
 
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
+            if (saveFileDialog.ShowDialog() == DialogResult.OK) {
                 string selectedFileName = saveFileDialog.FileName;
                 xmlDoc.Save(selectedFileName);
+                lastUsedDirectory = Path.GetDirectoryName(selectedFileName);
+
+                _InitialStateBar();
+                _GlobalWrite(false);
+                _ExportLogfileToCsv("RegisterFile", false);
+
+                destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(APROMPath));
+                File.Copy(APROMPath, destinationFilePath, true);
+                destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(DATAROMPath));
+                File.Copy(DATAROMPath, destinationFilePath, true);
             }
         }
 
@@ -2167,29 +2203,31 @@ namespace IntegratedGuiV2
 
         private bool _LoadFilesPosition(string fileType)
         {
-            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Title = "Files position";
                 openFileDialog.Filter = "Binary Files (*.bin)|*.bin";
-                openFileDialog.InitialDirectory = initialDirectory;
+                //openFileDialog.InitialDirectory = initialDirectory;
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
+                    string sourceFilePath = Path.GetFileName(openFileDialog.FileName);
+
                     if (fileType == "APROM")
                     {
-                        APROMPath = Path.GetFileName(openFileDialog.FileName);
+                        APROMPath = sourceFilePath;
                         cbAPPath.Checked = true;
                     }
 
                     if (fileType == "DATAROM")
                     {
-                        DATAROMPath = Path.GetFileName(openFileDialog.FileName);
+                        DATAROMPath = sourceFilePath;
                         cbDAPath.Checked = true;
                     }
-                    
-                    return true;  
+
+                    return true;
                 }
                 else
                 {
@@ -2636,13 +2674,13 @@ namespace IntegratedGuiV2
         private void bSaveToCfg_Click(object sender, EventArgs e)
         {
             string LogFileName = "RegisterFile";
-
+            lastUsedDirectory = Application.StartupPath;
             _DisableButtons();
-
+            // Save the file 
             _GlobalWrite(false);
             _InitialStateBar();
             
-            _ExprotLogfileToCsv(LogFileName, false);
+            _ExportLogfileToCsv(LogFileName, false);
 
             _EnableButtons();
         }
@@ -2798,11 +2836,11 @@ namespace IntegratedGuiV2
 
         private void bGenerateCfg_Click(object sender, EventArgs e)
         {
-            if (bGenerateCfg.Enabled)
-                bGenerateCfg.Enabled = false;
+            _DisableButtons();
 
             _GenerateXmlFileForProject();
-            bGenerateCfg.Enabled = true;
+
+            _EnableButtons();
         }
 
         private void cbConnected_CheckedChanged(object sender, EventArgs e)

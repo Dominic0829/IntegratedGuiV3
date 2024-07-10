@@ -49,7 +49,7 @@
             this.lModeT = new System.Windows.Forms.Label();
             this.lProductT = new System.Windows.Forms.Label();
             this.lPathAP = new System.Windows.Forms.Label();
-            this.lAPPath = new System.Windows.Forms.Label();
+            this.lApName = new System.Windows.Forms.Label();
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
@@ -67,7 +67,7 @@
             this.lRssi0 = new System.Windows.Forms.Label();
             this.lDateCode = new System.Windows.Forms.Label();
             this.tbDateCode = new System.Windows.Forms.TextBox();
-            this.lDataPath = new System.Windows.Forms.Label();
+            this.lDataName = new System.Windows.Forms.Label();
             this.lPathData = new System.Windows.Forms.Label();
             this.tbVersionCodeCh1 = new System.Windows.Forms.TextBox();
             this.tbVersionCodeCheckCh1 = new System.Windows.Forms.TextBox();
@@ -339,20 +339,20 @@
             this.lPathAP.ForeColor = System.Drawing.Color.White;
             this.lPathAP.Location = new System.Drawing.Point(20, 198);
             this.lPathAP.Name = "lPathAP";
-            this.lPathAP.Size = new System.Drawing.Size(49, 13);
+            this.lPathAP.Size = new System.Drawing.Size(51, 13);
             this.lPathAP.TabIndex = 60;
-            this.lPathAP.Text = "APPath:";
+            this.lPathAP.Text = "APROM:";
             // 
             // lAPPath
             // 
-            this.lAPPath.AutoSize = true;
-            this.lAPPath.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
-            this.lAPPath.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.lAPPath.Location = new System.Drawing.Point(75, 200);
-            this.lAPPath.Name = "lAPPath";
-            this.lAPPath.Size = new System.Drawing.Size(8, 11);
-            this.lAPPath.TabIndex = 61;
-            this.lAPPath.Text = "_";
+            this.lApName.AutoSize = true;
+            this.lApName.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.lApName.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.lApName.Location = new System.Drawing.Point(70, 200);
+            this.lApName.Name = "lAPPath";
+            this.lApName.Size = new System.Drawing.Size(8, 11);
+            this.lApName.TabIndex = 61;
+            this.lApName.Text = "_";
             // 
             // cbBypassW
             // 
@@ -559,14 +559,14 @@
             // 
             // lDataPath
             // 
-            this.lDataPath.AutoSize = true;
-            this.lDataPath.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
-            this.lDataPath.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.lDataPath.Location = new System.Drawing.Point(75, 215);
-            this.lDataPath.Name = "lDataPath";
-            this.lDataPath.Size = new System.Drawing.Size(8, 11);
-            this.lDataPath.TabIndex = 72;
-            this.lDataPath.Text = "_";
+            this.lDataName.AutoSize = true;
+            this.lDataName.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.lDataName.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.lDataName.Location = new System.Drawing.Point(82, 215);
+            this.lDataName.Name = "lDataPath";
+            this.lDataName.Size = new System.Drawing.Size(8, 11);
+            this.lDataName.TabIndex = 72;
+            this.lDataName.Text = "_";
             // 
             // lPathData
             // 
@@ -575,9 +575,9 @@
             this.lPathData.ForeColor = System.Drawing.Color.White;
             this.lPathData.Location = new System.Drawing.Point(20, 213);
             this.lPathData.Name = "lPathData";
-            this.lPathData.Size = new System.Drawing.Size(50, 13);
+            this.lPathData.Size = new System.Drawing.Size(64, 13);
             this.lPathData.TabIndex = 71;
-            this.lPathData.Text = "DAPath:";
+            this.lPathData.Text = "DATAROM:";
             // 
             // tbVersionCodeCh1
             // 
@@ -664,8 +664,9 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(76, 29);
             this.button1.TabIndex = 81;
-            this.button1.Text = "TestButton";
+            this.button1.Text = "ExportFile";
             this.button1.UseVisualStyleBackColor = false;
+            this.button1.Visible = false;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // button2
@@ -677,10 +678,11 @@
             this.button2.ForeColor = System.Drawing.Color.White;
             this.button2.Location = new System.Drawing.Point(102, 131);
             this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(76, 29);
+            this.button2.Size = new System.Drawing.Size(89, 29);
             this.button2.TabIndex = 82;
-            this.button2.Text = "TestButton";
+            this.button2.Text = "WriteFromFile";
             this.button2.UseVisualStyleBackColor = false;
+            this.button2.Visible = false;
             this.button2.Click += new System.EventHandler(this.button2_Click);
             // 
             // CustomerAndMpForm
@@ -698,12 +700,12 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.tbVersionCodeCheckCh1);
             this.Controls.Add(this.tbVersionCodeCh1);
-            this.Controls.Add(this.lDataPath);
+            this.Controls.Add(this.lDataName);
             this.Controls.Add(this.lPathData);
             this.Controls.Add(this.gbOperatorMode);
             this.Controls.Add(this.cbI2cConnect);
             this.Controls.Add(this.cbBypassW);
-            this.Controls.Add(this.lAPPath);
+            this.Controls.Add(this.lApName);
             this.Controls.Add(this.lPathAP);
             this.Controls.Add(this.lMode);
             this.Controls.Add(this.lProduct);
@@ -758,7 +760,7 @@
         private System.Windows.Forms.Label lModeT;
         private System.Windows.Forms.Label lProductT;
         private System.Windows.Forms.Label lPathAP;
-        private System.Windows.Forms.Label lAPPath;
+        private System.Windows.Forms.Label lApName;
         private System.Windows.Forms.CheckBox cbBypassW;
         private System.Windows.Forms.CheckBox cbI2cConnect;
         private System.Windows.Forms.GroupBox gbOperatorMode;
@@ -776,7 +778,7 @@
         private System.Windows.Forms.TextBox tbRssi1;
         private System.Windows.Forms.TextBox tbLogFIlePath;
         private System.Windows.Forms.Label lLogFilePath;
-        private System.Windows.Forms.Label lDataPath;
+        private System.Windows.Forms.Label lDataName;
         private System.Windows.Forms.Label lPathData;
         private System.Windows.Forms.TextBox tbVersionCodeCh1;
         private System.Windows.Forms.TextBox tbVersionCodeCheckCh1;
