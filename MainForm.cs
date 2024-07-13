@@ -69,6 +69,7 @@ namespace IntegratedGuiV2
         {
             ReadStateUpdated?.Invoke(this, message);
             ProgressValue?.Invoke(this, value);
+            Application.DoEvents();
         }
 
         private void SetupControlEvents()
@@ -203,12 +204,12 @@ namespace IntegratedGuiV2
                 _ExportRegisterToCsv(fileName);
         }
 
-        public void ExportLogfileToCsvApi(string fileName, bool logFileMode)
+        public void ExportLogfileToCsvApi(string fileName, bool logFileMode, bool writeSnMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExportLogfileToCsv(fileName, logFileMode)));
+                this.Invoke(new Action(() => _ExportLogfileToCsv(fileName, logFileMode, writeSnMode)));
             else
-                _ExportLogfileToCsv(fileName, logFileMode);
+                _ExportLogfileToCsv(fileName, logFileMode, writeSnMode);
         }
 
         public void ForceConnectSingleApi() // Used for MpForm
@@ -242,7 +243,15 @@ namespace IntegratedGuiV2
             else
                 ucInformation.WriteApi();
         }
-
+        /*
+        public void WriteUpPage0LiteApi(string vendorSn, string dataCode)
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucInformation.WriteUpPage0LiteApi(vendorSn, dataCode)));
+            else
+                ucInformation.WriteUpPage0LiteApi(vendorSn, dataCode);
+        }
+        */
         public void InformationStoreIntoFlashApi() // Used for MpForm
         {
             if (this.InvokeRequired)
@@ -299,12 +308,12 @@ namespace IntegratedGuiV2
                 return _GetBypassEraseAllControl();
         }
 
-        public void WriteRegisterPageApi(string targetPage, int delayTime)
+        public int WriteRegisterPageApi(string targetPage, int delayTime, string registerFilePath)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _WriteRegisterPage(targetPage, delayTime)));
+                return (int)this.Invoke(new Action(() => _WriteRegisterPage(targetPage, delayTime, registerFilePath)));
             else
-                _WriteRegisterPage(targetPage, delayTime);
+                return _WriteRegisterPage(targetPage, delayTime, registerFilePath);
         }
 
 
@@ -478,7 +487,7 @@ namespace IntegratedGuiV2
             if (i2cMaster.ConnectApi(400) < 0)
                 return -1;
 
-            cbConnected.Checked = true;
+            cbConnect.Checked = true;
             I2cConnected = true;
 
             if (setMode && _SetQsfpMode(0x4D) < 0)
@@ -495,7 +504,7 @@ namespace IntegratedGuiV2
             if (i2cMaster.DisconnectApi() < 0)
                 return -1;
 
-            cbConnected.Checked = false;
+            cbConnect.Checked = false;
             I2cConnected = false;
 
             return 0;
@@ -972,7 +981,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _WriteRegisterPage (string targetPage, int delayTime)
+        private int _WriteRegisterPage (string targetPage, int delayTime, string registerFilePath)
         {
 
             switch (targetPage) {
@@ -980,31 +989,42 @@ namespace IntegratedGuiV2
                 case "Up 03h":
                 case "80h":
                 case "81h":
-                    ucMemoryDump.WriteRegisterPageApi(targetPage, delayTime);
+                    if (ucMemoryDump.WriteRegisterPageApi(targetPage, delayTime, registerFilePath) < 0)
+                        return -1;
+                    
                     break;
 
                 case "Tx":
-                    ucMald37045cConfig.WriteAllRegisterApi("Tx", delayTime);
+                    if (ucMald37045cConfig.WriteAllRegisterApi("Tx", delayTime, registerFilePath) < 0)
+                        return -1;
+                    
                     break;
 
                 case "Rx":
-                    ucMata37044cConfig.WriteAllRegisterApi("Rx", delayTime);
+                    if (ucMata37044cConfig.WriteAllRegisterApi("Rx", delayTime, registerFilePath) < 0)
+                        return -1;
+                    
                     break;
 
                 default:
                     break;
             }
-
+            return 0;
         }
         
-        private int _ExportLogfileToCsv(string fileName, bool logFileMode)
+        private int _ExportLogfileToCsv(string fileName, bool logFileMode, bool writeSnMode)
         {
             string folderPath;
             string exportFilePath;
             string tempExportFilePath;
 
+            if (!writeSnMode)
+                StateUpdated("Read State:\nPreparing resources...", 3);
+
             if (logFileMode) {
-                lastUsedDirectory = Application.StartupPath;
+                lastUsedDirectory = Application.StartupPath + "\\";
+                //MessageBox.Show("Application startup path: \n " + lastUsedDirectory);
+
                 folderPath = Path.Combine(lastUsedDirectory, "LogFolder");
                 if (!Directory.Exists(folderPath))
                     Directory.CreateDirectory(folderPath);
@@ -1014,34 +1034,45 @@ namespace IntegratedGuiV2
             }
 
             fileName = fileName.Replace(" ", "") + ".csv";
-            
-            if (logFileMode) {
-                exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
-                tempExportFilePath = Path.Combine(folderPath, "LogFolder", "temp_" + fileName);
-            }
-            else {
-                exportFilePath = Path.Combine(folderPath, fileName);
-                tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
-            }
-                
+            exportFilePath = Path.Combine(folderPath, fileName);
+            tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
             exportFilePath = exportFilePath.Replace("\\\\", "\\");
             tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
 
             if (File.Exists(exportFilePath))
                 File.Delete(exportFilePath);
+            //MessageBox.Show("1: \n" + ucInformation.GetVendorInfo() +
+            //                "exportFilePath: \n" + exportFilePath);
 
             AppendVendorInfo(exportFilePath);
             AppendMoreInfo(exportFilePath);
+
+            if (!writeSnMode)
+                StateUpdated("Read State:\nInformation...Done", 5);
 
             if (ucMemoryDump.ExportAllPagesDataApi(tempExportFilePath) < 0)
                 return -1;
 
             AppendFileContentToAnother(tempExportFilePath, exportFilePath);
+
+            if (!writeSnMode)
+                StateUpdated("Read State:\nUpPage 00h/03h...Done", 10);
+           
             AppendRxRegisterContents(exportFilePath);
+
+            if (!writeSnMode)
+                StateUpdated("Read State:\nRxIcConfig...Done", 20);
+            
             AppendTxRegisterContents(exportFilePath);
 
+            if (!writeSnMode)
+                StateUpdated("Read State:\nTxIcConfig...Done", 30);
+           
             if (File.Exists(tempExportFilePath))
                 File.Delete(tempExportFilePath);
+
+            //MessageBox.Show("9: \n" + ucInformation.GetVendorInfo() + 
+            //                "exportFilePath: \n" + exportFilePath);
 
             return 0;
         }
@@ -1430,6 +1461,7 @@ namespace IntegratedGuiV2
 
         private void _DisableButtons()
         {
+            cbConnect.Enabled = false;
             bGlobalRead.Enabled = false;
             bInnerSwitch.Enabled = false;
             bOutterSwitch.Enabled = false;
@@ -1445,10 +1477,22 @@ namespace IntegratedGuiV2
             bGenerateCfg.Enabled = false;
             //bFunctionTest2.Enabled = false;
             bDumpToString.Enabled = false;
+            cbInfomation.Enabled = false;
+            cbDdm.Enabled = false;
+            cbMemDump.Enabled = false;
+            cbCorrector.Enabled = false;
+            cbTxIcConfig.Enabled = false;
+            cbRxIcConfig.Enabled = false;
+            cbAPPath.Enabled = false;
+            cbDAPath.Enabled = false;
+            rbCustomerMode.Enabled = false;
+            rbMpMode.Enabled = false;
+            bBackToMainForm.Enabled = false;
         }
 
         private void _EnableButtons()
         {
+            cbConnect.Enabled = true;
             bGlobalRead.Enabled = true;
             bInnerSwitch.Enabled = true;
             bOutterSwitch.Enabled = true;
@@ -1462,6 +1506,17 @@ namespace IntegratedGuiV2
             bGenerateCfg.Enabled = true;
             //bFunctionTest2.Enabled = true;
             bDumpToString.Enabled = true;
+            cbInfomation.Enabled = true;
+            cbDdm.Enabled = true;
+            cbMemDump.Enabled = true;
+            cbCorrector.Enabled = true;
+            cbTxIcConfig.Enabled = true;
+            cbRxIcConfig.Enabled = true;
+            cbAPPath.Enabled = true;
+            cbDAPath.Enabled = true;
+            rbCustomerMode.Enabled = true;
+            rbMpMode.Enabled = true;
+            bBackToMainForm.Enabled = true;
 
             if (FirstRead)
             {
@@ -1572,6 +1627,9 @@ namespace IntegratedGuiV2
             saveFileDialog.Filter = "XML Files|*.xml";
             saveFileDialog.Title = "Save XML File";
 
+            string targetApromPath = APROMPath;
+            string targetDataromPath = DATAROMPath;
+
             XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
 
             if (rbCustomerMode.Checked) {
@@ -1595,7 +1653,7 @@ namespace IntegratedGuiV2
             }
 
             // Check APROM, DATAROM filepath
-            if (!string.IsNullOrWhiteSpace(APROMPath) && !string.IsNullOrWhiteSpace(DATAROMPath)) {
+            if (!string.IsNullOrWhiteSpace(APROMPath) || !string.IsNullOrWhiteSpace(DATAROMPath)) {
                 XmlElement APROMNode = xmlDoc.CreateElement("APROM");
                 APROMNode.SetAttribute("name", Path.GetFileName(APROMPath));
                 permissionsNode.AppendChild(APROMNode);
@@ -1612,16 +1670,27 @@ namespace IntegratedGuiV2
             if (saveFileDialog.ShowDialog() == DialogResult.OK) {
                 string selectedFileName = saveFileDialog.FileName;
                 xmlDoc.Save(selectedFileName);
-                lastUsedDirectory = Path.GetDirectoryName(selectedFileName);
 
+                lastUsedDirectory = Path.GetDirectoryName(selectedFileName);
                 _InitialStateBar();
                 _GlobalWrite(false);
-                _ExportLogfileToCsv("RegisterFile", false);
+                _ExportLogfileToCsv("RegisterFile", false, false); // Export CfgFile to config folder
+                //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory);
 
-                destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(APROMPath));
-                File.Copy(APROMPath, destinationFilePath, true);
-                destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(DATAROMPath));
-                File.Copy(DATAROMPath, destinationFilePath, true);
+                if (!string.IsNullOrWhiteSpace(targetApromPath)) {
+                    destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(APROMPath));
+                    //MessageBox.Show("APROMPath: \n" + APROMPath +
+                    //                "\nlastUsedDirectory: \n" + destinationFilePath);
+                    File.Copy(targetApromPath, destinationFilePath, true);
+                }
+                
+                if (!string.IsNullOrWhiteSpace(targetDataromPath)) {
+                    destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(DATAROMPath));
+                    //MessageBox.Show("DATAROMPath: \n" + DATAROMPath +
+                    //                "\nlastUsedDirectory: \n" + destinationFilePath);
+                    File.Copy(targetDataromPath, destinationFilePath, true);
+                }
+                    
             }
         }
 
@@ -2214,16 +2283,20 @@ namespace IntegratedGuiV2
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     string sourceFilePath = Path.GetFileName(openFileDialog.FileName);
+                    lastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+
+                    //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory );
 
                     if (fileType == "APROM")
                     {
-                        APROMPath = sourceFilePath;
+                        APROMPath = lastUsedDirectory + "\\" + sourceFilePath;
                         cbAPPath.Checked = true;
+                        //MessageBox.Show("APROMPath: \n" + APROMPath);
                     }
 
                     if (fileType == "DATAROM")
                     {
-                        DATAROMPath = sourceFilePath;
+                        DATAROMPath = lastUsedDirectory + "\\" + sourceFilePath;
                         cbDAPath.Checked = true;
                     }
 
@@ -2259,6 +2332,55 @@ namespace IntegratedGuiV2
 
             _EnableButtons();
         }
+
+        internal int _GlobalWrite2(bool CustomerMode, string CfgFilePath)
+        {
+
+            string DirectoryPath = Application.StartupPath;
+            string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder/TempRegister.csv");
+
+            StateUpdated("Write State:\nPreparing resources...", 61);
+            Application.DoEvents();
+
+            if (CustomerMode)
+            {
+                if (WriteRegisterPageApi("Up 00h", 50, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
+                StateUpdated("Write State:\nUpPage 00h...Done", 63);
+                Application.DoEvents();
+                if (WriteRegisterPageApi("Up 03h", 50, TempRegisterFilePath) < 0) return -1;
+                StateUpdated("Write State:\nUpPage 03h...Done", 65);
+                Application.DoEvents();
+            }
+            else
+            {
+                if (WriteRegisterPageApi("Up 00h", 50, CfgFilePath) < 0) return -1; //Write from Cfg.RegisterFile
+                StateUpdated("Write State:\nUpPage 00h...Done", 63);
+                Application.DoEvents();
+                if (WriteRegisterPageApi("Up 03h", 50, CfgFilePath) < 0) return -1;
+                StateUpdated("Write State:\nUpPage 03h...Done", 65);
+                Application.DoEvents();
+            }
+
+            if (WriteRegisterPageApi("80h", 200, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
+            StateUpdated("Write State:\nPage 0x80h...Done", 67);
+            Application.DoEvents();
+            if (WriteRegisterPageApi("81h", 200, TempRegisterFilePath) < 0) return -1;
+            StateUpdated("Write State:\nPage 0x81h...Done", 70);
+            Application.DoEvents();
+            if (WriteRegisterPageApi("Rx", 1000, TempRegisterFilePath) < 0) return -1;
+            StateUpdated("Write State:\nRxIcConfig...Done", 80);
+            Application.DoEvents();
+            if (WriteRegisterPageApi("Tx", 1000, TempRegisterFilePath) < 0) return -1;
+            StateUpdated("Write State:\nTxIcConfig...Done", 90);
+            Application.DoEvents();
+
+            StoreIntoFlashApi();
+            StateUpdated("Write State:\nStore into flash...Done", 95);
+            Application.DoEvents();
+
+            return 0;
+        }
+
 
         internal int _GlobalWrite(bool ExternalMode)
         {
@@ -2480,190 +2602,6 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
-        private int _GlobalWirte_Original()
-        {
-
-            bool writeFail = false;
-            int returnValue;
-            int errorCount = 0;
-            int delay = 100;
-
-            StateUpdated("Write State:\nPreparing resources...", 62);
-
-            if (cbInfomation.Checked)
-            {
-                tbInformationReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-                Thread.Sleep(delay);
-
-                if (ucInformation.WriteApi() < 0)
-                {
-                    tbInformationReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nInformation...Failed", 65);
-                    errorCount++;
-                }
-                else
-                {
-                    tbInformationReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nInformation...Done", 65);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbDdm.Checked)
-            {
-                tbDdmReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-                Thread.Sleep(delay);
-
-                if (ucDigitalDiagnosticsMonitoring.WriteApi() < 0)
-                {
-                    returnValue = ucDigitalDiagnosticsMonitoring.WriteApi();
-                    MessageBox.Show("rv : " + returnValue);
-                    tbDdmReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nDdm...Failed", 68);
-                    errorCount++;
-                }
-
-                else
-                {
-                    tbDdmReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nDdm...Done", 68);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbMemDump.Checked)
-            {
-                tbMemDumpReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-                Thread.Sleep(delay);
-
-                if (ucMemoryDump.WriteApi() < 0)
-                {
-                    tbMemDumpReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nMemoryDump...Failed", 70);
-                    errorCount++;
-                }
-                else
-                {
-                    tbMemDumpReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nMemoryDump...Done", 70);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbCorrector.Checked)
-            {
-                tbCorrectorReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-                Thread.Sleep(delay);
-
-                if (ucGn1190Corrector.WriteAllApi() < 0)
-                {
-                    tbCorrectorReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nCorrector...Failed", 80);
-                    errorCount++;
-                }
-                else
-                {
-                    tbCorrectorReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nCorrector...Done", 80);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbProductSelect.SelectedIndex != 0)
-            {
-                if (cbTxIcConfig.Checked)
-                {
-                    tbTxConfigReadState.BackColor = Color.SteelBlue;
-                    Application.DoEvents();
-                    Thread.Sleep(delay);
-
-                    switch (cbProductSelect.SelectedIndex)
-                    {
-                        case 1: // SAS4.0
-                            if (ucMald37045cConfig.WriteAllApi() < 0)
-                                writeFail = true;
-
-                            break;
-                        case 2: // PCIe4
-                            if (ucRt146Config.WriteAllApi() < 0)
-                                writeFail = true;
-
-                            break;
-                        case 3: // QSFP28
-                            if (ucGn2108Config.WriteAllApi() < 0)
-                                writeFail = true;
-
-                            break;
-                    }
-
-                    if (writeFail)
-                    {
-                        tbTxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Write State:\nTxIcConfig...Failed", 89);
-                        errorCount++;
-                    }
-                    else
-                    {
-                        tbTxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Write State:\nTxIcConfig...Done", 89);
-                    }
-
-                    Application.DoEvents();
-                    writeFail = false;
-                }
-
-                if (cbRxIcConfig.Checked)
-                {
-                    tbRxConfigReadState.BackColor = Color.SteelBlue;
-                    Application.DoEvents();
-                    Thread.Sleep(delay);
-
-                    switch (cbProductSelect.SelectedIndex)
-                    {
-                        case 1: // SAS4.0
-                            if (ucMata37044cConfig.WriteAllApi() < 0)
-                                writeFail = true;
-
-                            break;
-                        case 2: // PCIe4
-                            if (ucRt145Config.WriteAllApi() < 0)
-                                writeFail = true;
-
-                            break;
-                        case 3: // QSFP28
-                            if (ucGn2109Config.WriteAllApi() < 0)
-                                writeFail = true;
-
-                            break;
-                    }
-
-                    if (writeFail)
-                    {
-                        tbRxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Write State:\nRxIcConfig...Failed", 98);
-                        errorCount++;
-                    }
-                    else
-                    {
-                        tbRxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Write State:\nRxIcConfig...Done", 98);
-                    }
-
-                    Application.DoEvents();
-                }
-            }
-
-            return errorCount;
-        }
-
         private void bStoreIntoFlash_Click(object sender, EventArgs e)
         {
             _DisableButtons();
@@ -2671,7 +2609,7 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
-        private void bSaveToCfg_Click(object sender, EventArgs e)
+        private void bSaveCfgFile_Click(object sender, EventArgs e)
         {
             string LogFileName = "RegisterFile";
             lastUsedDirectory = Application.StartupPath;
@@ -2679,59 +2617,17 @@ namespace IntegratedGuiV2
             // Save the file 
             _GlobalWrite(false);
             _InitialStateBar();
-            
-            _ExportLogfileToCsv(LogFileName, false);
+
+            _ExportLogfileToCsv(LogFileName, false, false);
 
             _EnableButtons();
         }
 
-        /*
-        private void bSaveToCfg_Click(object sender, EventArgs e)
+        private void bLoadCfgFile_Click(object sender, EventArgs e)
         {
-            _DisableButtons();
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            string DirectoryPath = Application.StartupPath;
+            string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder/TempRegister.csv");
 
-            if (File.Exists(filePath))
-                File.WriteAllText(filePath, string.Empty);
-
-            writeToFile = true;
-            _DisableButtons();
-            _InitialStateBar();
-            _GlobalWrite(false);
-            _EnableButtons();
-            // 切割範圍, 切割方式
-            // ConfigFile檔案優化
-            // ConfigFile寫入及驗證
-
-            writeToFile = false;
-
-            _EnableButtons();
-        }
-        
-        private async void bGlobalWrite2_Click(object sender, EventArgs e)
-{
-            _DisableButtons();
-
-            if (await _SetWriteConfigAsync() < 0)
-                MessageBox.Show("Something went wrong, please check detail");
-
-            _EnableButtons();
-        }
-        
-
-        private void bGlobalWrite2_Click(object sender, EventArgs e)
-        {
-            _DisableButtons();
-
-            if (_SetWriteConfig() < 0)
-                MessageBox.Show("Something went wrong, please check detail");
-            
-            _EnableButtons();
-        }
-        */
-
-        private void bGlobalWrite2_Click(object sender, EventArgs e)
-        {
             _DisableButtons();
 
             progressBar1.Value = 0;
@@ -2740,18 +2636,18 @@ namespace IntegratedGuiV2
             _ConnectI2c();
 
             //Write data from RegisterFile
+            progressBar1.Value = 5;
+            WriteRegisterPageApi("Up 00h", 10, TempRegisterFilePath);
             progressBar1.Value = 10;
-            WriteRegisterPageApi("Up 00h", 10);
-            progressBar1.Value = 10;
-            WriteRegisterPageApi("Up 03h", 10);
+            WriteRegisterPageApi("Up 03h", 10, TempRegisterFilePath);
             progressBar1.Value = 20;
-            WriteRegisterPageApi("80h", 200);
+            WriteRegisterPageApi("80h", 200, TempRegisterFilePath);
             progressBar1.Value = 30;
-            WriteRegisterPageApi("81h", 200);
+            WriteRegisterPageApi("81h", 200, TempRegisterFilePath);
             progressBar1.Value = 40;
-            WriteRegisterPageApi("Rx", 1000);
+            WriteRegisterPageApi("Rx", 1000, TempRegisterFilePath);
             progressBar1.Value = 50;
-            WriteRegisterPageApi("Tx", 1000);
+            WriteRegisterPageApi("Tx", 1000, TempRegisterFilePath);
             progressBar1.Value = 60;
 
             StoreIntoFlashApi();
@@ -2780,8 +2676,6 @@ namespace IntegratedGuiV2
 
             _EnableButtons();
         }
-
-
 
         private void bScanComponents_Click(object sender, EventArgs e)
         {
@@ -2859,7 +2753,7 @@ namespace IntegratedGuiV2
 
         private void _ConnectI2c()
         {
-            if (cbConnected.Checked == true) {
+            if (cbConnect.Checked == true) {
                 _I2cMasterConnect(true, true);
                 i2cMaster.ChannelSetApi(ProcessingChannel);
                 _UpdateButtonState();

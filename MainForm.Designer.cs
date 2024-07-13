@@ -36,8 +36,11 @@ namespace IntegratedGuiV2
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.tcDdmi = new System.Windows.Forms.TabControl();
             this.tabPage11 = new System.Windows.Forms.TabPage();
+            this.ucInformation = new QsfpDigitalDiagnosticMonitoring.UcInformation();
             this.tabPage12 = new System.Windows.Forms.TabPage();
+            this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
             this.tabPage13 = new System.Windows.Forms.TabPage();
+            this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.ucGn1190Corrector = new Gn1190Corrector.UcGn1190CorrectorLite();
             this.tabPage3 = new System.Windows.Forms.TabPage();
@@ -78,7 +81,7 @@ namespace IntegratedGuiV2
             this.gbWriteConfig = new System.Windows.Forms.GroupBox();
             this.dgvWriteConfig = new System.Windows.Forms.DataGridView();
             this.kryptonPalette1 = new ComponentFactory.Krypton.Toolkit.KryptonPalette(this.components);
-            this.cbConnected = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+            this.cbConnect = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
             this.lPassword = new System.Windows.Forms.Label();
             this.tbPassword = new System.Windows.Forms.TextBox();
             this.bGlobalRead = new System.Windows.Forms.Button();
@@ -122,9 +125,6 @@ namespace IntegratedGuiV2
             this.cbAPPath = new System.Windows.Forms.CheckBox();
             this.bBackToMainForm = new System.Windows.Forms.Button();
             this.lMessage = new System.Windows.Forms.Label();
-            this.ucInformation = new QsfpDigitalDiagnosticMonitoring.UcInformation();
-            this.ucDigitalDiagnosticsMonitoring = new QsfpDigitalDiagnosticMonitoring.UCDigitalDiagnosticsMonitoring();
-            this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
             this.tcMain.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tcDdmi.SuspendLayout();
@@ -208,6 +208,14 @@ namespace IntegratedGuiV2
             this.tabPage11.Text = "Information";
             this.tabPage11.UseVisualStyleBackColor = true;
             // 
+            // ucInformation
+            // 
+            this.ucInformation.Location = new System.Drawing.Point(5, 5);
+            this.ucInformation.Margin = new System.Windows.Forms.Padding(4);
+            this.ucInformation.Name = "ucInformation";
+            this.ucInformation.Size = new System.Drawing.Size(960, 760);
+            this.ucInformation.TabIndex = 1;
+            // 
             // tabPage12
             // 
             this.tabPage12.Controls.Add(this.ucDigitalDiagnosticsMonitoring);
@@ -220,6 +228,14 @@ namespace IntegratedGuiV2
             this.tabPage12.Text = "DDM";
             this.tabPage12.UseVisualStyleBackColor = true;
             // 
+            // ucDigitalDiagnosticsMonitoring
+            // 
+            this.ucDigitalDiagnosticsMonitoring.Location = new System.Drawing.Point(5, 5);
+            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(4);
+            this.ucDigitalDiagnosticsMonitoring.Name = "ucDigitalDiagnosticsMonitoring";
+            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(960, 760);
+            this.ucDigitalDiagnosticsMonitoring.TabIndex = 1;
+            // 
             // tabPage13
             // 
             this.tabPage13.Controls.Add(this.ucMemoryDump);
@@ -231,6 +247,14 @@ namespace IntegratedGuiV2
             this.tabPage13.TabIndex = 2;
             this.tabPage13.Text = "MemDump";
             this.tabPage13.UseVisualStyleBackColor = true;
+            // 
+            // ucMemoryDump
+            // 
+            this.ucMemoryDump.Location = new System.Drawing.Point(5, 5);
+            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(4);
+            this.ucMemoryDump.Name = "ucMemoryDump";
+            this.ucMemoryDump.Size = new System.Drawing.Size(960, 760);
+            this.ucMemoryDump.TabIndex = 0;
             // 
             // tabPage2
             // 
@@ -702,17 +726,17 @@ namespace IntegratedGuiV2
             this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.ButtonEdgeInset = 10;
             this.kryptonPalette1.HeaderStyles.HeaderForm.StateCommon.Content.Padding = new System.Windows.Forms.Padding(10, -1, -1, -1);
             // 
-            // cbConnected
+            // cbConnect
             // 
-            this.cbConnected.Location = new System.Drawing.Point(1010, 10);
-            this.cbConnected.Margin = new System.Windows.Forms.Padding(2);
-            this.cbConnected.Name = "cbConnected";
-            this.cbConnected.Size = new System.Drawing.Size(105, 22);
-            this.cbConnected.StateCommon.ShortText.Color1 = System.Drawing.SystemColors.ControlText;
-            this.cbConnected.StateCommon.ShortText.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbConnected.TabIndex = 5;
-            this.cbConnected.Values.Text = "I2c Connect";
-            this.cbConnected.CheckedChanged += new System.EventHandler(this.cbConnected_CheckedChanged);
+            this.cbConnect.Location = new System.Drawing.Point(1010, 10);
+            this.cbConnect.Margin = new System.Windows.Forms.Padding(2);
+            this.cbConnect.Name = "cbConnect";
+            this.cbConnect.Size = new System.Drawing.Size(105, 22);
+            this.cbConnect.StateCommon.ShortText.Color1 = System.Drawing.SystemColors.ControlText;
+            this.cbConnect.StateCommon.ShortText.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbConnect.TabIndex = 5;
+            this.cbConnect.Values.Text = "I2c Connect";
+            this.cbConnect.CheckedChanged += new System.EventHandler(this.cbConnected_CheckedChanged);
             // 
             // lPassword
             // 
@@ -997,9 +1021,9 @@ namespace IntegratedGuiV2
             this.bGlobalWrite2.Name = "bGlobalWrite2";
             this.bGlobalWrite2.Size = new System.Drawing.Size(100, 28);
             this.bGlobalWrite2.TabIndex = 1017;
-            this.bGlobalWrite2.Text = "GWrite2";
+            this.bGlobalWrite2.Text = "Load CfgFile";
             this.bGlobalWrite2.UseVisualStyleBackColor = false;
-            this.bGlobalWrite2.Click += new System.EventHandler(this.bGlobalWrite2_Click);
+            this.bGlobalWrite2.Click += new System.EventHandler(this.bLoadCfgFile_Click);
             // 
             // tbPasswordB3
             // 
@@ -1053,6 +1077,7 @@ namespace IntegratedGuiV2
             this.bScanComponents.TabIndex = 1024;
             this.bScanComponents.Text = "ScanCom.ToXml";
             this.bScanComponents.UseVisualStyleBackColor = false;
+            this.bScanComponents.Visible = false;
             this.bScanComponents.Click += new System.EventHandler(this.bScanComponents_Click);
             // 
             // bStoreIntoFlash
@@ -1080,6 +1105,7 @@ namespace IntegratedGuiV2
             this.bFunctionTest2.TabIndex = 1027;
             this.bFunctionTest2.Text = "ReData table";
             this.bFunctionTest2.UseVisualStyleBackColor = false;
+            this.bFunctionTest2.Visible = false;
             this.bFunctionTest2.Click += new System.EventHandler(this.bReNew_Click);
             // 
             // progressBar1
@@ -1098,9 +1124,9 @@ namespace IntegratedGuiV2
             this.bDumpToString.Name = "bDumpToString";
             this.bDumpToString.Size = new System.Drawing.Size(100, 28);
             this.bDumpToString.TabIndex = 1029;
-            this.bDumpToString.Text = "SaveToCfg";
+            this.bDumpToString.Text = "Save CfgFile";
             this.bDumpToString.UseVisualStyleBackColor = false;
-            this.bDumpToString.Click += new System.EventHandler(this.bSaveToCfg_Click);
+            this.bDumpToString.Click += new System.EventHandler(this.bSaveCfgFile_Click);
             // 
             // gbPermissions
             // 
@@ -1265,30 +1291,6 @@ namespace IntegratedGuiV2
             this.lMessage.TabIndex = 1036;
             this.lMessage.Text = "...";
             // 
-            // ucInformation
-            // 
-            this.ucInformation.Location = new System.Drawing.Point(5, 5);
-            this.ucInformation.Margin = new System.Windows.Forms.Padding(4);
-            this.ucInformation.Name = "ucInformation";
-            this.ucInformation.Size = new System.Drawing.Size(960, 760);
-            this.ucInformation.TabIndex = 1;
-            // 
-            // ucDigitalDiagnosticsMonitoring
-            // 
-            this.ucDigitalDiagnosticsMonitoring.Location = new System.Drawing.Point(5, 5);
-            this.ucDigitalDiagnosticsMonitoring.Margin = new System.Windows.Forms.Padding(4);
-            this.ucDigitalDiagnosticsMonitoring.Name = "ucDigitalDiagnosticsMonitoring";
-            this.ucDigitalDiagnosticsMonitoring.Size = new System.Drawing.Size(960, 760);
-            this.ucDigitalDiagnosticsMonitoring.TabIndex = 1;
-            // 
-            // ucMemoryDump
-            // 
-            this.ucMemoryDump.Location = new System.Drawing.Point(5, 5);
-            this.ucMemoryDump.Margin = new System.Windows.Forms.Padding(4);
-            this.ucMemoryDump.Name = "ucMemoryDump";
-            this.ucMemoryDump.Size = new System.Drawing.Size(960, 760);
-            this.ucMemoryDump.TabIndex = 0;
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -1312,7 +1314,7 @@ namespace IntegratedGuiV2
             this.Controls.Add(this.bGlobalRead);
             this.Controls.Add(this.tbPassword);
             this.Controls.Add(this.lPassword);
-            this.Controls.Add(this.cbConnected);
+            this.Controls.Add(this.cbConnect);
             this.Controls.Add(this.tcMain);
             this.Controls.Add(this.tbPasswordB3);
             this.Controls.Add(this.tbPasswordB2);
@@ -1420,7 +1422,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Label lCh2;
         private System.Windows.Forms.Label lCh1;
         private System.Windows.Forms.Label lContinuousMode;
-        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbConnected;
+        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbConnect;
         private ComponentFactory.Krypton.Toolkit.KryptonPalette kryptonPalette1;
         private System.Windows.Forms.TextBox tbPasswordB3;
         private System.Windows.Forms.TextBox tbPasswordB2;
