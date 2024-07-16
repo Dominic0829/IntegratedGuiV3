@@ -95,9 +95,6 @@ namespace IntegratedGuiV2
             this.Load += MainForm_Load;
             this.KeyPreview = true;
             this.KeyDown += _HideKeys_KeyDown;
-            gbOperatorMode.Visible = false;
-            lOriginalSN.Visible = false;
-            lReNewSn.Visible = false;
 
             if (!(mainForm.I2cMasterConnectApi(true, true) < 0)) // (bool setMode, bool setPassword)
                 I2cConnected = true;
@@ -106,7 +103,6 @@ namespace IntegratedGuiV2
                                 "I2c master connection failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Application.Exit();
             }
-
 
             mainForm.ReadStateUpdated += MainForm_ReadStateUpdated;
             mainForm.ProgressValue += MainForm_ProgressUpdated;
@@ -461,6 +457,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh2.Visible = false;
                 lVenderSnCh2.Visible=false;
                 tbVenderSnCh2.Visible = false;
+                bCfgFileComparsion.Visible = false;
             }
             else if (rbBoth.Checked == true) {
                 cProgressBar1.Visible = true;
@@ -474,6 +471,7 @@ namespace IntegratedGuiV2
                 tbVersionCodeReNewCh2.Visible = true;
                 lVenderSnCh2.Visible = true;
                 tbVenderSnCh2.Visible = true;
+                bCfgFileComparsion.Visible = true;
 
                 if (lMode.Text == "MP") {
                     tbOrignalSNCh2.Visible = true;
@@ -622,6 +620,7 @@ namespace IntegratedGuiV2
                 this.Size = new System.Drawing.Size(550, 280);
                 // rbSingle.Enabled = true;
                 //rbBoth.Enabled = true;
+                cbSecurityLock.Visible = false;
                 gbOperatorMode.Visible = false;
                 bWriteSnDateCone.Visible = false;
                 tbOrignalSNCh1.Visible = false;
@@ -630,6 +629,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh2.Visible = false;
                 lOriginalSN.Visible = false;
                 lReNewSn.Visible = false;
+                bCfgFileComparsion.Visible = false;
             }
 
             else if (lMode.Text == "MP") {
@@ -638,6 +638,7 @@ namespace IntegratedGuiV2
                 _GenerateDateCode();
                 //rbSingle.Enabled = false;
                 //rbBoth.Enabled = false;
+                cbSecurityLock.Visible = true;
                 gbOperatorMode.Visible = true;
                 bWriteSnDateCone.Visible = true;
                 tbOrignalSNCh1.Visible = true;
@@ -646,6 +647,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh2.Visible = true;
                 lOriginalSN.Visible = true;
                 lReNewSn.Visible = true;
+                bCfgFileComparsion.Visible = true;
 
                 if (rbBoth.Checked) {
                     tbOrignalSNCh2.Visible = true;
@@ -806,6 +808,7 @@ namespace IntegratedGuiV2
             bWriteSnDateCone.Enabled = false;
             tbVenderSnCh1.Enabled = false;
             tbDateCode.Enabled = false;
+            bCfgFileComparsion.Enabled = false;
         }
 
         private void _EnableButtons()
@@ -823,6 +826,7 @@ namespace IntegratedGuiV2
             bWriteSnDateCone.Enabled = true;
             tbVenderSnCh1.Enabled = true;
             tbDateCode.Enabled = true;
+            bCfgFileComparsion.Enabled = true;
         }
 
         private int _RemoteControl2(bool customerMode)
@@ -830,19 +834,19 @@ namespace IntegratedGuiV2
             string DirectoryPath = Path.GetDirectoryName(tbFilePath.Text);
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             string LogFileName = "TempRegister";
+            Label[] channelMessages = new Label[] { lCh1Message, lCh2Message};
 
-            if (DebugMode)
-                MessageBox.Show("directoryPath: \n" + DirectoryPath+
+            if (DebugMode) {
+                MessageBox.Show("directoryPath: \n" + DirectoryPath +
                                 "\nRegisterFilePath: \n" + RegisterFilePath);
+            }
 
             if (!((_PathCheck(lApName)) || (_PathCheck(lDataName)))) {
                 MessageBox.Show("No file path specified. Please choose the file again.", "Config file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return -1;
             }
             else {
-                //MessageBox.Show("Check point1");
-                mainForm.ExportLogfileToCsvApi(LogFileName, true, false); //目標模組Cfg Backup
-                //MessageBox.Show("Check point2");
+                mainForm.ExportLogfileApi(LogFileName, true, false); //目標模組Cfg Backup
 
                 if (ProcessingChannel == 1) {
                     mainForm.SetToChannle2Api(false);
@@ -870,14 +874,11 @@ namespace IntegratedGuiV2
                 Thread.Sleep(10);
                 mainForm.StartFlashingApi(); // Firmware update
                 Thread.Sleep(10);
+                mainForm._GlobalWriteFromRegisterMap(customerMode, RegisterFilePath);
+                Thread.Sleep(10);
+                mainForm.ComparationRegisterApi(RegisterFilePath, false);
 
-                if (DebugMode)
-                    MessageBox.Show("Firmware burning...Done");
-
-                mainForm._GlobalWrite2(customerMode, RegisterFilePath);
-
-                if (DebugMode)
-                    MessageBox.Show("GlobalWrite...Done");
+                Thread.Sleep(500);
 
                 if (ProcessingChannel == 1) {
                     lCh1Message.Text = "Update completed.";
@@ -960,7 +961,7 @@ namespace IntegratedGuiV2
                         }
                         MessageBox.Show("Check point1");
                         string LogFileName = "TempRegister";
-                        mainForm.ExportLogfileToCsvApi(LogFileName, true, false);
+                        mainForm.ExportLogfileApi(LogFileName, true, false);
 
                         MessageBox.Show("Check point2");
                         mainForm.SetToChannle2Api(false);
@@ -996,11 +997,11 @@ namespace IntegratedGuiV2
                         MessageBox.Show("Firmware burning...Done");
 
                     if (ProcessingChannel == 1) {
-                        errorCountCh1W = mainForm._GlobalWrite(true).ToString(); // Write the previous parameter into Flash
+                        errorCountCh1W = mainForm._GlobalWriteFromUi(true).ToString(); // Write the previous parameter into Flash
                         lCh1EC.Text = $"R:{errorCountCh1R} /W:{errorCountCh1W} ";
                     }
                     else if (ProcessingChannel == 2) {
-                        errorCountCh2W = mainForm._GlobalWrite(true).ToString(); // Write the previous parameter into Flash
+                        errorCountCh2W = mainForm._GlobalWriteFromUi(true).ToString(); // Write the previous parameter into Flash
                         lCh2EC.Text = $"R:{errorCountCh2R} /W:{errorCountCh2W} ";
                     }
 
@@ -1092,7 +1093,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh1.ForeColor = Color.White;
             }
 
-            mainForm.ExportLogfileToCsvApi(LogFileName, true, true); //Must be implement
+            mainForm.ExportLogfileApi(LogFileName, true, true); //Must be implement
             Thread.Sleep(10);
             _UpdateMessage(ch, "LogFile..exported");
         }
@@ -1305,7 +1306,7 @@ namespace IntegratedGuiV2
 
             mainForm._GlobalRead();
             string LogFileName = "BeforeFlasing";
-            mainForm.ExportLogfileToCsvApi(LogFileName, true, true);
+            mainForm.ExportLogfileApi(LogFileName, true, true);
             //mainForm.ExprotRegisterToCsvApi("RegisterFile");
 
             _EnableButtons();
@@ -1329,7 +1330,7 @@ namespace IntegratedGuiV2
 
             mainForm._GlobalRead();
             string LogFileName = "AfterFlasing";
-            mainForm.ExportLogfileToCsvApi(LogFileName, true, true);
+            mainForm.ExportLogfileApi(LogFileName, true, true);
 
             /*
             string[] commands = { "Up 00h", "Up 03h", "80h", "81h", "Tx", "Rx" };
@@ -1438,6 +1439,29 @@ namespace IntegratedGuiV2
 
             return 0;
 
+        }
+
+        private void bCfgFileComparsion_Click(object sender, EventArgs e)
+        {
+            string DirectoryPath = Path.GetDirectoryName(tbFilePath.Text);
+            string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
+            FirstRound = true;
+
+            _DisableButtons();
+            _InitialUi();
+
+            if (ProcessingChannel == 1) {
+                mainForm.SetToChannle2Api(false);
+                tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+            else if (ProcessingChannel == 2) {
+                mainForm.SetToChannle2Api(true);
+                tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+
+            mainForm.ComparationRegisterApi(RegisterFilePath, true);
+
+            _EnableButtons();
         }
     }
     

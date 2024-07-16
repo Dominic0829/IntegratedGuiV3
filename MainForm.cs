@@ -65,10 +65,13 @@ namespace IntegratedGuiV2
         public event EventHandler<TextBoxTextEventArgs> TextBoxTextChanged;
 
         
-        protected virtual void StateUpdated(string message, int value)
+        protected virtual void StateUpdated(string message, int? value)
         {
             ReadStateUpdated?.Invoke(this, message);
-            ProgressValue?.Invoke(this, value);
+
+            if (value != null)
+                ProgressValue?.Invoke(this, value.Value);
+
             Application.DoEvents();
         }
 
@@ -195,21 +198,20 @@ namespace IntegratedGuiV2
                 throw new ArgumentException("Invalid Var Name or Var is not a bool type");
             }
         }
-
-        public void ExportRegisterToCsvApi(string fileName)
+        public void ComparationRegisterApi(string filePath, bool onlyVerifyMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExportRegisterToCsv(fileName)));
+                this.Invoke(new Action(() => _ComparationRegister(filePath, onlyVerifyMode)));
             else
-                _ExportRegisterToCsv(fileName);
+                _ComparationRegister(filePath, onlyVerifyMode);
         }
-
-        public void ExportLogfileToCsvApi(string fileName, bool logFileMode, bool writeSnMode)
+        
+        public void ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExportLogfileToCsv(fileName, logFileMode, writeSnMode)));
+                this.Invoke(new Action(() => _ExportLogfile(fileName, logFileMode, writeSnMode)));
             else
-                _ExportLogfileToCsv(fileName, logFileMode, writeSnMode);
+                _ExportLogfile(fileName, logFileMode, writeSnMode);
         }
 
         public void ForceConnectSingleApi() // Used for MpForm
@@ -611,6 +613,7 @@ namespace IntegratedGuiV2
                 }
                 else if (rv != length) {
                     //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                    MessageBox.Show("Please confirm the module plug-in status");
                     ErrorState = -1;
                 }
                     
@@ -647,8 +650,10 @@ namespace IntegratedGuiV2
                     MessageBox.Show("TRx module no response!!");
                     _I2cMasterDisconnect();
                 }
-                else if (rv != length)
-                    MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                else if (rv != length) {
+                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                    MessageBox.Show("Please confirm the module plug-in status");
+                }
 
                 return rv;
             }
@@ -685,8 +690,10 @@ namespace IntegratedGuiV2
                     MessageBox.Show("TRx module no response!!");
                     _I2cMasterDisconnect();
                 }
-                else if (rv != length)
-                    MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                else if (rv != length) {
+                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                    MessageBox.Show("Please confirm the module plug-in status");
+                }
 
                 return rv;
             }
@@ -895,22 +902,6 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _ExportRegisterToCsv(string fileName)
-        {
-            if (File.Exists(fileName))
-                File.Delete(fileName);
-
-            fileName = fileName.Replace(" ", "") + ".csv";
-            string folderPath = System.Windows.Forms.Application.StartupPath;
-            string exportFilePath = Path.Combine(folderPath, "LogFolder", fileName);
-            exportFilePath = exportFilePath.Replace("\\\\", "\\");
-
-            AppendRxRegisterContents(exportFilePath);
-            AppendTxRegisterContents(exportFilePath);
-
-            return 0;
-        }
-
         private void AppendRxRegisterContents(string exportFilePath)
         {
             string vendorInfo;
@@ -1011,8 +1002,40 @@ namespace IntegratedGuiV2
             }
             return 0;
         }
-        
-        private int _ExportLogfileToCsv(string fileName, bool logFileMode, bool writeSnMode)
+
+        private int _ExportModuleCfg(string fileName)
+        {
+            string executableFileFolderPath = Application.StartupPath;
+            string exportFilePath;
+            string folderPath;
+            string tempUcMemoryFile;
+
+            fileName = fileName.Replace(" ", "") + ".csv";
+            folderPath = Path.Combine(executableFileFolderPath, "LogFolder");
+            exportFilePath = Path.Combine(folderPath, fileName);
+
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            if (File.Exists(exportFilePath))
+                File.Delete(exportFilePath);
+
+            tempUcMemoryFile = Path.Combine(folderPath, "temp_" + fileName);
+            //exportFilePath = exportFilePath.Replace("\\\\", "\\");
+            //tempUcMemoryFile = tempUcMemoryFile.Replace("\\\\", "\\");
+
+            if (ucMemoryDump.ExportAllPagesDataApi(tempUcMemoryFile) < 0)
+                return -1;
+
+            AppendFileContentToAnother(tempUcMemoryFile, exportFilePath);
+
+            if (File.Exists(tempUcMemoryFile))
+                File.Delete(tempUcMemoryFile);
+
+            return 0;
+        }
+
+        private int _ExportLogfile(string fileName, bool logFileMode, bool writeSnMode)
         {
             string folderPath;
             string exportFilePath;
@@ -1503,7 +1526,6 @@ namespace IntegratedGuiV2
             */
             ucNuvotonIcpTool.SetButtonEnable("bLink", true);
             bGlobalWrite2.Enabled = true;
-            bGenerateCfg.Enabled = true;
             //bFunctionTest2.Enabled = true;
             bDumpToString.Enabled = true;
             cbInfomation.Enabled = true;
@@ -1517,6 +1539,8 @@ namespace IntegratedGuiV2
             rbCustomerMode.Enabled = true;
             rbMpMode.Enabled = true;
             bBackToMainForm.Enabled = true;
+
+            _GenerateCfgButtonState();
 
             if (FirstRead)
             {
@@ -1673,8 +1697,8 @@ namespace IntegratedGuiV2
 
                 lastUsedDirectory = Path.GetDirectoryName(selectedFileName);
                 _InitialStateBar();
-                _GlobalWrite(false);
-                _ExportLogfileToCsv("RegisterFile", false, false); // Export CfgFile to config folder
+                _GlobalWriteFromUi(false);
+                _ExportLogfile("RegisterFile", false, false); // Export CfgFile to config folder
                 //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory);
 
                 if (!string.IsNullOrWhiteSpace(targetApromPath)) {
@@ -2323,66 +2347,44 @@ namespace IntegratedGuiV2
                 bGenerateCfg.Enabled = false;
         }
 
-        private void bGlobalWrite_Click(object sender, EventArgs e)
+        internal int _GlobalWriteFromRegisterMap(bool CustomerMode, string CfgFilePath)
         {
-            _DisableButtons();
-            _InitialStateBar();
-
-            _GlobalWrite(false);
-
-            _EnableButtons();
-        }
-
-        internal int _GlobalWrite2(bool CustomerMode, string CfgFilePath)
-        {
-
             string DirectoryPath = Application.StartupPath;
             string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder/TempRegister.csv");
 
             StateUpdated("Write State:\nPreparing resources...", 61);
-            Application.DoEvents();
 
             if (CustomerMode)
             {
                 if (WriteRegisterPageApi("Up 00h", 50, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
                 StateUpdated("Write State:\nUpPage 00h...Done", 63);
-                Application.DoEvents();
                 if (WriteRegisterPageApi("Up 03h", 50, TempRegisterFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
-                Application.DoEvents();
             }
             else
             {
                 if (WriteRegisterPageApi("Up 00h", 50, CfgFilePath) < 0) return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nUpPage 00h...Done", 63);
-                Application.DoEvents();
                 if (WriteRegisterPageApi("Up 03h", 50, CfgFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
-                Application.DoEvents();
             }
 
             if (WriteRegisterPageApi("80h", 200, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
             StateUpdated("Write State:\nPage 0x80h...Done", 67);
-            Application.DoEvents();
             if (WriteRegisterPageApi("81h", 200, TempRegisterFilePath) < 0) return -1;
             StateUpdated("Write State:\nPage 0x81h...Done", 70);
-            Application.DoEvents();
             if (WriteRegisterPageApi("Rx", 1000, TempRegisterFilePath) < 0) return -1;
             StateUpdated("Write State:\nRxIcConfig...Done", 80);
-            Application.DoEvents();
             if (WriteRegisterPageApi("Tx", 1000, TempRegisterFilePath) < 0) return -1;
             StateUpdated("Write State:\nTxIcConfig...Done", 90);
-            Application.DoEvents();
 
             StoreIntoFlashApi();
             StateUpdated("Write State:\nStore into flash...Done", 95);
-            Application.DoEvents();
 
             return 0;
         }
 
-
-        internal int _GlobalWrite(bool ExternalMode)
+        internal int _GlobalWriteFromUi(bool ExternalMode)
         {
             bool writeFail = false;
             int returnValue = 0;
@@ -2483,13 +2485,13 @@ namespace IntegratedGuiV2
                 if (ucGn1190Corrector.WriteAllApi() < 0)
                 {
                     tbCorrectorReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nCorrector...Failed", 80);
+                    StateUpdated("Write State:\nCorrector...Failed", 75);
                     errorCount++;
                 }
                 else
                 {
                     tbCorrectorReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nCorrector...Done", 80);
+                    StateUpdated("Write State:\nCorrector...Done", 75);
                     if (DebugMode)
                         MessageBox.Show("Write State: Corrector...Done");
                 }
@@ -2536,13 +2538,13 @@ namespace IntegratedGuiV2
                     if (writeFail)
                     {
                         tbTxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Write State:\nTxIcConfig...Failed", 89);
+                        StateUpdated("Write State:\nTxIcConfig...Failed", 80);
                         errorCount++;
                     }
                     else
                     {
                         tbTxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Write State:\nTxIcConfig...Done", 89);
+                        StateUpdated("Write State:\nTxIcConfig...Done", 80);
                         if (DebugMode)
                             MessageBox.Show("Write State: TxIcConfig...Done");
                     }
@@ -2584,13 +2586,13 @@ namespace IntegratedGuiV2
                     if (writeFail)
                     {
                         tbRxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Write State:\nRxIcConfig...Failed", 98);
+                        StateUpdated("Write State:\nRxIcConfig...Failed", 90);
                         errorCount++;
                     }
                     else
                     {
                         tbRxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Write State:\nRxIcConfig...Done", 98);
+                        StateUpdated("Write State:\nRxIcConfig...Done", 90);
                         if (DebugMode)
                             MessageBox.Show("Write State: RxIcConfig...Done");
                     }
@@ -2600,6 +2602,174 @@ namespace IntegratedGuiV2
             }
 
             return errorCount;
+        }
+
+        private void _ReformatedCsvFile(string FilePath, int fineNumber)
+        {
+            string startupPath = Application.StartupPath;
+            string tempFilePath;
+
+            if (fineNumber == 1)
+                tempFilePath = Path.Combine(startupPath, "LogFolder", "temp1_" + Path.GetFileName(FilePath));
+            else if (fineNumber == 2)
+                tempFilePath = Path.Combine(startupPath, "LogFolder", "temp2_" + Path.GetFileName(FilePath));
+            else
+                return;
+
+            using (StreamReader reader = new StreamReader(FilePath))
+            using (StreamWriter writer = new StreamWriter(tempFilePath)) {
+                string line;
+                bool isHeaderFound = false;
+                int rowCount = 0;
+
+                while ((line = reader.ReadLine()) != null) {
+                    if (!isHeaderFound && line.StartsWith("Page,Row")) {
+                        isHeaderFound = true;
+                        writer.WriteLine(line);
+                        break;
+                    }
+                }
+
+                while ((line = reader.ReadLine()) != null) {
+                    if (line.Contains("\"Up 00h\"") || line.Contains("\"Up 03h\"")) {
+                        writer.WriteLine(line);
+                        rowCount++;
+                    }
+
+                    if (rowCount >= 16) {
+                        break;
+                    }
+                }
+            }
+        }
+
+        internal int _ComparationRegister(string TargetCfgFilePath, bool onlyVerifyMode)
+        {
+            string fileName1 = "ModuleCfg"; //Module cfg file
+            string fileName2 = Path.GetFileName(TargetCfgFilePath); //Reference cfg file
+            string filePath1;
+            string filePath2 = TargetCfgFilePath; //Reference cfg file
+            string executableFileFolderPath = Path.Combine(Application.StartupPath, "LogFolder");
+
+            if (!onlyVerifyMode)
+                StateUpdated("Verify State:\nCfgFile check...", 93);
+            else
+                StateUpdated("Verify State:\nCfgFile check...", null);
+            //Export current module Cfg file
+            if (_ExportModuleCfg(fileName1) < 0)
+                return -1;
+            
+            filePath1 = Path.Combine(executableFileFolderPath, "ModuleCfg.csv");
+            _ReformatedCsvFile(filePath1, 1);
+            _ReformatedCsvFile(filePath2, 2);
+
+            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
+            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
+
+            if (DebugMode) {
+                MessageBox.Show("filePath1: \n" + filePath1 +
+                            "\n\nfilePath2: \n" + filePath2);
+            }
+
+            //Data compare between Module_cfg(filePath1) and File_Cfg(filePath2)
+            DataTable dt1 = _ReadCsvToDataTable(filePath1);
+            DataTable dt2 = _ReadCsvToDataTable(filePath2);
+
+            if (DebugMode) {
+                MessageBox.Show("dt1: \n" + DataTableToString(dt1) +
+                            "\n\ndt2: \n" + DataTableToString(dt2));
+            }
+
+            //Error alarm, if there are differences
+            if (!CompareDataTables(dt1, dt2)) {
+                MessageBox.Show("Error.\nThere are differences between the module CfgFile and the target CfgFile.");
+                StateUpdated("Verify State:\nVerify failed", null);
+                return -1;
+            }
+
+            //Delet the temp file, if there are no errors
+            if (File.Exists(filePath1))
+                File.Delete(filePath1);
+
+            if (File.Exists(filePath2))
+                File.Delete(filePath2);
+
+            if (!onlyVerifyMode)
+                StateUpdated("Verify State:\nCfgFile are matching", 97);
+            else
+                StateUpdated("Verify State:\nCfgFile are matching", null);
+
+            return 0;
+        }
+
+        private string DataTableToString(DataTable dt)
+        {
+            if (dt == null || dt.Rows.Count == 0)
+                return "Empty DataTable";
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+
+            // Add column names
+            foreach (DataColumn column in dt.Columns) {
+                sb.Append(column.ColumnName).Append("\t");
+            }
+            sb.AppendLine();
+
+            // Add rows
+            foreach (DataRow row in dt.Rows) {
+                foreach (var item in row.ItemArray) {
+                    sb.Append(item.ToString()).Append("\t");
+                }
+                sb.AppendLine();
+            }
+
+            return sb.ToString();
+        }
+
+        private DataTable _ReadCsvToDataTable(string filePath)
+        {
+            DataTable dt = new DataTable();
+            using (StreamReader sr = new StreamReader(filePath)) {
+                string[] headers = sr.ReadLine().Split(',');
+                foreach (string header in headers) {
+                    dt.Columns.Add(header);
+                }
+                while (!sr.EndOfStream) {
+                    string[] rows = sr.ReadLine().Split(',');
+                    DataRow dr = dt.NewRow();
+                    for (int i = 0; i < headers.Length; i++) {
+                        dr[i] = rows[i];
+                    }
+                    dt.Rows.Add(dr);
+                }
+            }
+            return dt;
+        }
+
+        private bool CompareDataTables(DataTable dt1, DataTable dt2)
+        {
+            if (dt1.Rows.Count != dt2.Rows.Count || dt1.Columns.Count != dt2.Columns.Count) {
+                return false;
+            }
+
+            for (int i = 0; i < dt1.Rows.Count; i++) {
+                for (int j = 0; j < dt1.Columns.Count; j++) {
+                    if (!dt1.Rows[i][j].Equals(dt2.Rows[i][j])) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        private void bGlobalWrite_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            _InitialStateBar();
+
+            _GlobalWriteFromUi(false);
+
+            _EnableButtons();
         }
 
         private void bStoreIntoFlash_Click(object sender, EventArgs e)
@@ -2615,10 +2785,10 @@ namespace IntegratedGuiV2
             lastUsedDirectory = Application.StartupPath;
             _DisableButtons();
             // Save the file 
-            _GlobalWrite(false);
+            _GlobalWriteFromUi(false);
             _InitialStateBar();
 
-            _ExportLogfileToCsv(LogFileName, false, false);
+            _ExportLogfile(LogFileName, false, false);
 
             _EnableButtons();
         }

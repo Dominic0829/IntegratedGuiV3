@@ -961,8 +961,6 @@ namespace IntegratedGuiV2
             // 
             this.cbCorrector.AutoSize = true;
             this.cbCorrector.BackColor = System.Drawing.Color.Transparent;
-            this.cbCorrector.Checked = true;
-            this.cbCorrector.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbCorrector.Location = new System.Drawing.Point(4, 98);
             this.cbCorrector.Margin = new System.Windows.Forms.Padding(2);
             this.cbCorrector.Name = "cbCorrector";
@@ -975,8 +973,6 @@ namespace IntegratedGuiV2
             // 
             this.cbMemDump.AutoSize = true;
             this.cbMemDump.BackColor = System.Drawing.Color.Transparent;
-            this.cbMemDump.Checked = true;
-            this.cbMemDump.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbMemDump.Location = new System.Drawing.Point(4, 72);
             this.cbMemDump.Margin = new System.Windows.Forms.Padding(2);
             this.cbMemDump.Name = "cbMemDump";
@@ -989,8 +985,6 @@ namespace IntegratedGuiV2
             // 
             this.cbDdm.AutoSize = true;
             this.cbDdm.BackColor = System.Drawing.Color.Transparent;
-            this.cbDdm.Checked = true;
-            this.cbDdm.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbDdm.Location = new System.Drawing.Point(4, 46);
             this.cbDdm.Margin = new System.Windows.Forms.Padding(2);
             this.cbDdm.Name = "cbDdm";
@@ -1224,9 +1218,9 @@ namespace IntegratedGuiV2
             this.bGenerateCfg.Location = new System.Drawing.Point(7, 90);
             this.bGenerateCfg.Margin = new System.Windows.Forms.Padding(2);
             this.bGenerateCfg.Name = "bGenerateCfg";
-            this.bGenerateCfg.Size = new System.Drawing.Size(84, 28);
+            this.bGenerateCfg.Size = new System.Drawing.Size(103, 28);
             this.bGenerateCfg.TabIndex = 1034;
-            this.bGenerateCfg.Text = "Generate";
+            this.bGenerateCfg.Text = "Generate Cfg";
             this.bGenerateCfg.UseVisualStyleBackColor = true;
             this.bGenerateCfg.Click += new System.EventHandler(this.bGenerateCfg_Click);
             // 

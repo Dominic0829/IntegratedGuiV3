@@ -53,11 +53,13 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
+            this.lVenderSnCh1 = new System.Windows.Forms.Label();
             this.lVenderSnCh2 = new System.Windows.Forms.Label();
             this.tbVenderSnCh2 = new System.Windows.Forms.TextBox();
             this.tbLogFIlePath = new System.Windows.Forms.TextBox();
             this.lRssi3 = new System.Windows.Forms.Label();
             this.lLogFilePath = new System.Windows.Forms.Label();
+            this.bWriteSnDateCone = new System.Windows.Forms.Button();
             this.lRssi2 = new System.Windows.Forms.Label();
             this.lRssi1 = new System.Windows.Forms.Label();
             this.tbRssi3 = new System.Windows.Forms.TextBox();
@@ -80,14 +82,13 @@
             this.cbSecurityLock = new System.Windows.Forms.CheckBox();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
-            this.bWriteSnDateCone = new System.Windows.Forms.Button();
             this.tbOrignalSNCh1 = new System.Windows.Forms.TextBox();
             this.tbReNewSnCh1 = new System.Windows.Forms.TextBox();
             this.lOriginalSN = new System.Windows.Forms.Label();
             this.lReNewSn = new System.Windows.Forms.Label();
             this.tbReNewSnCh2 = new System.Windows.Forms.TextBox();
             this.tbOrignalSNCh2 = new System.Windows.Forms.TextBox();
-            this.lVenderSnCh1 = new System.Windows.Forms.Label();
+            this.bCfgFileComparsion = new System.Windows.Forms.Button();
             this.gbOperatorMode.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -420,6 +421,18 @@
             this.gbOperatorMode.TabIndex = 70;
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "MP information";
+            this.gbOperatorMode.Visible = false;
+            // 
+            // lVenderSnCh1
+            // 
+            this.lVenderSnCh1.AutoSize = true;
+            this.lVenderSnCh1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lVenderSnCh1.ForeColor = System.Drawing.Color.White;
+            this.lVenderSnCh1.Location = new System.Drawing.Point(326, 23);
+            this.lVenderSnCh1.Name = "lVenderSnCh1";
+            this.lVenderSnCh1.Size = new System.Drawing.Size(27, 13);
+            this.lVenderSnCh1.TabIndex = 78;
+            this.lVenderSnCh1.Text = "Ch1";
             // 
             // lVenderSnCh2
             // 
@@ -481,6 +494,22 @@
             this.lLogFilePath.TabIndex = 71;
             this.lLogFilePath.Text = "Log file path:";
             this.lLogFilePath.Visible = false;
+            // 
+            // bWriteSnDateCone
+            // 
+            this.bWriteSnDateCone.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bWriteSnDateCone.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bWriteSnDateCone.FlatAppearance.BorderSize = 0;
+            this.bWriteSnDateCone.Font = new System.Drawing.Font("Nirmala UI", 12F, System.Drawing.FontStyle.Bold);
+            this.bWriteSnDateCone.ForeColor = System.Drawing.Color.White;
+            this.bWriteSnDateCone.Location = new System.Drawing.Point(6, 25);
+            this.bWriteSnDateCone.Name = "bWriteSnDateCone";
+            this.bWriteSnDateCone.Size = new System.Drawing.Size(95, 40);
+            this.bWriteSnDateCone.TabIndex = 82;
+            this.bWriteSnDateCone.Text = "Write SN";
+            this.bWriteSnDateCone.UseVisualStyleBackColor = false;
+            this.bWriteSnDateCone.Visible = false;
+            this.bWriteSnDateCone.Click += new System.EventHandler(this.bWriteSnDateCone_Click);
             // 
             // lRssi2
             // 
@@ -697,6 +726,7 @@
             this.cbSecurityLock.TabIndex = 80;
             this.cbSecurityLock.Text = "SecurityLock";
             this.cbSecurityLock.UseVisualStyleBackColor = true;
+            this.cbSecurityLock.Visible = false;
             // 
             // button1
             // 
@@ -729,22 +759,6 @@
             this.button2.UseVisualStyleBackColor = false;
             this.button2.Visible = false;
             this.button2.Click += new System.EventHandler(this.button2_Click);
-            // 
-            // bWriteSnDateCone
-            // 
-            this.bWriteSnDateCone.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
-            this.bWriteSnDateCone.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bWriteSnDateCone.FlatAppearance.BorderSize = 0;
-            this.bWriteSnDateCone.Font = new System.Drawing.Font("Nirmala UI", 12F, System.Drawing.FontStyle.Bold);
-            this.bWriteSnDateCone.ForeColor = System.Drawing.Color.White;
-            this.bWriteSnDateCone.Location = new System.Drawing.Point(6, 25);
-            this.bWriteSnDateCone.Name = "bWriteSnDateCone";
-            this.bWriteSnDateCone.Size = new System.Drawing.Size(95, 40);
-            this.bWriteSnDateCone.TabIndex = 82;
-            this.bWriteSnDateCone.Text = "Write SN";
-            this.bWriteSnDateCone.UseVisualStyleBackColor = false;
-            this.bWriteSnDateCone.Visible = false;
-            this.bWriteSnDateCone.Click += new System.EventHandler(this.bWriteSnDateCone_Click);
             // 
             // tbOrignalSNCh1
             // 
@@ -814,16 +828,21 @@
             this.tbOrignalSNCh2.TabIndex = 87;
             this.tbOrignalSNCh2.Visible = false;
             // 
-            // lVenderSnCh1
+            // bCfgFileComparsion
             // 
-            this.lVenderSnCh1.AutoSize = true;
-            this.lVenderSnCh1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lVenderSnCh1.ForeColor = System.Drawing.Color.White;
-            this.lVenderSnCh1.Location = new System.Drawing.Point(326, 23);
-            this.lVenderSnCh1.Name = "lVenderSnCh1";
-            this.lVenderSnCh1.Size = new System.Drawing.Size(27, 13);
-            this.lVenderSnCh1.TabIndex = 78;
-            this.lVenderSnCh1.Text = "Ch1";
+            this.bCfgFileComparsion.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bCfgFileComparsion.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bCfgFileComparsion.FlatAppearance.BorderSize = 0;
+            this.bCfgFileComparsion.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bCfgFileComparsion.ForeColor = System.Drawing.Color.White;
+            this.bCfgFileComparsion.Location = new System.Drawing.Point(188, 74);
+            this.bCfgFileComparsion.Name = "bCfgFileComparsion";
+            this.bCfgFileComparsion.Size = new System.Drawing.Size(121, 29);
+            this.bCfgFileComparsion.TabIndex = 89;
+            this.bCfgFileComparsion.Text = "CfgFile comparison";
+            this.bCfgFileComparsion.UseVisualStyleBackColor = false;
+            this.bCfgFileComparsion.Visible = false;
+            this.bCfgFileComparsion.Click += new System.EventHandler(this.bCfgFileComparsion_Click);
             // 
             // CustomerAndMpForm
             // 
@@ -831,6 +850,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
             this.ClientSize = new System.Drawing.Size(536, 391);
+            this.Controls.Add(this.bCfgFileComparsion);
             this.Controls.Add(this.tbReNewSnCh2);
             this.Controls.Add(this.tbOrignalSNCh2);
             this.Controls.Add(this.lReNewSn);
@@ -945,5 +965,6 @@
         private System.Windows.Forms.TextBox tbVenderSnCh2;
         private System.Windows.Forms.Label lVenderSnCh2;
         private System.Windows.Forms.Label lVenderSnCh1;
+        private System.Windows.Forms.Button bCfgFileComparsion;
     }
 }
