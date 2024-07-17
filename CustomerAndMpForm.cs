@@ -18,6 +18,7 @@ using System.Windows.Forms;
 using System.Xml;
 using ComponentFactory.Krypton.Toolkit;
 using I2cMasterInterface;
+using Ionic.Zip;
 using NuvotonIcpTool;
 using QsfpDigitalDiagnosticMonitoring;
 using Rt145Rt146Config;
@@ -43,6 +44,7 @@ namespace IntegratedGuiV2
         private bool I2cConnected = false;
         private string CurrentDate = DateTime.Now.ToString("yyMMdd");
         private int Revision = 1;
+        private string TempFolderPath = string.Empty;
         private CancellationTokenSource cancellationTokenSource;
 
         private Thread RxPowerUpdateThread;
@@ -365,7 +367,7 @@ namespace IntegratedGuiV2
                 }
             }
         }
-
+        
         private int _RemoteInitial(bool cutomerMode) // True: Customer Mode, Flase: MP mode
         {
             string apromPath, dataromPath;
@@ -405,10 +407,14 @@ namespace IntegratedGuiV2
 
             if (!(string.IsNullOrEmpty(lApName.Text) || lApName.Text == "_")) {
                 mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
-                directoryPath = Path.GetDirectoryName(tbFilePath.Text);
+                directoryPath = TempFolderPath;
                 apromPath = Path.Combine(directoryPath, lApName.Text);
                 mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", apromPath);
-                //MessageBox.Show("APROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM"));
+                if (DebugMode) {
+                    MessageBox.Show("TempFolderPath: \n" + TempFolderPath +
+                                "\n\nAPROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM"));
+                }
+                
             }
             else {
                 MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -417,7 +423,7 @@ namespace IntegratedGuiV2
 
             if (!(string.IsNullOrEmpty(lDataName.Text) || lDataName.Text == "_")) {
                 mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", true);
-                directoryPath = Path.GetDirectoryName(tbFilePath.Text);
+                directoryPath = TempFolderPath;
                 dataromPath = Path.Combine(directoryPath, lDataName.Text);
                 mainForm.SetTextBoxTextToNuvotonIcpApi("tbDataFlash", dataromPath);
                 //MessageBox.Show("DATAROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbDataFlash"));
@@ -457,7 +463,14 @@ namespace IntegratedGuiV2
                 tbReNewSnCh2.Visible = false;
                 lVenderSnCh2.Visible=false;
                 tbVenderSnCh2.Visible = false;
-                bCfgFileComparsion.Visible = false;
+                lRssiCh2_0.Visible = false;
+                lRssiCh2_1.Visible = false;
+                lRssiCh2_2.Visible = false;
+                lRssiCh2_3.Visible = false;
+                tbRssiCh2_0.Visible = false;
+                tbRssiCh2_1.Visible = false;
+                tbRssiCh2_2.Visible = false;
+                tbRssiCh2_3.Visible = false;
             }
             else if (rbBoth.Checked == true) {
                 cProgressBar1.Visible = true;
@@ -471,7 +484,14 @@ namespace IntegratedGuiV2
                 tbVersionCodeReNewCh2.Visible = true;
                 lVenderSnCh2.Visible = true;
                 tbVenderSnCh2.Visible = true;
-                bCfgFileComparsion.Visible = true;
+                lRssiCh2_0.Visible = true;
+                lRssiCh2_1.Visible = true;
+                lRssiCh2_2.Visible = true;
+                lRssiCh2_3.Visible = true;
+                tbRssiCh2_0.Visible = true;
+                tbRssiCh2_1.Visible = true;
+                tbRssiCh2_2.Visible = true;
+                tbRssiCh2_3.Visible = true;
 
                 if (lMode.Text == "MP") {
                     tbOrignalSNCh2.Visible = true;
@@ -491,6 +511,67 @@ namespace IntegratedGuiV2
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
                 openFileDialog.Title = "Files position";
+                openFileDialog.Filter = "Zip Files (*.zip)|*.zip|Xml Files (*.xml)|*.xml";
+                openFileDialog.InitialDirectory = initialDirectory;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                    string selectedFilePath = openFileDialog.FileName;
+                    string extension = Path.GetExtension(selectedFilePath).ToLower();
+
+                    if (extension == ".zip") {
+                        try {
+                            TempFolderPath = ExtractZipToTemporaryFolder(selectedFilePath);
+                            SetHiddenAttribute(TempFolderPath);
+                            string xmlFilePath = Path.Combine(TempFolderPath, "Cfg.xml");
+
+                            if (File.Exists(xmlFilePath)) {
+                                _ParserXmlForProjectInformation(xmlFilePath);
+                                tbFilePath.Text = xmlFilePath;
+
+                            }
+                            else {
+                                MessageBox.Show("Cfg.xml not found in the zip file.");
+                            }
+                        }
+                        catch (Exception ex) {
+                            MessageBox.Show("Failed to extract zip file: " + ex.Message);
+                        }
+                    }
+                    else if (extension == ".xml") {
+                        tbFilePath.Text = selectedFilePath;
+                        _ParserXmlForProjectInformation(selectedFilePath);
+                    }
+
+                    tbFilePath.SelectionStart = tbFilePath.Text.Length;
+                }
+            }
+        }
+
+        private string ExtractZipToTemporaryFolder(string zipFilePath)
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(zipFilePath));
+
+            using (ZipFile zip = ZipFile.Read(zipFilePath)) {
+                zip.Password = "2368";
+                zip.ExtractAll(tempPath, ExtractExistingFileAction.OverwriteSilently);
+            }
+
+            return tempPath;
+        }
+
+        private void SetHiddenAttribute(string folderPath)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(folderPath);
+            dirInfo.Attributes |= FileAttributes.Hidden;
+        }
+
+        /*
+        private void _LoadXmlFile_original()
+        {
+            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+                openFileDialog.Title = "Files position";
                 openFileDialog.Filter = "Xml Files (*.xml)|*.xml";
                 openFileDialog.InitialDirectory = initialDirectory;
 
@@ -501,7 +582,58 @@ namespace IntegratedGuiV2
                 }
             }
         }
+        */
+        /*
+        private void _LoadXmlFile()
+        {
+            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string selectedFilePath;
+            string extension;
 
+            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+                openFileDialog.Title = "Files position";
+                openFileDialog.Filter = "Zip Files (*.zip)|*.zip";
+                openFileDialog.InitialDirectory = initialDirectory;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                    selectedFilePath = openFileDialog.FileName;
+                    extension = Path.GetExtension(selectedFilePath).ToLower();
+
+                    if (extension == ".zip") {
+                        try {
+                            tbFilePath.Text = selectedFilePath;
+                            XmlDocument xmlDoc = LoadXmlFromZip(selectedFilePath, "Cfg.xml");
+                            _ParserXmlForProjectInformation_method2(xmlDoc);
+                        }
+                        catch (Exception ex) {
+                            MessageBox.Show("Failed to load XML from zip file: " + ex.Message);
+                        }
+                    }
+                    
+                    tbFilePath.SelectionStart = tbFilePath.Text.Length;
+                }
+            }
+        }
+
+        private XmlDocument LoadXmlFromZip(string zipFilePath, string xmlFileName)
+        {
+            using (ZipFile zip = ZipFile.Read(zipFilePath)) {
+                ZipEntry xmlEntry = zip[xmlFileName];
+                if (xmlEntry != null) {
+                    using (MemoryStream ms = new MemoryStream()) {
+                        xmlEntry.ExtractWithPassword(ms, "2368");
+                        ms.Seek(0, SeekOrigin.Begin);
+                        XmlDocument xmlDoc = new XmlDocument();
+                        xmlDoc.Load(ms);
+                        return xmlDoc;
+                    }
+                }
+                else {
+                    throw new FileNotFoundException($"File {xmlFileName} not found in zip archive.");
+                }
+            }
+        }
+        */
         private void _SetCsvFilePath()
         {
             string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -518,9 +650,8 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _ParserXmlForProjectInformation(string filePath)
+        private void _ParserXmlForProjectInformation_original(string filePath)
         {
-            string currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
             lApName.Text = "_";
             lDataName.Text = "_";
 
@@ -538,23 +669,76 @@ namespace IntegratedGuiV2
             lMode.Text = role;
             lProduct.Text = productName;
 
-            if (!(APROMName == "" || APROMName == null)) {
+            if (!string.IsNullOrEmpty(APROMName))
                 lApName.Text = APROMName;
-                //lAPPath.Text = currentDirectory + APROMName;
-            }
             else
                 MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
 
-            if (!(DARAROMName == "" || DARAROMName == null)) {
+            if (!string.IsNullOrEmpty(DARAROMName))
                 lDataName.Text = DARAROMName;
-                //lDataPath.Text = currentDirectory + DARAROMName;
+        }
+
+        private void _ParserXmlForProjectInformation_method2(XmlDocument xmlDoc)
+        {
+            lApName.Text = "_";
+            lDataName.Text = "_";
+
+            XmlNode permissionsNode = xmlDoc.SelectSingleNode("//Premissions");
+            string role = permissionsNode.Attributes["role"].Value;
+            XmlNode productNode = xmlDoc.SelectSingleNode("//Product");
+            string productName = productNode.Attributes["name"].Value;
+            XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
+            string APROMName = APROMNode.Attributes["name"].Value;
+            XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
+            string DARAROMName = DATAROMNode.Attributes["name"].Value;
+
+            lMode.Text = role;
+            lProduct.Text = productName;
+
+            if (!string.IsNullOrWhiteSpace(APROMName))
+                lApName.Text = APROMName;
+            else
+                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+            if (!string.IsNullOrWhiteSpace(DARAROMName))
+                lDataName.Text = DARAROMName;
+        }
+
+        private void _ParserXmlForProjectInformation(string filePath)
+        {
+            lApName.Text = "_";
+            lDataName.Text = "_";
+
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.Load(filePath);
+            XmlNode permissionsNode = xmlDoc.SelectSingleNode("//Premissions");
+            string role = permissionsNode.Attributes["role"].Value;
+            XmlNode productNode = xmlDoc.SelectSingleNode("//Product");
+            string productName = productNode.Attributes["name"].Value;
+            XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
+            string APROMName = APROMNode.Attributes["name"].Value;
+            XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
+            string DARAROMName = DATAROMNode.Attributes["name"].Value;
+
+            lMode.Text = role;
+            lProduct.Text = productName;
+
+            if (!string.IsNullOrWhiteSpace(APROMName)) {
+                lApName.Text = APROMName;
+            }
+            else {
+                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            if (!string.IsNullOrWhiteSpace(DARAROMName)) {
+                lDataName.Text = DARAROMName;
             }
         }
 
         private bool _PathCheck(Label lable)
         {
-            string directoryPath = Path.GetDirectoryName(tbFilePath.Text);
+            string directoryPath = TempFolderPath;
             string fileName = lable.Text;
             string filePath = Path.Combine(directoryPath, fileName);
 
@@ -580,23 +764,6 @@ namespace IntegratedGuiV2
             _SwitchOrNot();
         }
 
-        private void timer1_Tick(object sender, EventArgs e)
-        {
-            /*
-                cProgressBar1.Value += 1;
-                cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
-
-                cProgressBar2.Value += 2;
-                cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
-
-                if (cProgressBar1.Value == 100 || cProgressBar2.Value == 100)
-                {
-                    timer1.Enabled = false;
-                }
-            */
-
-        }
-
         private void tbFilePath_MouseClick(object sender, MouseEventArgs e)
         {
             _ConfigFilePathChanges();
@@ -614,6 +781,7 @@ namespace IntegratedGuiV2
                 tbFilePath.ForeColor = Color.MidnightBlue;
             }
 
+            _CleanTempFolder(); // Before change zip file, Clean the tempFolder
             _LoadXmlFile();
 
             if (lMode.Text == "Customer") {
@@ -695,28 +863,28 @@ namespace IntegratedGuiV2
                 {
                     switch (currentState) {
                         case 1:
-                            tbRssi0.Text = "0";
-                            tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
-                            tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
-                            tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+                            tbRssiCh1_0.Text = "0";
+                            tbRssiCh1_1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
+                            tbRssiCh1_2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
+                            tbRssiCh1_3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
                             break;
                         case 2:
-                            tbRssi0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
-                            tbRssi1.Text = "0";
-                            tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
-                            tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+                            tbRssiCh1_0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
+                            tbRssiCh1_1.Text = "0";
+                            tbRssiCh1_2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
+                            tbRssiCh1_3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
                             break;
                         case 3:
-                            tbRssi0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
-                            tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
-                            tbRssi2.Text = "0";
-                            tbRssi3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
+                            tbRssiCh1_0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
+                            tbRssiCh1_1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
+                            tbRssiCh1_2.Text = "0";
+                            tbRssiCh1_3.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower4");
                             break;
                         case 4:
-                            tbRssi0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
-                            tbRssi1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
-                            tbRssi2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
-                            tbRssi3.Text = "0";
+                            tbRssiCh1_0.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower1");
+                            tbRssiCh1_1.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower2");
+                            tbRssiCh1_2.Text = mainForm.GetTextBoxTextFromDdmApi("tbRxPower3");
+                            tbRssiCh1_3.Text = "0";
                             break;
                         default:
                             break;
@@ -735,46 +903,44 @@ namespace IntegratedGuiV2
                 cancellationTokenSource.Cancel();
             }
         }
-        /*
-        private void _StopRxPowerUpdateThread()
+
+        private void _RxPowerUpdateWithoutThread()
         {
-            if (ContinueRxPowerUpdate && RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive) {
-                ContinueRxPowerUpdate = false; // Stop the while loop
-                RxPowerUpdateThread.Join(); // Waiting for thread to finish execution.
-                //RxPowerUpdateThread = null;
+            if (mainForm.I2cMasterConnectApi(true, true) < 0)
+                return;
+
+            if (mainForm.RxPowerReadApiFromDdmApi() < 0) {
+                MessageBox.Show("Please check the module plugin status");
+                return;
             }
-            else
-                MessageBox.Show("Error");
 
-        }
-        */
-
-
-        /*
-         
-        public void StopRxPowerUpdateThread()
-        {
-            if (RxPowerUpdateThread != null && RxPowerUpdateThread.IsAlive)
-            {
-                ContinueRxPowerUpdate = false; // 標記為 false 通知線程退出循環
-                RxPowerUpdateThread.Join(); // 等待線程結束
-                RxPowerUpdateThread = null; // 設為 null，以便可以重新啟動
+            if (ProcessingChannel == 1) {
+                tbRssiCh1_0.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower1"));
+                tbRssiCh1_1.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower2"));
+                tbRssiCh1_2.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower3"));
+                tbRssiCh1_3.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower4"));
+            }
+            else if (ProcessingChannel == 2) {
+                tbRssiCh2_0.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower1"));
+                tbRssiCh2_1.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower2"));
+                tbRssiCh2_2.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower3"));
+                tbRssiCh2_3.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower4"));
             }
         }
 
-        private void _RxPowerUpdateThread()
+        private string _decimalRemove(string text)
         {
-            while (true)
-            {
-                Invoke(new Action(() =>
-                {
-                    _RxPowerUpdate();
-                }));
+            if (text == "4.4" || text == "4")
+                return "0";
+            
 
-                Thread.Sleep(1000); // 使線程休眠1秒
+            int decimalIndex = text.IndexOf('.');
+            if (decimalIndex != -1) {
+                text = text.Substring(0, decimalIndex);
             }
+
+            return text;
         }
-        */
 
         private void tbFilePath_Leave(object sender, EventArgs e)
         {
@@ -790,6 +956,20 @@ namespace IntegratedGuiV2
                 if (!(mainForm.I2cMasterDisconnectApi() < 0))
                     I2cConnected = false;
                 Application.Exit();
+            }
+
+            _CleanTempFolder();
+        }
+
+        private void _CleanTempFolder()
+        {
+            if (Directory.Exists(TempFolderPath)) {
+                try {
+                    Directory.Delete(TempFolderPath, true);
+                }
+                catch (Exception ex) {
+                    MessageBox.Show("Failed to delete temporary folder: " + ex.Message);
+                }
             }
         }
 
@@ -831,10 +1011,9 @@ namespace IntegratedGuiV2
 
         private int _RemoteControl2(bool customerMode)
         {
-            string DirectoryPath = Path.GetDirectoryName(tbFilePath.Text);
+            string DirectoryPath = TempFolderPath;
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             string LogFileName = "TempRegister";
-            Label[] channelMessages = new Label[] { lCh1Message, lCh2Message};
 
             if (DebugMode) {
                 MessageBox.Show("directoryPath: \n" + DirectoryPath +
@@ -846,6 +1025,7 @@ namespace IntegratedGuiV2
                 return -1;
             }
             else {
+                _RxPowerUpdateWithoutThread();
                 mainForm.ExportLogfileApi(LogFileName, true, false); //目標模組Cfg Backup
 
                 if (ProcessingChannel == 1) {
@@ -876,9 +1056,11 @@ namespace IntegratedGuiV2
                 Thread.Sleep(10);
                 mainForm._GlobalWriteFromRegisterMap(customerMode, RegisterFilePath);
                 Thread.Sleep(10);
-                mainForm.ComparationRegisterApi(RegisterFilePath, false);
 
-                Thread.Sleep(500);
+                if (!customerMode)
+                    mainForm.ComparationRegisterApi(RegisterFilePath, false);
+                
+                Thread.Sleep(10);
 
                 if (ProcessingChannel == 1) {
                     lCh1Message.Text = "Update completed.";
@@ -1254,8 +1436,6 @@ namespace IntegratedGuiV2
                     MessageBox.Show("There are some problems", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                     return;
                 }
-
-
             }
             finally {
                 /*
@@ -1353,6 +1533,7 @@ namespace IntegratedGuiV2
             if (_VenderSnInputFormatCheck() < 0) return;
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                _RxPowerUpdateWithoutThread();
                 _WriteSnDatecode(ProcessingChannel); // Writing SN and DateCode, then export csv file.
                 SerialNumber++;
 
@@ -1443,7 +1624,7 @@ namespace IntegratedGuiV2
 
         private void bCfgFileComparsion_Click(object sender, EventArgs e)
         {
-            string DirectoryPath = Path.GetDirectoryName(tbFilePath.Text);
+            string DirectoryPath = TempFolderPath;
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;
 

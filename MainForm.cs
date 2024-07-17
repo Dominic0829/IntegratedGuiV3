@@ -23,6 +23,7 @@ using System.IO;
 using System.Threading.Tasks;
 using NuvotonIcpTool;
 using System.Reflection;
+using Ionic.Zip;
 using System.Runtime.Remoting.Messaging;
 using Gn1190Corrector;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
@@ -1640,7 +1641,7 @@ namespace IntegratedGuiV2
             xmlDoc.Save(xmlFilePath);
         }
 
-        private void _GenerateXmlFileForProject()
+        private void _GenerateXmlFileForProject_original()
         {
             string destinationFilePath;
 
@@ -1714,8 +1715,100 @@ namespace IntegratedGuiV2
                     //                "\nlastUsedDirectory: \n" + destinationFilePath);
                     File.Copy(targetDataromPath, destinationFilePath, true);
                 }
-                    
             }
+
+            CompressAndDeleteFolder(lastUsedDirectory);
+        }
+
+        private void _GenerateXmlFileForProject()
+        {
+            XmlDocument xmlDoc = new XmlDocument();
+            XmlElement root = xmlDoc.CreateElement("Project");
+            xmlDoc.AppendChild(root);
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Zip Files|*.zip";
+            saveFileDialog.Title = "Save Zip File";
+
+            string targetApromPath = APROMPath;
+            string targetDataromPath = DATAROMPath;
+
+            XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
+
+            if (rbCustomerMode.Checked) {
+                permissionsNode.SetAttribute("role", "Customer");
+            }
+            else if (rbMpMode.Checked) {
+                permissionsNode.SetAttribute("role", "MP");
+            }
+
+            root.AppendChild(permissionsNode);
+
+            // Check product selected
+            if (cbProductSelect.SelectedItem != null) {
+                XmlElement productNode = xmlDoc.CreateElement("Product");
+                productNode.SetAttribute("name", cbProductSelect.SelectedItem.ToString());
+                permissionsNode.AppendChild(productNode);
+            }
+            else {
+                MessageBox.Show("Please select a product.");
+                return;
+            }
+
+            // Check APROM, DATAROM filepath
+            if (!string.IsNullOrWhiteSpace(APROMPath) || !string.IsNullOrWhiteSpace(DATAROMPath)) {
+                XmlElement APROMNode = xmlDoc.CreateElement("APROM");
+                APROMNode.SetAttribute("name", Path.GetFileName(APROMPath));
+                permissionsNode.AppendChild(APROMNode);
+
+                XmlElement DATAROMNode = xmlDoc.CreateElement("DATAROM");
+                DATAROMNode.SetAttribute("name", Path.GetFileName(DATAROMPath));
+                permissionsNode.AppendChild(DATAROMNode);
+            }
+            else {
+                MessageBox.Show("APROM or DATAROM path is not set.");
+                return;
+            }
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK) {
+                string selectedFileName = saveFileDialog.FileName;
+                string folderName = Path.GetFileNameWithoutExtension(selectedFileName);
+                string folderPath = Path.Combine(Path.GetDirectoryName(selectedFileName), folderName);
+
+                Directory.CreateDirectory(folderPath);
+
+                // Save the XML file as Cfg.xml
+                xmlDoc.Save(Path.Combine(folderPath, "Cfg.xml"));
+
+                lastUsedDirectory = folderPath;
+                _InitialStateBar();
+                _ExportLogfile("RegisterFile", false, false); // Export CfgFile to config folder
+
+                if (!string.IsNullOrWhiteSpace(targetApromPath)) {
+                    string destinationFilePath = Path.Combine(folderPath, Path.GetFileName(APROMPath));
+                    File.Copy(targetApromPath, destinationFilePath, true);
+                }
+
+                if (!string.IsNullOrWhiteSpace(targetDataromPath)) {
+                    string destinationFilePath = Path.Combine(folderPath, Path.GetFileName(DATAROMPath));
+                    File.Copy(targetDataromPath, destinationFilePath, true);
+                }
+
+                CompressAndDeleteFolder(folderPath);
+            }
+        }
+
+        private void CompressAndDeleteFolder(string folderPath)
+        {
+            string zipFilePath = folderPath + ".zip";
+            string password = "2368";
+
+            using (ZipFile zip = new ZipFile()) {
+                zip.Password = password;
+                zip.AddDirectory(folderPath);
+                zip.Save(zipFilePath);
+            }
+
+            Directory.Delete(folderPath, true);
         }
 
         private List<UserControl> GetAllUserControls(Control control) // 遞迴取得 MainForm 中的所有 User Control
