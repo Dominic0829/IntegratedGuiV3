@@ -53,10 +53,26 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
-            this.lVenderSnCh1 = new System.Windows.Forms.Label();
-            this.lVenderSnCh2 = new System.Windows.Forms.Label();
-            this.tbVenderSnCh2 = new System.Windows.Forms.TextBox();
-            this.tbLogFIlePath = new System.Windows.Forms.TextBox();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.lMm = new System.Windows.Forms.Label();
+            this.dudSsss = new System.Windows.Forms.DomainUpDown();
+            this.dudRr = new System.Windows.Forms.DomainUpDown();
+            this.dudDd = new System.Windows.Forms.DomainUpDown();
+            this.dudMm = new System.Windows.Forms.DomainUpDown();
+            this.dudYy = new System.Windows.Forms.DomainUpDown();
+            this.lYy = new System.Windows.Forms.Label();
+            this.lRssiCh2_3 = new System.Windows.Forms.Label();
+            this.lRssiCh2_2 = new System.Windows.Forms.Label();
+            this.lRssiCh2_1 = new System.Windows.Forms.Label();
+            this.lRssiCh2_0 = new System.Windows.Forms.Label();
+            this.tbRssiCh2_3 = new System.Windows.Forms.TextBox();
+            this.tbRssiCh2_2 = new System.Windows.Forms.TextBox();
+            this.tbRssiCh2_1 = new System.Windows.Forms.TextBox();
+            this.tbRssiCh2_0 = new System.Windows.Forms.TextBox();
+            this.tbLogFilePath = new System.Windows.Forms.TextBox();
             this.lRssiCh1_3 = new System.Windows.Forms.Label();
             this.lLogFilePath = new System.Windows.Forms.Label();
             this.bWriteSnDateCone = new System.Windows.Forms.Button();
@@ -89,15 +105,8 @@
             this.tbReNewSnCh2 = new System.Windows.Forms.TextBox();
             this.tbOrignalSNCh2 = new System.Windows.Forms.TextBox();
             this.bCfgFileComparsion = new System.Windows.Forms.Button();
-            this.tbRssiCh2_3 = new System.Windows.Forms.TextBox();
-            this.tbRssiCh2_2 = new System.Windows.Forms.TextBox();
-            this.tbRssiCh2_1 = new System.Windows.Forms.TextBox();
-            this.tbRssiCh2_0 = new System.Windows.Forms.TextBox();
-            this.lRssiCh2_3 = new System.Windows.Forms.Label();
-            this.lRssiCh2_2 = new System.Windows.Forms.Label();
-            this.lRssiCh2_1 = new System.Windows.Forms.Label();
-            this.lRssiCh2_0 = new System.Windows.Forms.Label();
             this.gbOperatorMode.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonPalette1
@@ -404,6 +413,7 @@
             // 
             // gbOperatorMode
             // 
+            this.gbOperatorMode.Controls.Add(this.groupBox1);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_3);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_2);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_1);
@@ -412,10 +422,7 @@
             this.gbOperatorMode.Controls.Add(this.tbRssiCh2_2);
             this.gbOperatorMode.Controls.Add(this.tbRssiCh2_1);
             this.gbOperatorMode.Controls.Add(this.tbRssiCh2_0);
-            this.gbOperatorMode.Controls.Add(this.lVenderSnCh1);
-            this.gbOperatorMode.Controls.Add(this.lVenderSnCh2);
-            this.gbOperatorMode.Controls.Add(this.tbVenderSnCh2);
-            this.gbOperatorMode.Controls.Add(this.tbLogFIlePath);
+            this.gbOperatorMode.Controls.Add(this.tbLogFilePath);
             this.gbOperatorMode.Controls.Add(this.lRssiCh1_3);
             this.gbOperatorMode.Controls.Add(this.lLogFilePath);
             this.gbOperatorMode.Controls.Add(this.bWriteSnDateCone);
@@ -433,66 +440,226 @@
             this.gbOperatorMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
             this.gbOperatorMode.Location = new System.Drawing.Point(23, 240);
             this.gbOperatorMode.Name = "gbOperatorMode";
-            this.gbOperatorMode.Size = new System.Drawing.Size(506, 151);
+            this.gbOperatorMode.Size = new System.Drawing.Size(506, 167);
             this.gbOperatorMode.TabIndex = 70;
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "MP information";
             this.gbOperatorMode.Visible = false;
             // 
-            // lVenderSnCh1
+            // groupBox1
             // 
-            this.lVenderSnCh1.AutoSize = true;
-            this.lVenderSnCh1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lVenderSnCh1.ForeColor = System.Drawing.Color.White;
-            this.lVenderSnCh1.Location = new System.Drawing.Point(326, 23);
-            this.lVenderSnCh1.Name = "lVenderSnCh1";
-            this.lVenderSnCh1.Size = new System.Drawing.Size(27, 13);
-            this.lVenderSnCh1.TabIndex = 78;
-            this.lVenderSnCh1.Text = "Ch1";
+            this.groupBox1.Controls.Add(this.label5);
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.lMm);
+            this.groupBox1.Controls.Add(this.dudSsss);
+            this.groupBox1.Controls.Add(this.dudRr);
+            this.groupBox1.Controls.Add(this.dudDd);
+            this.groupBox1.Controls.Add(this.dudMm);
+            this.groupBox1.Controls.Add(this.dudYy);
+            this.groupBox1.Controls.Add(this.lYy);
+            this.groupBox1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.groupBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.groupBox1.Location = new System.Drawing.Point(245, 61);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(256, 56);
+            this.groupBox1.TabIndex = 93;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Code Editor";
             // 
-            // lVenderSnCh2
+            // label5
             // 
-            this.lVenderSnCh2.AutoSize = true;
-            this.lVenderSnCh2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lVenderSnCh2.ForeColor = System.Drawing.Color.White;
-            this.lVenderSnCh2.Location = new System.Drawing.Point(461, 23);
-            this.lVenderSnCh2.Name = "lVenderSnCh2";
-            this.lVenderSnCh2.Size = new System.Drawing.Size(27, 13);
-            this.lVenderSnCh2.TabIndex = 77;
-            this.lVenderSnCh2.Text = "Ch2";
-            this.lVenderSnCh2.Visible = false;
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.label5.Location = new System.Drawing.Point(198, 15);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(31, 13);
+            this.label5.TabIndex = 103;
+            this.label5.Text = "SSSS";
             // 
-            // tbVenderSnCh2
+            // label4
             // 
-            this.tbVenderSnCh2.Enabled = false;
-            this.tbVenderSnCh2.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbVenderSnCh2.Location = new System.Drawing.Point(359, 39);
-            this.tbVenderSnCh2.Name = "tbVenderSnCh2";
-            this.tbVenderSnCh2.Size = new System.Drawing.Size(130, 26);
-            this.tbVenderSnCh2.TabIndex = 76;
-            this.tbVenderSnCh2.Text = "YYMMDDRRSSSS";
-            this.tbVenderSnCh2.Visible = false;
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.label4.Location = new System.Drawing.Point(149, 15);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(21, 13);
+            this.label4.TabIndex = 102;
+            this.label4.Text = "RR";
             // 
-            // tbLogFIlePath
+            // label3
             // 
-            this.tbLogFIlePath.BackColor = System.Drawing.Color.White;
-            this.tbLogFIlePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.tbLogFIlePath.Font = new System.Drawing.Font("Nirmala UI", 10F);
-            this.tbLogFIlePath.ForeColor = System.Drawing.Color.Silver;
-            this.tbLogFIlePath.Location = new System.Drawing.Point(10, 117);
-            this.tbLogFIlePath.Name = "tbLogFIlePath";
-            this.tbLogFIlePath.Size = new System.Drawing.Size(101, 25);
-            this.tbLogFIlePath.TabIndex = 72;
-            this.tbLogFIlePath.Text = "Please click here to set the export file path.";
-            this.tbLogFIlePath.Visible = false;
-            this.tbLogFIlePath.Click += new System.EventHandler(this.tbLogFilePath);
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.label3.Location = new System.Drawing.Point(104, 15);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(23, 13);
+            this.label3.TabIndex = 101;
+            this.label3.Text = "DD";
+            // 
+            // lMm
+            // 
+            this.lMm.AutoSize = true;
+            this.lMm.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lMm.Location = new System.Drawing.Point(55, 15);
+            this.lMm.Name = "lMm";
+            this.lMm.Size = new System.Drawing.Size(29, 13);
+            this.lMm.TabIndex = 100;
+            this.lMm.Text = "MM";
+            // 
+            // dudSsss
+            // 
+            this.dudSsss.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudSsss.Location = new System.Drawing.Point(193, 30);
+            this.dudSsss.Name = "dudSsss";
+            this.dudSsss.Size = new System.Drawing.Size(55, 22);
+            this.dudSsss.TabIndex = 99;
+            // 
+            // dudRr
+            // 
+            this.dudRr.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudRr.Location = new System.Drawing.Point(147, 30);
+            this.dudRr.Name = "dudRr";
+            this.dudRr.Size = new System.Drawing.Size(40, 22);
+            this.dudRr.TabIndex = 98;
+            // 
+            // dudDd
+            // 
+            this.dudDd.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudDd.Location = new System.Drawing.Point(103, 30);
+            this.dudDd.Name = "dudDd";
+            this.dudDd.Size = new System.Drawing.Size(40, 22);
+            this.dudDd.TabIndex = 97;
+            // 
+            // dudMm
+            // 
+            this.dudMm.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudMm.Location = new System.Drawing.Point(57, 30);
+            this.dudMm.Name = "dudMm";
+            this.dudMm.Size = new System.Drawing.Size(40, 22);
+            this.dudMm.TabIndex = 96;
+            // 
+            // dudYy
+            // 
+            this.dudYy.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudYy.Location = new System.Drawing.Point(11, 30);
+            this.dudYy.Name = "dudYy";
+            this.dudYy.Size = new System.Drawing.Size(40, 22);
+            this.dudYy.TabIndex = 95;
+            // 
+            // lYy
+            // 
+            this.lYy.AutoSize = true;
+            this.lYy.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lYy.Location = new System.Drawing.Point(13, 15);
+            this.lYy.Name = "lYy";
+            this.lYy.Size = new System.Drawing.Size(21, 13);
+            this.lYy.TabIndex = 93;
+            this.lYy.Text = "YY";
+            // 
+            // lRssiCh2_3
+            // 
+            this.lRssiCh2_3.AutoSize = true;
+            this.lRssiCh2_3.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssiCh2_3.ForeColor = System.Drawing.Color.White;
+            this.lRssiCh2_3.Location = new System.Drawing.Point(467, 13);
+            this.lRssiCh2_3.Name = "lRssiCh2_3";
+            this.lRssiCh2_3.Size = new System.Drawing.Size(29, 11);
+            this.lRssiCh2_3.TabIndex = 90;
+            this.lRssiCh2_3.Text = "RSSI-4";
+            // 
+            // lRssiCh2_2
+            // 
+            this.lRssiCh2_2.AutoSize = true;
+            this.lRssiCh2_2.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssiCh2_2.ForeColor = System.Drawing.Color.White;
+            this.lRssiCh2_2.Location = new System.Drawing.Point(434, 13);
+            this.lRssiCh2_2.Name = "lRssiCh2_2";
+            this.lRssiCh2_2.Size = new System.Drawing.Size(29, 11);
+            this.lRssiCh2_2.TabIndex = 89;
+            this.lRssiCh2_2.Text = "RSSI-3";
+            // 
+            // lRssiCh2_1
+            // 
+            this.lRssiCh2_1.AutoSize = true;
+            this.lRssiCh2_1.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssiCh2_1.ForeColor = System.Drawing.Color.White;
+            this.lRssiCh2_1.Location = new System.Drawing.Point(401, 13);
+            this.lRssiCh2_1.Name = "lRssiCh2_1";
+            this.lRssiCh2_1.Size = new System.Drawing.Size(29, 11);
+            this.lRssiCh2_1.TabIndex = 88;
+            this.lRssiCh2_1.Text = "RSSI-2";
+            // 
+            // lRssiCh2_0
+            // 
+            this.lRssiCh2_0.AutoSize = true;
+            this.lRssiCh2_0.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lRssiCh2_0.ForeColor = System.Drawing.Color.White;
+            this.lRssiCh2_0.Location = new System.Drawing.Point(368, 13);
+            this.lRssiCh2_0.Name = "lRssiCh2_0";
+            this.lRssiCh2_0.Size = new System.Drawing.Size(29, 11);
+            this.lRssiCh2_0.TabIndex = 87;
+            this.lRssiCh2_0.Text = "RSSI-1";
+            // 
+            // tbRssiCh2_3
+            // 
+            this.tbRssiCh2_3.Enabled = false;
+            this.tbRssiCh2_3.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRssiCh2_3.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.tbRssiCh2_3.Location = new System.Drawing.Point(469, 25);
+            this.tbRssiCh2_3.Name = "tbRssiCh2_3";
+            this.tbRssiCh2_3.Size = new System.Drawing.Size(32, 23);
+            this.tbRssiCh2_3.TabIndex = 86;
+            // 
+            // tbRssiCh2_2
+            // 
+            this.tbRssiCh2_2.Enabled = false;
+            this.tbRssiCh2_2.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRssiCh2_2.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.tbRssiCh2_2.Location = new System.Drawing.Point(436, 25);
+            this.tbRssiCh2_2.Name = "tbRssiCh2_2";
+            this.tbRssiCh2_2.Size = new System.Drawing.Size(32, 23);
+            this.tbRssiCh2_2.TabIndex = 85;
+            // 
+            // tbRssiCh2_1
+            // 
+            this.tbRssiCh2_1.Enabled = false;
+            this.tbRssiCh2_1.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRssiCh2_1.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.tbRssiCh2_1.Location = new System.Drawing.Point(403, 25);
+            this.tbRssiCh2_1.Name = "tbRssiCh2_1";
+            this.tbRssiCh2_1.Size = new System.Drawing.Size(32, 23);
+            this.tbRssiCh2_1.TabIndex = 84;
+            // 
+            // tbRssiCh2_0
+            // 
+            this.tbRssiCh2_0.Enabled = false;
+            this.tbRssiCh2_0.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRssiCh2_0.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.tbRssiCh2_0.Location = new System.Drawing.Point(370, 25);
+            this.tbRssiCh2_0.Name = "tbRssiCh2_0";
+            this.tbRssiCh2_0.Size = new System.Drawing.Size(32, 23);
+            this.tbRssiCh2_0.TabIndex = 83;
+            // 
+            // tbLogFilePath
+            // 
+            this.tbLogFilePath.BackColor = System.Drawing.Color.White;
+            this.tbLogFilePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.tbLogFilePath.Font = new System.Drawing.Font("Nirmala UI", 10F);
+            this.tbLogFilePath.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.tbLogFilePath.Location = new System.Drawing.Point(13, 135);
+            this.tbLogFilePath.Name = "tbLogFilePath";
+            this.tbLogFilePath.Size = new System.Drawing.Size(207, 25);
+            this.tbLogFilePath.TabIndex = 72;
+            this.tbLogFilePath.Text = "Please click here to set the export file path.";
+            this.tbLogFilePath.Click += new System.EventHandler(this.tbLogFilePath_Click);
             // 
             // lRssiCh1_3
             // 
             this.lRssiCh1_3.AutoSize = true;
             this.lRssiCh1_3.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lRssiCh1_3.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh1_3.Location = new System.Drawing.Point(320, 68);
+            this.lRssiCh1_3.Location = new System.Drawing.Point(331, 13);
             this.lRssiCh1_3.Name = "lRssiCh1_3";
             this.lRssiCh1_3.Size = new System.Drawing.Size(29, 11);
             this.lRssiCh1_3.TabIndex = 75;
@@ -503,12 +670,11 @@
             this.lLogFilePath.AutoSize = true;
             this.lLogFilePath.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lLogFilePath.ForeColor = System.Drawing.Color.White;
-            this.lLogFilePath.Location = new System.Drawing.Point(6, 101);
+            this.lLogFilePath.Location = new System.Drawing.Point(9, 120);
             this.lLogFilePath.Name = "lLogFilePath";
             this.lLogFilePath.Size = new System.Drawing.Size(76, 13);
             this.lLogFilePath.TabIndex = 71;
             this.lLogFilePath.Text = "Log file path:";
-            this.lLogFilePath.Visible = false;
             // 
             // bWriteSnDateCone
             // 
@@ -531,7 +697,7 @@
             this.lRssiCh1_2.AutoSize = true;
             this.lRssiCh1_2.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lRssiCh1_2.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh1_2.Location = new System.Drawing.Point(287, 68);
+            this.lRssiCh1_2.Location = new System.Drawing.Point(298, 13);
             this.lRssiCh1_2.Name = "lRssiCh1_2";
             this.lRssiCh1_2.Size = new System.Drawing.Size(29, 11);
             this.lRssiCh1_2.TabIndex = 74;
@@ -542,7 +708,7 @@
             this.lRssiCh1_1.AutoSize = true;
             this.lRssiCh1_1.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lRssiCh1_1.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh1_1.Location = new System.Drawing.Point(254, 68);
+            this.lRssiCh1_1.Location = new System.Drawing.Point(265, 13);
             this.lRssiCh1_1.Name = "lRssiCh1_1";
             this.lRssiCh1_1.Size = new System.Drawing.Size(29, 11);
             this.lRssiCh1_1.TabIndex = 73;
@@ -553,7 +719,7 @@
             this.tbRssiCh1_3.Enabled = false;
             this.tbRssiCh1_3.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRssiCh1_3.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh1_3.Location = new System.Drawing.Point(322, 80);
+            this.tbRssiCh1_3.Location = new System.Drawing.Point(333, 25);
             this.tbRssiCh1_3.Name = "tbRssiCh1_3";
             this.tbRssiCh1_3.Size = new System.Drawing.Size(32, 23);
             this.tbRssiCh1_3.TabIndex = 72;
@@ -563,7 +729,7 @@
             this.tbRssiCh1_2.Enabled = false;
             this.tbRssiCh1_2.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRssiCh1_2.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh1_2.Location = new System.Drawing.Point(289, 80);
+            this.tbRssiCh1_2.Location = new System.Drawing.Point(300, 25);
             this.tbRssiCh1_2.Name = "tbRssiCh1_2";
             this.tbRssiCh1_2.Size = new System.Drawing.Size(32, 23);
             this.tbRssiCh1_2.TabIndex = 71;
@@ -573,7 +739,7 @@
             this.tbRssiCh1_1.Enabled = false;
             this.tbRssiCh1_1.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRssiCh1_1.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh1_1.Location = new System.Drawing.Point(256, 80);
+            this.tbRssiCh1_1.Location = new System.Drawing.Point(267, 25);
             this.tbRssiCh1_1.Name = "tbRssiCh1_1";
             this.tbRssiCh1_1.Size = new System.Drawing.Size(32, 23);
             this.tbRssiCh1_1.TabIndex = 70;
@@ -583,7 +749,7 @@
             this.lVenderSn.AutoSize = true;
             this.lVenderSn.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lVenderSn.ForeColor = System.Drawing.Color.White;
-            this.lVenderSn.Location = new System.Drawing.Point(222, 22);
+            this.lVenderSn.Location = new System.Drawing.Point(108, 74);
             this.lVenderSn.Name = "lVenderSn";
             this.lVenderSn.Size = new System.Drawing.Size(64, 13);
             this.lVenderSn.TabIndex = 64;
@@ -594,15 +760,16 @@
             this.tbRssiCh1_0.Enabled = false;
             this.tbRssiCh1_0.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRssiCh1_0.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh1_0.Location = new System.Drawing.Point(223, 80);
+            this.tbRssiCh1_0.Location = new System.Drawing.Point(234, 25);
             this.tbRssiCh1_0.Name = "tbRssiCh1_0";
             this.tbRssiCh1_0.Size = new System.Drawing.Size(32, 23);
             this.tbRssiCh1_0.TabIndex = 69;
             // 
             // tbVenderSnCh1
             // 
+            this.tbVenderSnCh1.Enabled = false;
             this.tbVenderSnCh1.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbVenderSnCh1.Location = new System.Drawing.Point(224, 39);
+            this.tbVenderSnCh1.Location = new System.Drawing.Point(110, 91);
             this.tbVenderSnCh1.Name = "tbVenderSnCh1";
             this.tbVenderSnCh1.Size = new System.Drawing.Size(130, 26);
             this.tbVenderSnCh1.TabIndex = 65;
@@ -613,7 +780,7 @@
             this.lRssiCh1_0.AutoSize = true;
             this.lRssiCh1_0.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lRssiCh1_0.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh1_0.Location = new System.Drawing.Point(221, 68);
+            this.lRssiCh1_0.Location = new System.Drawing.Point(232, 13);
             this.lRssiCh1_0.Name = "lRssiCh1_0";
             this.lRssiCh1_0.Size = new System.Drawing.Size(29, 11);
             this.lRssiCh1_0.TabIndex = 68;
@@ -624,7 +791,7 @@
             this.lDateCode.AutoSize = true;
             this.lDateCode.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lDateCode.ForeColor = System.Drawing.Color.White;
-            this.lDateCode.Location = new System.Drawing.Point(125, 22);
+            this.lDateCode.Location = new System.Drawing.Point(11, 74);
             this.lDateCode.Name = "lDateCode";
             this.lDateCode.Size = new System.Drawing.Size(62, 13);
             this.lDateCode.TabIndex = 66;
@@ -632,8 +799,9 @@
             // 
             // tbDateCode
             // 
+            this.tbDateCode.Enabled = false;
             this.tbDateCode.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbDateCode.Location = new System.Drawing.Point(127, 39);
+            this.tbDateCode.Location = new System.Drawing.Point(13, 91);
             this.tbDateCode.Name = "tbDateCode";
             this.tbDateCode.Size = new System.Drawing.Size(90, 26);
             this.tbDateCode.TabIndex = 67;
@@ -856,96 +1024,12 @@
             this.bCfgFileComparsion.Visible = false;
             this.bCfgFileComparsion.Click += new System.EventHandler(this.bCfgFileComparsion_Click);
             // 
-            // tbRssiCh2_3
-            // 
-            this.tbRssiCh2_3.Enabled = false;
-            this.tbRssiCh2_3.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssiCh2_3.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh2_3.Location = new System.Drawing.Point(458, 80);
-            this.tbRssiCh2_3.Name = "tbRssiCh2_3";
-            this.tbRssiCh2_3.Size = new System.Drawing.Size(32, 23);
-            this.tbRssiCh2_3.TabIndex = 86;
-            // 
-            // tbRssiCh2_2
-            // 
-            this.tbRssiCh2_2.Enabled = false;
-            this.tbRssiCh2_2.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssiCh2_2.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh2_2.Location = new System.Drawing.Point(425, 80);
-            this.tbRssiCh2_2.Name = "tbRssiCh2_2";
-            this.tbRssiCh2_2.Size = new System.Drawing.Size(32, 23);
-            this.tbRssiCh2_2.TabIndex = 85;
-            // 
-            // tbRssiCh2_1
-            // 
-            this.tbRssiCh2_1.Enabled = false;
-            this.tbRssiCh2_1.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssiCh2_1.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh2_1.Location = new System.Drawing.Point(392, 80);
-            this.tbRssiCh2_1.Name = "tbRssiCh2_1";
-            this.tbRssiCh2_1.Size = new System.Drawing.Size(32, 23);
-            this.tbRssiCh2_1.TabIndex = 84;
-            // 
-            // tbRssiCh2_0
-            // 
-            this.tbRssiCh2_0.Enabled = false;
-            this.tbRssiCh2_0.Font = new System.Drawing.Font("Nirmala UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRssiCh2_0.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbRssiCh2_0.Location = new System.Drawing.Point(359, 80);
-            this.tbRssiCh2_0.Name = "tbRssiCh2_0";
-            this.tbRssiCh2_0.Size = new System.Drawing.Size(32, 23);
-            this.tbRssiCh2_0.TabIndex = 83;
-            // 
-            // lRssiCh2_3
-            // 
-            this.lRssiCh2_3.AutoSize = true;
-            this.lRssiCh2_3.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lRssiCh2_3.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh2_3.Location = new System.Drawing.Point(456, 68);
-            this.lRssiCh2_3.Name = "lRssiCh2_3";
-            this.lRssiCh2_3.Size = new System.Drawing.Size(29, 11);
-            this.lRssiCh2_3.TabIndex = 90;
-            this.lRssiCh2_3.Text = "RSSI-4";
-            // 
-            // lRssiCh2_2
-            // 
-            this.lRssiCh2_2.AutoSize = true;
-            this.lRssiCh2_2.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lRssiCh2_2.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh2_2.Location = new System.Drawing.Point(423, 68);
-            this.lRssiCh2_2.Name = "lRssiCh2_2";
-            this.lRssiCh2_2.Size = new System.Drawing.Size(29, 11);
-            this.lRssiCh2_2.TabIndex = 89;
-            this.lRssiCh2_2.Text = "RSSI-3";
-            // 
-            // lRssiCh2_1
-            // 
-            this.lRssiCh2_1.AutoSize = true;
-            this.lRssiCh2_1.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lRssiCh2_1.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh2_1.Location = new System.Drawing.Point(390, 68);
-            this.lRssiCh2_1.Name = "lRssiCh2_1";
-            this.lRssiCh2_1.Size = new System.Drawing.Size(29, 11);
-            this.lRssiCh2_1.TabIndex = 88;
-            this.lRssiCh2_1.Text = "RSSI-2";
-            // 
-            // lRssiCh2_0
-            // 
-            this.lRssiCh2_0.AutoSize = true;
-            this.lRssiCh2_0.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lRssiCh2_0.ForeColor = System.Drawing.Color.White;
-            this.lRssiCh2_0.Location = new System.Drawing.Point(357, 68);
-            this.lRssiCh2_0.Name = "lRssiCh2_0";
-            this.lRssiCh2_0.Size = new System.Drawing.Size(29, 11);
-            this.lRssiCh2_0.TabIndex = 87;
-            this.lRssiCh2_0.Text = "RSSI-1";
-            // 
             // CustomerAndMpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
-            this.ClientSize = new System.Drawing.Size(536, 391);
+            this.ClientSize = new System.Drawing.Size(534, 406);
             this.Controls.Add(this.bCfgFileComparsion);
             this.Controls.Add(this.tbReNewSnCh2);
             this.Controls.Add(this.tbOrignalSNCh2);
@@ -996,6 +1080,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.gbOperatorMode.ResumeLayout(false);
             this.gbOperatorMode.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1038,7 +1124,7 @@
         private System.Windows.Forms.TextBox tbRssiCh1_3;
         private System.Windows.Forms.TextBox tbRssiCh1_2;
         private System.Windows.Forms.TextBox tbRssiCh1_1;
-        private System.Windows.Forms.TextBox tbLogFIlePath;
+        private System.Windows.Forms.TextBox tbLogFilePath;
         private System.Windows.Forms.Label lLogFilePath;
         private System.Windows.Forms.Label lDataName;
         private System.Windows.Forms.Label lPathData;
@@ -1058,9 +1144,6 @@
         private System.Windows.Forms.Label lReNewSn;
         private System.Windows.Forms.TextBox tbReNewSnCh2;
         private System.Windows.Forms.TextBox tbOrignalSNCh2;
-        private System.Windows.Forms.TextBox tbVenderSnCh2;
-        private System.Windows.Forms.Label lVenderSnCh2;
-        private System.Windows.Forms.Label lVenderSnCh1;
         private System.Windows.Forms.Button bCfgFileComparsion;
         private System.Windows.Forms.TextBox tbRssiCh2_3;
         private System.Windows.Forms.TextBox tbRssiCh2_2;
@@ -1070,5 +1153,16 @@
         private System.Windows.Forms.Label lRssiCh2_2;
         private System.Windows.Forms.Label lRssiCh2_1;
         private System.Windows.Forms.Label lRssiCh2_0;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label lYy;
+        private System.Windows.Forms.DomainUpDown dudSsss;
+        private System.Windows.Forms.DomainUpDown dudRr;
+        private System.Windows.Forms.DomainUpDown dudDd;
+        private System.Windows.Forms.DomainUpDown dudMm;
+        private System.Windows.Forms.DomainUpDown dudYy;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label lMm;
     }
 }

@@ -26,6 +26,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace IntegratedGuiV2
 {
+    
     public partial class CustomerAndMpForm: KryptonForm
     {
         private MainForm mainForm; // Assist processing for i2c communication
@@ -45,6 +46,7 @@ namespace IntegratedGuiV2
         private string CurrentDate = DateTime.Now.ToString("yyMMdd");
         private int Revision = 1;
         private string TempFolderPath = string.Empty;
+        private string LogFileFolderPath = string.Empty;
         private CancellationTokenSource cancellationTokenSource;
 
         private Thread RxPowerUpdateThread;
@@ -70,34 +72,75 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _MessageUpdate(string message, int number)
+        private void InitializeDomainUpDowns()
         {
-            if (ProcessingChannel == 1) {
-                lCh1Message.Text = message;
-                cProgressBar1.Value = number;
-                cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
+            for (int i = 30; i >= 15; i--) {
+                dudYy.Items.Add(i.ToString("D2"));
             }
-            else if (ProcessingChannel == 2) {
-                lCh2Message.Text = message;
-                cProgressBar2.Value = number;
-                cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
+            dudYy.SelectedItem = DateTime.Now.ToString("yy");
+
+            for (int i = 12; i >= 1; i--) {
+                dudMm.Items.Add(i.ToString("D2"));
             }
-            Application.DoEvents();
+            dudMm.SelectedItem = DateTime.Now.ToString("MM");
+
+            for (int i = 31; i >= 1; i--) {
+                dudDd.Items.Add(i.ToString("D2"));
+            }
+            dudDd.SelectedItem = DateTime.Now.ToString("dd");
+
+            for (int i = 99; i >= 1; i--) {
+                dudRr.Items.Add(i.ToString("D2"));
+            }
+            dudRr.SelectedItem = Revision.ToString("D2");
+
+            for (int i = 9999; i >= 1; i--) {
+                dudSsss.Items.Add(i.ToString("D4"));
+            }
+            dudSsss.SelectedItem = SerialNumber.ToString("D4");
         }
+
+        private void domainUpDown_TextChanged(object sender, EventArgs e)
+        {
+            UpdateTextBoxAA();
+        }
+
+        private void UpdateTextBoxAA()
+        {
+            string yy = !string.IsNullOrEmpty(dudYy.Text) ? dudYy.Text : DateTime.Now.ToString("yy");
+            string mm = !string.IsNullOrEmpty(dudMm.Text) ? dudMm.Text : DateTime.Now.ToString("MM");
+            string dd = !string.IsNullOrEmpty(dudDd.Text) ? dudDd.Text : DateTime.Now.ToString("dd");
+            string rr = !string.IsNullOrEmpty(dudRr.Text) ? dudRr.Text : Revision.ToString("D2");
+            string ssss = !string.IsNullOrEmpty(dudSsss.Text) ? dudSsss.Text : SerialNumber.ToString("D4");
+            tbVenderSnCh1.Text = yy + mm + dd + rr + ssss;
+            tbDateCode.Text = yy + mm + dd;
+        }
+
+        private void BindEvents()
+        {
+            dudYy.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudMm.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudDd.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudRr.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudSsss.TextChanged += new EventHandler(domainUpDown_TextChanged);
+        }
+        
 
         public CustomerAndMpForm()
         {
             InitializeComponent();
-
+            InitializeDomainUpDowns();
+            BindEvents();
+            UpdateTextBoxAA();
             mainForm = new MainForm(true);
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
-            this.Size = new System.Drawing.Size(550, 280);
+            this.Size = new Size(550, 280);
             cProgressBar1.Value = 0;
             cProgressBar2.Value = 0;
             this.Load += MainForm_Load;
             this.KeyPreview = true;
             this.KeyDown += _HideKeys_KeyDown;
-
+            
             if (!(mainForm.I2cMasterConnectApi(true, true) < 0)) // (bool setMode, bool setPassword)
                 I2cConnected = true;
             else {
@@ -461,8 +504,6 @@ namespace IntegratedGuiV2
                 tbVersionCodeReNewCh2.Visible = false;
                 tbOrignalSNCh2.Visible = false;
                 tbReNewSnCh2.Visible = false;
-                lVenderSnCh2.Visible=false;
-                tbVenderSnCh2.Visible = false;
                 lRssiCh2_0.Visible = false;
                 lRssiCh2_1.Visible = false;
                 lRssiCh2_2.Visible = false;
@@ -482,8 +523,6 @@ namespace IntegratedGuiV2
                 DoubleSideMode = true;
                 tbVersionCodeCh2.Visible = true;
                 tbVersionCodeReNewCh2.Visible = true;
-                lVenderSnCh2.Visible = true;
-                tbVenderSnCh2.Visible = true;
                 lRssiCh2_0.Visible = true;
                 lRssiCh2_1.Visible = true;
                 lRssiCh2_2.Visible = true;
@@ -501,17 +540,142 @@ namespace IntegratedGuiV2
                     tbOrignalSNCh2.Visible = false;
                     tbReNewSnCh2.Visible = false;
                 }
-                
             }
         }
 
+        private void _SaveLastBinPaths(string zipPath, string logFilePath)
+        {
+            string exeFolderPath = Application.StartupPath;
+            string combinedPath = Path.Combine(exeFolderPath, "XmlFolder");
+
+            if (!Directory.Exists(combinedPath))
+                Directory.CreateDirectory(combinedPath);
+
+            string xmlFilePath = Path.Combine(combinedPath, "MainFormPaths.xml");
+            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
+
+            XmlDocument xmlDoc = new XmlDocument();
+
+            if (File.Exists(xmlFilePath)) {
+                xmlDoc.Load(xmlFilePath);
+            }
+            else {
+                XmlElement root = xmlDoc.CreateElement("Paths");
+                xmlDoc.AppendChild(root);
+            }
+
+            XmlNode rootElement = xmlDoc.DocumentElement;
+
+            if (!string.IsNullOrEmpty(zipPath)) {
+                XmlElement zipPathElement = rootElement.SelectSingleNode("FormPaths/ZipPath") as XmlElement;
+                if (zipPathElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    zipPathElement = xmlDoc.CreateElement("ZipPath");
+                    formPaths.AppendChild(zipPathElement);
+                }
+                zipPathElement.InnerText = Path.GetDirectoryName(zipPath);
+            }
+
+            if (!string.IsNullOrEmpty(logFilePath)) {
+                XmlElement logFilePathElement = rootElement.SelectSingleNode("FormPaths/LogFilePath") as XmlElement;
+                if (logFilePathElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    logFilePathElement = xmlDoc.CreateElement("LogFilePath");
+                    formPaths.AppendChild(logFilePathElement);
+                }
+                logFilePathElement.InnerText = logFilePath;
+            }
+
+            xmlDoc.Save(xmlFilePath);
+        }
+
+        /*
+        private void _SaveLastBinPaths(string zipPath, string logFilePath)
+        {
+            string exeFolderPath = Application.StartupPath;
+            string combinedPath = Path.Combine(exeFolderPath, "XmlFolder");
+
+            if (!Directory.Exists(combinedPath))
+                Directory.CreateDirectory(combinedPath);
+
+            string xmlFilePath = Path.Combine(combinedPath, "MainFormPaths.xml");
+            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
+
+            XmlDocument xmlDoc = new XmlDocument();
+            XmlElement root = xmlDoc.CreateElement("Paths");
+            
+            if (!string.IsNullOrEmpty(zipPath)) {
+                XmlElement zipPathElement = xmlDoc.CreateElement("ZipPath");
+                zipPathElement.InnerText = Path.GetDirectoryName(zipPath);
+                root.AppendChild(zipPathElement);
+            }
+
+            if (!string.IsNullOrEmpty(logFilePath)) {
+                XmlElement logFilePathElement = xmlDoc.CreateElement("LogFilePath");
+                logFilePathElement.InnerText = Path.GetDirectoryName(logFilePath);
+                root.AppendChild(logFilePathElement);
+            }
+
+            xmlDoc.AppendChild(root);
+            xmlDoc.Save(xmlFilePath);
+        }
+        */
+
+        private LastBinPaths _LoadLastPaths()
+        {
+            string folderPath = Application.StartupPath;
+            string combinedPath = Path.Combine(folderPath, "XmlFolder");
+            string xmlFilePath = Path.Combine(combinedPath, "MainFormPaths.xml");
+            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
+
+            try {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlFilePath);
+                XmlNode zipPathNode = xmlDoc.SelectSingleNode("//ZipPath");
+                XmlNode logFilePathNode = xmlDoc.SelectSingleNode("//LogFilePath");
+
+                string zipPath = zipPathNode?.InnerText;
+                string logFilePath = logFilePathNode?.InnerText;
+
+                return new LastBinPaths {
+                    ZipPath = zipPath,
+                    LogFilePath = logFilePath
+                };
+            }
+            catch (Exception) {
+                return new LastBinPaths {
+                    ZipPath = null,
+                    LogFilePath = null
+                };
+            }
+        }
+
+
+
         private void _LoadXmlFile()
         {
-            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            LastBinPaths lastPath = _LoadLastPaths();
+            string initialDirectory = lastPath.ZipPath;
+            tbLogFilePath.Text = lastPath.LogFilePath;
+            tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+
+
+            if (string.IsNullOrEmpty(initialDirectory))
+                initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
                 openFileDialog.Title = "Files position";
-                openFileDialog.Filter = "Zip Files (*.zip)|*.zip|Xml Files (*.xml)|*.xml";
+                openFileDialog.Filter = "Zip Files (*.zip)|*.zip";
                 openFileDialog.InitialDirectory = initialDirectory;
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK) {
@@ -526,7 +690,7 @@ namespace IntegratedGuiV2
 
                             if (File.Exists(xmlFilePath)) {
                                 _ParserXmlForProjectInformation(xmlFilePath);
-                                tbFilePath.Text = xmlFilePath;
+                                tbFilePath.Text = selectedFilePath;
 
                             }
                             else {
@@ -537,11 +701,7 @@ namespace IntegratedGuiV2
                             MessageBox.Show("Failed to extract zip file: " + ex.Message);
                         }
                     }
-                    else if (extension == ".xml") {
-                        tbFilePath.Text = selectedFilePath;
-                        _ParserXmlForProjectInformation(selectedFilePath);
-                    }
-
+                    
                     tbFilePath.SelectionStart = tbFilePath.Text.Length;
                 }
             }
@@ -634,20 +794,22 @@ namespace IntegratedGuiV2
             }
         }
         */
-        private void _SetCsvFilePath()
+        private void _SetLogFilePath()
         {
-            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string initialDirectory = Application.StartupPath;
 
             using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog()) {
                 folderBrowserDialog.Description = "Select a Folder";
-                folderBrowserDialog.RootFolder = Environment.SpecialFolder.LocalApplicationData;
                 folderBrowserDialog.SelectedPath = initialDirectory;
 
                 if (folderBrowserDialog.ShowDialog() == DialogResult.OK) {
-                    tbLogFIlePath.Text = folderBrowserDialog.SelectedPath;
-                    tbLogFIlePath.SelectionStart = tbLogFIlePath.Text.Length;
+                    tbLogFilePath.Text = folderBrowserDialog.SelectedPath;
+                    tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+                    LogFileFolderPath = folderBrowserDialog.SelectedPath;
+                    _SaveLastBinPaths(null, LogFileFolderPath);
                 }
             }
+
         }
 
         private void _ParserXmlForProjectInformation_original(string filePath)
@@ -785,7 +947,7 @@ namespace IntegratedGuiV2
             _LoadXmlFile();
 
             if (lMode.Text == "Customer") {
-                this.Size = new System.Drawing.Size(550, 280);
+                this.Size = new Size(550, 280);
                 // rbSingle.Enabled = true;
                 //rbBoth.Enabled = true;
                 cbSecurityLock.Visible = false;
@@ -801,7 +963,7 @@ namespace IntegratedGuiV2
             }
 
             else if (lMode.Text == "MP") {
-                this.Size = new System.Drawing.Size(550, 450);
+                this.Size = new Size(550, 445);
                 rbSingle.Select();
                 _GenerateDateCode();
                 //rbSingle.Enabled = false;
@@ -957,7 +1119,6 @@ namespace IntegratedGuiV2
                     I2cConnected = false;
                 Application.Exit();
             }
-
             _CleanTempFolder();
         }
 
@@ -986,8 +1147,6 @@ namespace IntegratedGuiV2
             button1.Enabled = false;
             button2.Enabled = false;
             bWriteSnDateCone.Enabled = false;
-            tbVenderSnCh1.Enabled = false;
-            tbDateCode.Enabled = false;
             bCfgFileComparsion.Enabled = false;
         }
 
@@ -1004,8 +1163,6 @@ namespace IntegratedGuiV2
             button1.Enabled = true;
             button2.Enabled = true;
             bWriteSnDateCone.Enabled = true;
-            tbVenderSnCh1.Enabled = true;
-            tbDateCode.Enabled = true;
             bCfgFileComparsion.Enabled = true;
         }
 
@@ -1224,17 +1381,17 @@ namespace IntegratedGuiV2
             originalDateCode = mainForm.GetDateCodeFromDdmiApi();
 
             if (ProcessingChannel == 1) {
-                 venderSn = tbVenderSnCh1.Text;
                 tbOrignalSNCh1.Text = originalVenderSn;
                 tbOrignalSNCh1.BackColor = Color.DarkBlue;
                 tbOrignalSNCh1.ForeColor = Color.White;
             }
             else {
-                venderSn = tbVenderSnCh2.Text;
                 tbOrignalSNCh2.Text = originalVenderSn;
                 tbOrignalSNCh2.BackColor = Color.DarkBlue;
                 tbOrignalSNCh2.ForeColor = Color.White;
             }
+
+            venderSn = tbVenderSnCh1.Text;
 
             if (DebugMode) {
                 mainForm.SetVendorSnToDdmiApi(venderSn);
@@ -1374,6 +1531,7 @@ namespace IntegratedGuiV2
         private int _Processor(bool customerMode) // True: Customer Mode, Flase: MP mode
         {
             _InitialUi();
+            _SaveLastBinPaths(tbFilePath.Text, null);
 
             if (!customerMode)
                 _StopRxPowerUpdateThread();
@@ -1475,9 +1633,9 @@ namespace IntegratedGuiV2
         }
         */
 
-        private void tbLogFilePath(object sender, EventArgs e)
+        private void tbLogFilePath_Click(object sender, EventArgs e)
         {
-            _SetCsvFilePath();
+            _SetLogFilePath();
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -1553,7 +1711,6 @@ namespace IntegratedGuiV2
                 mainForm.ChannelSwitchApi(); // return to ch1
                 tbVenderSnCh1.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
                 SerialNumber++;
-                tbVenderSnCh2.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
             }
 
             _EnableButtons();
@@ -1562,10 +1719,10 @@ namespace IntegratedGuiV2
         private void _GenerateDateCode()
         {
             int initilaSN1 = 1;
-            int initilaSN2 = 2;
+            //int initilaSN2 = 2;
 
             tbVenderSnCh1.Text = CurrentDate + Revision.ToString("D2") + initilaSN1.ToString("D4");
-            tbVenderSnCh2.Text = CurrentDate + Revision.ToString("D2") + initilaSN2.ToString("D4");
+            //tbVenderSnCh2.Text = CurrentDate + Revision.ToString("D2") + initilaSN2.ToString("D4");
             tbDateCode.Text = CurrentDate;
         }
 
@@ -1603,15 +1760,9 @@ namespace IntegratedGuiV2
                     return -1;
                 }
 
-                serialNumber2 = serialNumber1 + 1;
-
-                if (serialNumber2 > MaxSerialNumber) 
-                    serialNumber2 = MinSerialNumber;
-
+              
                 newSerialNumber1 = serialNumber1.ToString("0000");
-                newSerialNumber2 = serialNumber2.ToString("0000");
                 tbVenderSnCh1.Text = $"{CurrentDate}{Revision.ToString("D2")}{newSerialNumber1}";
-                tbVenderSnCh2.Text = $"{CurrentDate}{Revision.ToString("D2")}{newSerialNumber2}";
             }
             catch (Exception ex) {
                 MessageBox.Show($"Error: {ex.Message}");
@@ -1641,10 +1792,15 @@ namespace IntegratedGuiV2
             }
 
             mainForm.ComparationRegisterApi(RegisterFilePath, true);
-
             _EnableButtons();
         }
     }
-    
+
+    public class LastBinPaths
+    {
+        public string ZipPath { get; set; }
+        public string LogFilePath { get; set; }
+    }
+
 }
 

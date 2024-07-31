@@ -1046,10 +1046,8 @@ namespace IntegratedGuiV2
                 StateUpdated("Read State:\nPreparing resources...", 3);
 
             if (logFileMode) {
-                lastUsedDirectory = Application.StartupPath + "\\";
-                //MessageBox.Show("Application startup path: \n " + lastUsedDirectory);
-
-                folderPath = Path.Combine(lastUsedDirectory, "LogFolder");
+                LastBinPaths lastPath = _LoadLastPaths();
+                folderPath = lastPath.LogFilePath;
                 if (!Directory.Exists(folderPath))
                     Directory.CreateDirectory(folderPath);
             }
@@ -1949,6 +1947,35 @@ namespace IntegratedGuiV2
                         reader.Skip(); // Skip the elements for other permission levels
                     }
                 }
+            }
+        }
+
+        private LastBinPaths _LoadLastPaths()
+        {
+            string folderPath = Application.StartupPath;
+            string combinedPath = Path.Combine(folderPath, "XmlFolder");
+            string xmlFilePath = Path.Combine(combinedPath, "MainFormPaths.xml");
+            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
+
+            try {
+                XmlDocument xmlDoc = new XmlDocument();
+                xmlDoc.Load(xmlFilePath);
+                XmlNode zipPathNode = xmlDoc.SelectSingleNode("//ZipPath");
+                XmlNode logFilePathNode = xmlDoc.SelectSingleNode("//LogFilePath");
+
+                string zipPath = zipPathNode?.InnerText;
+                string logFilePath = logFilePathNode?.InnerText;
+
+                return new LastBinPaths {
+                    ZipPath = zipPath,
+                    LogFilePath = logFilePath
+                };
+            }
+            catch (Exception) {
+                return new LastBinPaths {
+                    ZipPath = null,
+                    LogFilePath = null
+                };
             }
         }
 
@@ -3089,7 +3116,6 @@ namespace IntegratedGuiV2
             {
                 DATAROMPath = "";
             }
-            
         }
     }
 
@@ -3103,5 +3129,4 @@ namespace IntegratedGuiV2
         }
 
     }
-
 }
