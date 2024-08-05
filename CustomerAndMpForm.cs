@@ -416,8 +416,10 @@ namespace IntegratedGuiV2
             string apromPath, dataromPath;
             string directoryPath;
 
+            /*
             if (cbBypassW.Checked)
                 mainForm.SetVarBoolStateToMainFormApi("BypassWriteIcConfig", true);
+            */
 
             if ((string.IsNullOrEmpty(lProduct.Text))) {
                 MessageBox.Show("The configuration file format is incorrect.");
@@ -668,7 +670,6 @@ namespace IntegratedGuiV2
             string initialDirectory = lastPath.ZipPath;
             tbLogFilePath.Text = lastPath.LogFilePath;
             tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
-
 
             if (string.IsNullOrEmpty(initialDirectory))
                 initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -1142,7 +1143,7 @@ namespace IntegratedGuiV2
             rbBoth.Enabled = false;
             cbSecurityLock.Enabled = false;
             cbI2cConnect.Enabled = false;
-            cbBypassW.Enabled = false;
+            //cbBypassW.Enabled = false;
             gbOperatorMode.Enabled = false;
             button1.Enabled = false;
             button2.Enabled = false;
@@ -1158,7 +1159,7 @@ namespace IntegratedGuiV2
             rbBoth.Enabled = true;
             cbSecurityLock.Enabled = true;
             cbI2cConnect.Enabled = true;
-            cbBypassW.Enabled = true;
+            //cbBypassW.Enabled = true;
             gbOperatorMode.Enabled = true;
             button1.Enabled = true;
             button2.Enabled = true;
@@ -1370,10 +1371,14 @@ namespace IntegratedGuiV2
 
         private void _WriteSnDatecode(int ch)
         {
-
             string venderSn;
             string originalVenderSn, originalDateCode;
             string LogFileName = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
+
+            if (ch == 1)
+                LogFileName = LogFileName + "A";
+            else
+                LogFileName = LogFileName + "B";
 
             _UpdateMessage(ch, "CheckVendorSN");
             mainForm.InformationReadApi();
@@ -1693,7 +1698,6 @@ namespace IntegratedGuiV2
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 _RxPowerUpdateWithoutThread();
                 _WriteSnDatecode(ProcessingChannel); // Writing SN and DateCode, then export csv file.
-                SerialNumber++;
 
                 if (ProcessingChannel == 1) 
                     tbVenderSnCh1.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
@@ -1709,10 +1713,10 @@ namespace IntegratedGuiV2
 
             if (DoubleSideMode) {
                 mainForm.ChannelSwitchApi(); // return to ch1
-                tbVenderSnCh1.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
-                SerialNumber++;
             }
 
+            SerialNumber++;
+            tbVenderSnCh1.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
             _EnableButtons();
         }
 

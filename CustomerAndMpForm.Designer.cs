@@ -395,6 +395,7 @@
             this.cbBypassW.TabIndex = 62;
             this.cbBypassW.Text = "BypassIcConfigWrite";
             this.cbBypassW.UseVisualStyleBackColor = true;
+            this.cbBypassW.Visible = false;
             // 
             // cbI2cConnect
             // 
@@ -403,7 +404,7 @@
             this.cbI2cConnect.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbI2cConnect.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbI2cConnect.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbI2cConnect.Location = new System.Drawing.Point(436, 0);
+            this.cbI2cConnect.Location = new System.Drawing.Point(469, 0);
             this.cbI2cConnect.Name = "cbI2cConnect";
             this.cbI2cConnect.Size = new System.Drawing.Size(65, 15);
             this.cbI2cConnect.TabIndex = 63;
@@ -413,6 +414,7 @@
             // 
             // gbOperatorMode
             // 
+            this.gbOperatorMode.Controls.Add(this.bCfgFileComparsion);
             this.gbOperatorMode.Controls.Add(this.groupBox1);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_3);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_2);
@@ -900,7 +902,7 @@
             this.cbSecurityLock.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbSecurityLock.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbSecurityLock.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbSecurityLock.Location = new System.Drawing.Point(365, 0);
+            this.cbSecurityLock.Location = new System.Drawing.Point(398, 0);
             this.cbSecurityLock.Name = "cbSecurityLock";
             this.cbSecurityLock.Size = new System.Drawing.Size(70, 15);
             this.cbSecurityLock.TabIndex = 80;
@@ -1015,13 +1017,12 @@
             this.bCfgFileComparsion.FlatAppearance.BorderSize = 0;
             this.bCfgFileComparsion.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bCfgFileComparsion.ForeColor = System.Drawing.Color.White;
-            this.bCfgFileComparsion.Location = new System.Drawing.Point(188, 74);
+            this.bCfgFileComparsion.Location = new System.Drawing.Point(107, 25);
             this.bCfgFileComparsion.Name = "bCfgFileComparsion";
-            this.bCfgFileComparsion.Size = new System.Drawing.Size(121, 29);
+            this.bCfgFileComparsion.Size = new System.Drawing.Size(121, 40);
             this.bCfgFileComparsion.TabIndex = 89;
             this.bCfgFileComparsion.Text = "CfgFile comparison";
             this.bCfgFileComparsion.UseVisualStyleBackColor = false;
-            this.bCfgFileComparsion.Visible = false;
             this.bCfgFileComparsion.Click += new System.EventHandler(this.bCfgFileComparsion_Click);
             // 
             // CustomerAndMpForm
@@ -1030,7 +1031,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
             this.ClientSize = new System.Drawing.Size(534, 406);
-            this.Controls.Add(this.bCfgFileComparsion);
             this.Controls.Add(this.tbReNewSnCh2);
             this.Controls.Add(this.tbOrignalSNCh2);
             this.Controls.Add(this.lReNewSn);

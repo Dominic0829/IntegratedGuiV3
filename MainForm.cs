@@ -445,8 +445,8 @@ namespace IntegratedGuiV2
 
         private int _AppendWriteToFile(string sAction)
         {
-            if (!System.IO.File.Exists(fileName)||
-                string.IsNullOrEmpty(System.IO.File.ReadAllText(fileName)))
+            if (!File.Exists(fileName)||
+                string.IsNullOrEmpty(File.ReadAllText(fileName)))
             { 
                 sAcConfig = "//Write,DevAddr,RegAddr,Value\n" + "//Read,DevAddr,RegAddr,Value\n";
             }
@@ -457,7 +457,7 @@ namespace IntegratedGuiV2
 
             sAcConfig += sAction + "\n";
 
-            System.IO.File.AppendAllText(fileName, sAcConfig);
+            File.AppendAllText(fileName, sAcConfig);
             return 0;
         }
 
@@ -1048,6 +1048,9 @@ namespace IntegratedGuiV2
             if (logFileMode) {
                 LastBinPaths lastPath = _LoadLastPaths();
                 folderPath = lastPath.LogFilePath;
+                if(string.IsNullOrEmpty(folderPath))
+                    folderPath = Path.Combine(Application.StartupPath, "LogFolder");
+
                 if (!Directory.Exists(folderPath))
                     Directory.CreateDirectory(folderPath);
             }
@@ -1061,8 +1064,24 @@ namespace IntegratedGuiV2
             exportFilePath = exportFilePath.Replace("\\\\", "\\");
             tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
 
-            if (File.Exists(exportFilePath))
-                File.Delete(exportFilePath);
+            if (File.Exists(exportFilePath)) {
+                if (fileName == "TempRegister.csv") {
+                    File.Delete(exportFilePath);
+                }
+                else {
+                    DialogResult result = MessageBox.Show($"File {fileName} already exists." +
+                                                      $"\nDo you want to overwrite it?",
+                                                      "File Exists", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.Yes) {
+                        File.Delete(exportFilePath);
+                    }
+                    else {
+                        MessageBox.Show("Operation cancelled.", "Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return -1;
+                    }
+                }
+            }
+
             //MessageBox.Show("1: \n" + ucInformation.GetVendorInfo() +
             //                "exportFilePath: \n" + exportFilePath);
 
@@ -1720,6 +1739,8 @@ namespace IntegratedGuiV2
 
         private void _GenerateXmlFileForProject()
         {
+            string LogFileName = "RegisterFile";
+
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Project");
             xmlDoc.AppendChild(root);
@@ -1778,8 +1799,9 @@ namespace IntegratedGuiV2
                 xmlDoc.Save(Path.Combine(folderPath, "Cfg.xml"));
 
                 lastUsedDirectory = folderPath;
+                _GlobalWriteFromUi(false);
                 _InitialStateBar();
-                _ExportLogfile("RegisterFile", false, false); // Export CfgFile to config folder
+                _ExportLogfile(LogFileName, false, false); // Export CfgFile to config folder
 
                 if (!string.IsNullOrWhiteSpace(targetApromPath)) {
                     string destinationFilePath = Path.Combine(folderPath, Path.GetFileName(APROMPath));
@@ -2470,22 +2492,22 @@ namespace IntegratedGuiV2
         internal int _GlobalWriteFromRegisterMap(bool CustomerMode, string CfgFilePath)
         {
             string DirectoryPath = Application.StartupPath;
-            string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder/TempRegister.csv");
+            string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\TempRegister.csv");
 
             StateUpdated("Write State:\nPreparing resources...", 61);
 
             if (CustomerMode)
             {
-                if (WriteRegisterPageApi("Up 00h", 50, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
+                if (WriteRegisterPageApi("Up 00h", 200, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
                 StateUpdated("Write State:\nUpPage 00h...Done", 63);
-                if (WriteRegisterPageApi("Up 03h", 50, TempRegisterFilePath) < 0) return -1;
+                if (WriteRegisterPageApi("Up 03h", 200, TempRegisterFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
             else
             {
-                if (WriteRegisterPageApi("Up 00h", 50, CfgFilePath) < 0) return -1; //Write from Cfg.RegisterFile
+                if (WriteRegisterPageApi("Up 00h", 200, CfgFilePath) < 0) return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nUpPage 00h...Done", 63);
-                if (WriteRegisterPageApi("Up 03h", 50, CfgFilePath) < 0) return -1;
+                if (WriteRegisterPageApi("Up 03h", 200, CfgFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
 
@@ -2802,7 +2824,8 @@ namespace IntegratedGuiV2
 
             //Error alarm, if there are differences
             if (!CompareDataTables(dt1, dt2)) {
-                MessageBox.Show("Error.\nThere are differences between the module CfgFile and the target CfgFile.");
+                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
+                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 StateUpdated("Verify State:\nVerify failed", null);
                 return -1;
             }
