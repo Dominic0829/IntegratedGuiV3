@@ -125,6 +125,9 @@ namespace IntegratedGuiV2
             this.cbAPPath = new System.Windows.Forms.CheckBox();
             this.bBackToMainForm = new System.Windows.Forms.Button();
             this.lMessage = new System.Windows.Forms.Label();
+            this.cbAllCh = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+            this.cbCh2 = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+            this.cbCh1 = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
             this.tcMain.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tcDdmi.SuspendLayout();
@@ -1064,7 +1067,7 @@ namespace IntegratedGuiV2
             this.bScanComponents.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.bScanComponents.Enabled = false;
             this.bScanComponents.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bScanComponents.Location = new System.Drawing.Point(1013, 762);
+            this.bScanComponents.Location = new System.Drawing.Point(1016, 826);
             this.bScanComponents.Margin = new System.Windows.Forms.Padding(2);
             this.bScanComponents.Name = "bScanComponents";
             this.bScanComponents.Size = new System.Drawing.Size(119, 28);
@@ -1085,6 +1088,7 @@ namespace IntegratedGuiV2
             this.bStoreIntoFlash.TabIndex = 1025;
             this.bStoreIntoFlash.Text = "Store into Fl.";
             this.bStoreIntoFlash.UseVisualStyleBackColor = true;
+            this.bStoreIntoFlash.Visible = false;
             this.bStoreIntoFlash.Click += new System.EventHandler(this.bStoreIntoFlash_Click);
             // 
             // bFunctionTest2
@@ -1092,7 +1096,7 @@ namespace IntegratedGuiV2
             this.bFunctionTest2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.bFunctionTest2.Enabled = false;
             this.bFunctionTest2.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bFunctionTest2.Location = new System.Drawing.Point(1013, 722);
+            this.bFunctionTest2.Location = new System.Drawing.Point(1017, 794);
             this.bFunctionTest2.Margin = new System.Windows.Forms.Padding(2);
             this.bFunctionTest2.Name = "bFunctionTest2";
             this.bFunctionTest2.Size = new System.Drawing.Size(119, 28);
@@ -1266,7 +1270,7 @@ namespace IntegratedGuiV2
             // bBackToMainForm
             // 
             this.bBackToMainForm.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bBackToMainForm.Location = new System.Drawing.Point(1013, 800);
+            this.bBackToMainForm.Location = new System.Drawing.Point(1017, 762);
             this.bBackToMainForm.Margin = new System.Windows.Forms.Padding(2);
             this.bBackToMainForm.Name = "bBackToMainForm";
             this.bBackToMainForm.Size = new System.Drawing.Size(119, 28);
@@ -1285,12 +1289,54 @@ namespace IntegratedGuiV2
             this.lMessage.TabIndex = 1036;
             this.lMessage.Text = "...";
             // 
+            // cbAllCh
+            // 
+            this.cbAllCh.Location = new System.Drawing.Point(701, -4);
+            this.cbAllCh.Margin = new System.Windows.Forms.Padding(2);
+            this.cbAllCh.Name = "cbAllCh";
+            this.cbAllCh.Size = new System.Drawing.Size(69, 22);
+            this.cbAllCh.StateCommon.ShortText.Color1 = System.Drawing.SystemColors.ControlText;
+            this.cbAllCh.StateCommon.ShortText.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbAllCh.TabIndex = 1037;
+            this.cbAllCh.Values.Text = "All Ch";
+            this.cbAllCh.Visible = false;
+            this.cbAllCh.CheckedChanged += new System.EventHandler(this.cbAllCh_CheckedChanged);
+            // 
+            // cbCh2
+            // 
+            this.cbCh2.Location = new System.Drawing.Point(645, -4);
+            this.cbCh2.Margin = new System.Windows.Forms.Padding(2);
+            this.cbCh2.Name = "cbCh2";
+            this.cbCh2.Size = new System.Drawing.Size(52, 22);
+            this.cbCh2.StateCommon.ShortText.Color1 = System.Drawing.SystemColors.ControlText;
+            this.cbCh2.StateCommon.ShortText.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbCh2.TabIndex = 1039;
+            this.cbCh2.Values.Text = "Ch2";
+            this.cbCh2.Visible = false;
+            this.cbCh2.CheckedChanged += new System.EventHandler(this.cbCh2_CheckedChanged);
+            // 
+            // cbCh1
+            // 
+            this.cbCh1.Location = new System.Drawing.Point(589, -4);
+            this.cbCh1.Margin = new System.Windows.Forms.Padding(2);
+            this.cbCh1.Name = "cbCh1";
+            this.cbCh1.Size = new System.Drawing.Size(52, 22);
+            this.cbCh1.StateCommon.ShortText.Color1 = System.Drawing.SystemColors.ControlText;
+            this.cbCh1.StateCommon.ShortText.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbCh1.TabIndex = 1038;
+            this.cbCh1.Values.Text = "Ch1";
+            this.cbCh1.Visible = false;
+            this.cbCh1.CheckedChanged += new System.EventHandler(this.cbCh1_CheckedChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
             this.ClientSize = new System.Drawing.Size(1184, 849);
+            this.Controls.Add(this.cbCh2);
+            this.Controls.Add(this.cbCh1);
+            this.Controls.Add(this.cbAllCh);
             this.Controls.Add(this.lMessage);
             this.Controls.Add(this.bBackToMainForm);
             this.Controls.Add(this.gbGenerateCfg);
@@ -1455,6 +1501,9 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Button bBypassEraseAllStateCheck;
         public System.Windows.Forms.CheckBox cbDAPath;
         public System.Windows.Forms.Label lMessage;
+        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbAllCh;
+        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbCh2;
+        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbCh1;
     }
 }
 

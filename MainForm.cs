@@ -515,7 +515,7 @@ namespace IntegratedGuiV2
         
         private int _ChannelSwitch()
         {
-            ProcessingChannel = (ProcessingChannel == 1) ? 2 : 1;
+            ProcessingChannel = (ProcessingChannel == 13) ? 23 : 13;
             _ChannelSet(ProcessingChannel);
             _UpdateButtonState();
 
@@ -524,6 +524,8 @@ namespace IntegratedGuiV2
 
         private int _ChannelSet(int ch)
         {
+            int chSet;
+
             if (!I2cConnected)
             {
                 if (_I2cMasterConnect(true, false) < 0)
@@ -533,7 +535,14 @@ namespace IntegratedGuiV2
             }
 
             Thread.Sleep(10);
-            int result = i2cMaster.ChannelSetApi(ch);
+            if (ch == 1 || ch == 13)
+                chSet = 13;
+            else if (ch == 2 || ch == 23)
+                chSet = 23;
+            else
+                chSet = 0;
+
+            int result = i2cMaster.ChannelSetApi(chSet);
 
             if (result < 0)
                 return -1; 
@@ -552,10 +561,11 @@ namespace IntegratedGuiV2
             int result = -1;
 
             if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _I2cMasterConnect(setMode, setPassword)));
+                this.Invoke(new Action(() => result = _I2cMasterConnect(setMode, setPassword)));
             else
-                return _I2cMasterConnect(setMode, setPassword);
-            
+                result = _I2cMasterConnect(setMode, setPassword);
+
+            return result;
         }
 
         public int I2cMasterDisconnectApi()
@@ -1012,7 +1022,7 @@ namespace IntegratedGuiV2
             string tempUcMemoryFile;
 
             fileName = fileName.Replace(" ", "") + ".csv";
-            folderPath = Path.Combine(executableFileFolderPath, "LogFolder");
+            folderPath = Path.Combine(executableFileFolderPath, "RegisterFiles");
             exportFilePath = Path.Combine(folderPath, fileName);
 
             if (!Directory.Exists(folderPath))
@@ -1048,24 +1058,25 @@ namespace IntegratedGuiV2
             if (logFileMode) {
                 LastBinPaths lastPath = _LoadLastPaths();
                 folderPath = lastPath.LogFilePath;
+
                 if(string.IsNullOrEmpty(folderPath))
                     folderPath = Path.Combine(Application.StartupPath, "LogFolder");
-
-                if (!Directory.Exists(folderPath))
-                    Directory.CreateDirectory(folderPath);
             }
             else {
                 folderPath = lastUsedDirectory;
             }
 
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
             fileName = fileName.Replace(" ", "") + ".csv";
             exportFilePath = Path.Combine(folderPath, fileName);
             tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
-            exportFilePath = exportFilePath.Replace("\\\\", "\\");
-            tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
+            //exportFilePath = exportFilePath.Replace("\\\\", "\\");
+            //tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
 
             if (File.Exists(exportFilePath)) {
-                if (fileName == "TempRegister.csv") {
+                if (fileName == "ModuleRegisterFile.csv") {
                     File.Delete(exportFilePath);
                 }
                 else {
@@ -1508,6 +1519,7 @@ namespace IntegratedGuiV2
             bOutterSwitch.Enabled = false;
             bGlobalWrite.Enabled = false;
             bStoreIntoFlash.Enabled = false;
+            bIcpConnect.Enabled = false;
             ucNuvotonIcpTool.SetButtonEnable("bLink" , false);
             /*
             tcDdmi.Enabled = false;
@@ -1542,6 +1554,7 @@ namespace IntegratedGuiV2
             tcIcConfig.Enabled = true;
             ucGn1190Corrector.EnableButtonApi();
             */
+            bIcpConnect.Enabled = true;
             ucNuvotonIcpTool.SetButtonEnable("bLink", true);
             bGlobalWrite2.Enabled = true;
             //bFunctionTest2.Enabled = true;
@@ -1576,7 +1589,7 @@ namespace IntegratedGuiV2
         {
             string folderPath = System.Windows.Forms.Application.StartupPath;
             string combinedPath = Path.Combine(folderPath, "XmlFolder");
-            string xmlFilePath = Path.Combine(combinedPath, "Settings.xml");
+            string xmlFilePath = Path.Combine(combinedPath, "Permission settings file.xml");
             xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
 
             XmlDocument xmlDoc = new XmlDocument();
@@ -1614,6 +1627,42 @@ namespace IntegratedGuiV2
 
                     permissionNode.AppendChild(userControlNode);
 
+                    // Add MainForm components
+                    XmlElement mainFormNode = xmlDoc.CreateElement("MainForm");
+                    permissionNode.AppendChild(mainFormNode);
+
+                    List<Control> mainFormComponents = GetAllControls(this); // 搜尋 MainForm 所有元件
+                    mainFormComponents.Sort(new ControlComparer());
+
+                    XmlElement mainFormComponentsNode = xmlDoc.CreateElement("Components");
+
+                    foreach (Control control in mainFormComponents) {
+                        XmlElement componentNode = xmlDoc.CreateElement("Component");
+
+                        componentNode.SetAttribute("name", control.Name);
+                        componentNode.SetAttribute("object", control.GetType().Name);
+                        componentNode.SetAttribute("visible", "True");
+
+                        if (control.Name.Contains("Write") || control.Name.Contains("Flash")) {
+                            componentNode.SetAttribute("enabled", "False");
+                        }
+                        else if (control.Name.Contains("tp")) {
+                            componentNode.SetAttribute("enabled", "True");
+                        }
+                        else {
+                            componentNode.SetAttribute("enabled", control.Enabled.ToString());
+                        }
+
+                        if (control is TextBox textBox) {
+                            componentNode.SetAttribute("ReadOnly", textBox.ReadOnly.ToString());
+                        }
+
+                        mainFormComponentsNode.AppendChild(componentNode);
+                    }
+
+                    mainFormNode.AppendChild(mainFormComponentsNode);
+
+                    // Add UserControl components
                     List<Control> userControlComponents = GetAllControls(userControl); // search all components from UserControl and set xml node
                     userControlComponents.Sort(new ControlComparer());
 
@@ -1622,7 +1671,6 @@ namespace IntegratedGuiV2
                     foreach (Control control in userControlComponents)
                     {
                         XmlElement componentNode = xmlDoc.CreateElement("Component");
-
                         componentNode.SetAttribute("name", control.Name);
                         componentNode.SetAttribute("object", control.GetType().Name);
                         componentNode.SetAttribute("visible", "True");
@@ -1657,86 +1705,7 @@ namespace IntegratedGuiV2
 
             xmlDoc.Save(xmlFilePath);
         }
-
-        private void _GenerateXmlFileForProject_original()
-        {
-            string destinationFilePath;
-
-            XmlDocument xmlDoc = new XmlDocument();
-            XmlElement root = xmlDoc.CreateElement("Project");
-            xmlDoc.AppendChild(root);
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "XML Files|*.xml";
-            saveFileDialog.Title = "Save XML File";
-
-            string targetApromPath = APROMPath;
-            string targetDataromPath = DATAROMPath;
-
-            XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
-
-            if (rbCustomerMode.Checked) {
-                permissionsNode.SetAttribute("role", "Customer");
-            }
-            else if (rbMpMode.Checked) {
-                permissionsNode.SetAttribute("role", "MP");
-            }
-
-            root.AppendChild(permissionsNode);
-
-            // Check produc selected
-            if (cbProductSelect.SelectedItem != null) {
-                XmlElement productNode = xmlDoc.CreateElement("Product");
-                productNode.SetAttribute("name", cbProductSelect.SelectedItem.ToString());
-                permissionsNode.AppendChild(productNode);
-            }
-            else {
-                MessageBox.Show("Please select a product.");
-                return;
-            }
-
-            // Check APROM, DATAROM filepath
-            if (!string.IsNullOrWhiteSpace(APROMPath) || !string.IsNullOrWhiteSpace(DATAROMPath)) {
-                XmlElement APROMNode = xmlDoc.CreateElement("APROM");
-                APROMNode.SetAttribute("name", Path.GetFileName(APROMPath));
-                permissionsNode.AppendChild(APROMNode);
-
-                XmlElement DATAROMNode = xmlDoc.CreateElement("DATAROM");
-                DATAROMNode.SetAttribute("name", Path.GetFileName(DATAROMPath));
-                permissionsNode.AppendChild(DATAROMNode);
-            }
-            else {
-                MessageBox.Show("APROM or DATAROM path is not set.");
-                return;
-            }
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK) {
-                string selectedFileName = saveFileDialog.FileName;
-                xmlDoc.Save(selectedFileName);
-
-                lastUsedDirectory = Path.GetDirectoryName(selectedFileName);
-                _InitialStateBar();
-                _GlobalWriteFromUi(false);
-                _ExportLogfile("RegisterFile", false, false); // Export CfgFile to config folder
-                //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory);
-
-                if (!string.IsNullOrWhiteSpace(targetApromPath)) {
-                    destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(APROMPath));
-                    //MessageBox.Show("APROMPath: \n" + APROMPath +
-                    //                "\nlastUsedDirectory: \n" + destinationFilePath);
-                    File.Copy(targetApromPath, destinationFilePath, true);
-                }
-                
-                if (!string.IsNullOrWhiteSpace(targetDataromPath)) {
-                    destinationFilePath = Path.Combine(lastUsedDirectory, Path.GetFileName(DATAROMPath));
-                    //MessageBox.Show("DATAROMPath: \n" + DATAROMPath +
-                    //                "\nlastUsedDirectory: \n" + destinationFilePath);
-                    File.Copy(targetDataromPath, destinationFilePath, true);
-                }
-            }
-
-            CompressAndDeleteFolder(lastUsedDirectory);
-        }
-
+        
         private void _GenerateXmlFileForProject()
         {
             string LogFileName = "RegisterFile";
@@ -2114,7 +2083,7 @@ namespace IntegratedGuiV2
         private void _UpdateButtonState()
         {
            
-            if (ProcessingChannel == 1)
+            if (ProcessingChannel == 13)
             {
                 rbCh1.Checked = true;
                 rbCh2.Checked = false;
@@ -2122,7 +2091,7 @@ namespace IntegratedGuiV2
                 tbInnerStateCh2.BackColor = Color.White;
             }
 
-            if (ProcessingChannel == 2)
+            if (ProcessingChannel == 23)
             {
                 rbCh2.Checked = true;
                 rbCh1.Checked = false;
@@ -2491,16 +2460,22 @@ namespace IntegratedGuiV2
 
         internal int _GlobalWriteFromRegisterMap(bool CustomerMode, string CfgFilePath)
         {
+            LastBinPaths lastPath = _LoadLastPaths();
             string DirectoryPath = Application.StartupPath;
-            string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\TempRegister.csv");
+            string BackupRegisterFilePath = lastPath.LogFilePath;
+
+            if (string.IsNullOrEmpty(BackupRegisterFilePath))
+                BackupRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\ModuleRegisterFile.csv");
+            else
+                BackupRegisterFilePath = Path.Combine(BackupRegisterFilePath, "ModuleRegisterFile.csv");
 
             StateUpdated("Write State:\nPreparing resources...", 61);
 
             if (CustomerMode)
             {
-                if (WriteRegisterPageApi("Up 00h", 200, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
+                if (WriteRegisterPageApi("Up 00h", 200, BackupRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
                 StateUpdated("Write State:\nUpPage 00h...Done", 63);
-                if (WriteRegisterPageApi("Up 03h", 200, TempRegisterFilePath) < 0) return -1;
+                if (WriteRegisterPageApi("Up 03h", 200, BackupRegisterFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
             else
@@ -2511,13 +2486,13 @@ namespace IntegratedGuiV2
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
 
-            if (WriteRegisterPageApi("80h", 200, TempRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
+            if (WriteRegisterPageApi("80h", 200, BackupRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
             StateUpdated("Write State:\nPage 0x80h...Done", 67);
-            if (WriteRegisterPageApi("81h", 200, TempRegisterFilePath) < 0) return -1;
+            if (WriteRegisterPageApi("81h", 200, BackupRegisterFilePath) < 0) return -1;
             StateUpdated("Write State:\nPage 0x81h...Done", 70);
-            if (WriteRegisterPageApi("Rx", 1000, TempRegisterFilePath) < 0) return -1;
+            if (WriteRegisterPageApi("Rx", 1000, BackupRegisterFilePath) < 0) return -1;
             StateUpdated("Write State:\nRxIcConfig...Done", 80);
-            if (WriteRegisterPageApi("Tx", 1000, TempRegisterFilePath) < 0) return -1;
+            if (WriteRegisterPageApi("Tx", 1000, BackupRegisterFilePath) < 0) return -1;
             StateUpdated("Write State:\nTxIcConfig...Done", 90);
 
             StoreIntoFlashApi();
@@ -2746,15 +2721,12 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
-        private void _ReformatedCsvFile(string FilePath, int fineNumber)
+        private void _ReformatedCsvFile(string FilePath, int fineNumber, string tempFilePath)
         {
-            string startupPath = Application.StartupPath;
-            string tempFilePath;
-
             if (fineNumber == 1)
-                tempFilePath = Path.Combine(startupPath, "LogFolder", "temp1_" + Path.GetFileName(FilePath));
+                tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
             else if (fineNumber == 2)
-                tempFilePath = Path.Combine(startupPath, "LogFolder", "temp2_" + Path.GetFileName(FilePath));
+                tempFilePath = Path.Combine(tempFilePath, "temp2_" + Path.GetFileName(FilePath));
             else
                 return;
 
@@ -2785,13 +2757,13 @@ namespace IntegratedGuiV2
             }
         }
 
-        internal int _ComparationRegister(string TargetCfgFilePath, bool onlyVerifyMode)
+        internal int _ComparationRegister(string RegisterFilePath, bool onlyVerifyMode)
         {
-            string fileName1 = "ModuleCfg"; //Module cfg file
-            string fileName2 = Path.GetFileName(TargetCfgFilePath); //Reference cfg file
+            string fileName1 = "UpdatedModuleRegisterFile"; //Module cfg file
+            string fileName2 = Path.GetFileName(RegisterFilePath); //Reference cfg file
             string filePath1;
-            string filePath2 = TargetCfgFilePath; //Reference cfg file
-            string executableFileFolderPath = Path.Combine(Application.StartupPath, "LogFolder");
+            string filePath2 = RegisterFilePath; //Reference cfg file
+            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
 
             if (!onlyVerifyMode)
                 StateUpdated("Verify State:\nCfgFile check...", 93);
@@ -2801,10 +2773,9 @@ namespace IntegratedGuiV2
             if (_ExportModuleCfg(fileName1) < 0)
                 return -1;
             
-            filePath1 = Path.Combine(executableFileFolderPath, "ModuleCfg.csv");
-            _ReformatedCsvFile(filePath1, 1);
-            _ReformatedCsvFile(filePath2, 2);
-
+            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
+            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath);
+            _ReformatedCsvFile(filePath2, 2, executableFileFolderPath);
             filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
             filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
 
@@ -2911,7 +2882,7 @@ namespace IntegratedGuiV2
             _InitialStateBar();
 
             _GlobalWriteFromUi(false);
-
+            ucInformation.StoreIntoFlashApi();
             _EnableButtons();
         }
 
@@ -2924,8 +2895,8 @@ namespace IntegratedGuiV2
 
         private void bSaveCfgFile_Click(object sender, EventArgs e)
         {
-            string LogFileName = "RegisterFile";
-            lastUsedDirectory = Application.StartupPath;
+            string LogFileName = "EngRegisterFile";
+            lastUsedDirectory = Path.Combine(Application.StartupPath, "RegisterFiles");
             _DisableButtons();
             // Save the file 
             _GlobalWriteFromUi(false);
@@ -2938,8 +2909,8 @@ namespace IntegratedGuiV2
 
         private void bLoadCfgFile_Click(object sender, EventArgs e)
         {
-            string DirectoryPath = Application.StartupPath;
-            string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder/TempRegister.csv");
+            string DirectoryPath = Path.Combine(Application.StartupPath, "RegisterFiles");
+            string RegisterFileName = Path.Combine(DirectoryPath, "EngRegisterFile.csv");
 
             _DisableButtons();
 
@@ -2950,17 +2921,17 @@ namespace IntegratedGuiV2
 
             //Write data from RegisterFile
             progressBar1.Value = 5;
-            WriteRegisterPageApi("Up 00h", 10, TempRegisterFilePath);
+            WriteRegisterPageApi("Up 00h", 10, RegisterFileName);
             progressBar1.Value = 10;
-            WriteRegisterPageApi("Up 03h", 10, TempRegisterFilePath);
+            WriteRegisterPageApi("Up 03h", 10, RegisterFileName);
             progressBar1.Value = 20;
-            WriteRegisterPageApi("80h", 200, TempRegisterFilePath);
+            WriteRegisterPageApi("80h", 200, RegisterFileName);
             progressBar1.Value = 30;
-            WriteRegisterPageApi("81h", 200, TempRegisterFilePath);
+            WriteRegisterPageApi("81h", 200, RegisterFileName);
             progressBar1.Value = 40;
-            WriteRegisterPageApi("Rx", 1000, TempRegisterFilePath);
+            WriteRegisterPageApi("Rx", 1000, RegisterFileName);
             progressBar1.Value = 50;
-            WriteRegisterPageApi("Tx", 1000, TempRegisterFilePath);
+            WriteRegisterPageApi("Tx", 1000, RegisterFileName);
             progressBar1.Value = 60;
 
             StoreIntoFlashApi();
@@ -2995,8 +2966,8 @@ namespace IntegratedGuiV2
             if (bScanComponents.Enabled)
                 bScanComponents.Enabled = false;
 
-            //_GenerateXmlFileFromUcComponents();
-            _GenerateXmlFileForProject();
+            _GenerateXmlFileFromUcComponents();
+            //_GenerateXmlFileForProject();
             bScanComponents.Enabled = true;
         }
 
@@ -3044,9 +3015,7 @@ namespace IntegratedGuiV2
         private void bGenerateCfg_Click(object sender, EventArgs e)
         {
             _DisableButtons();
-
             _GenerateXmlFileForProject();
-
             _EnableButtons();
         }
 
@@ -3056,7 +3025,7 @@ namespace IntegratedGuiV2
 
             if (FirstRound)
             {
-                ProcessingChannel = 1;
+                ProcessingChannel = 13;
                 FirstRound = false;
             }
 
@@ -3068,7 +3037,7 @@ namespace IntegratedGuiV2
         {
             if (cbConnect.Checked == true) {
                 _I2cMasterConnect(true, true);
-                i2cMaster.ChannelSetApi(ProcessingChannel);
+                _ChannelSet(ProcessingChannel);
                 _UpdateButtonState();
                 gbChannelSwitcher.Enabled = true;
             }
@@ -3140,6 +3109,32 @@ namespace IntegratedGuiV2
                 DATAROMPath = "";
             }
         }
+
+        private void cbCh1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbCh1.Checked)
+                ChannelSetApi(1);
+            else
+                ChannelSetApi(0);
+        }
+
+        private void cbCh2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbCh2.Checked)
+                ChannelSetApi(2);
+            else
+                ChannelSetApi(0);
+        }
+
+        private void cbAllCh_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbAllCh.Checked)
+                ChannelSetApi(13);
+            else
+                ChannelSetApi(0);
+        }
+
+
     }
 
     public class ComboBoxItem

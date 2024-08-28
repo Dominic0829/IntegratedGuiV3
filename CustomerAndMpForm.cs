@@ -1170,8 +1170,9 @@ namespace IntegratedGuiV2
         private int _RemoteControl2(bool customerMode)
         {
             string DirectoryPath = TempFolderPath;
-            string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
-            string LogFileName = "TempRegister";
+            string RegisterFileName = "RegisterFile.csv";
+            string RegisterFilePath = Path.Combine(DirectoryPath, RegisterFileName); //Generate the CfgFilePath with config folder
+            string BackupFileName = "ModuleRegisterFile";
 
             if (DebugMode) {
                 MessageBox.Show("directoryPath: \n" + DirectoryPath +
@@ -1184,7 +1185,7 @@ namespace IntegratedGuiV2
             }
             else {
                 _RxPowerUpdateWithoutThread();
-                mainForm.ExportLogfileApi(LogFileName, true, false); //目標模組Cfg Backup
+                mainForm.ExportLogfileApi(BackupFileName, true, false); //目標模組Cfg Backup
 
                 if (ProcessingChannel == 1) {
                     mainForm.SetToChannle2Api(false);
@@ -1437,6 +1438,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh1.ForeColor = Color.White;
             }
 
+            _RxPowerUpdateWithoutThread();
             mainForm.ExportLogfileApi(LogFileName, true, true); //Must be implement
             Thread.Sleep(10);
             _UpdateMessage(ch, "LogFile..exported");
@@ -1568,7 +1570,6 @@ namespace IntegratedGuiV2
 
                     if (!(mainForm.I2cMasterConnectApi(true, true) < 0))// Reconnect-step2
                         I2cConnected = true;
-
                 }
 
                 FirstRound = false;
@@ -1668,9 +1669,7 @@ namespace IntegratedGuiV2
             mainForm.WriteRegisterPageApi("81h", 200, TempRegisterFilePath);
             mainForm.WriteRegisterPageApi("Rx", 1000, TempRegisterFilePath);
             mainForm.WriteRegisterPageApi("Tx", 1000, TempRegisterFilePath);
-
             mainForm.StoreIntoFlashApi();
-
             mainForm._GlobalRead();
             string LogFileName = "AfterFlasing";
             mainForm.ExportLogfileApi(LogFileName, true, true);
@@ -1678,7 +1677,7 @@ namespace IntegratedGuiV2
             /*
             string[] commands = { "Up 00h", "Up 03h", "80h", "81h", "Tx", "Rx" };
             
-            foreach(var command in commands) {
+            foreach(var command in commands) {             
                 mainForm.WriteRegisterPageApi(command);
                 Thread.Sleep(500);
             }
@@ -1696,7 +1695,6 @@ namespace IntegratedGuiV2
             if (_VenderSnInputFormatCheck() < 0) return;
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
-                _RxPowerUpdateWithoutThread();
                 _WriteSnDatecode(ProcessingChannel); // Writing SN and DateCode, then export csv file.
 
                 if (ProcessingChannel == 1) 
@@ -1798,6 +1796,7 @@ namespace IntegratedGuiV2
             mainForm.ComparationRegisterApi(RegisterFilePath, true);
             _EnableButtons();
         }
+
     }
 
     public class LastBinPaths

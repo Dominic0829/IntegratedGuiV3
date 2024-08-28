@@ -53,6 +53,7 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
+            this.bCfgFileComparsion = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -104,7 +105,6 @@
             this.lReNewSn = new System.Windows.Forms.Label();
             this.tbReNewSnCh2 = new System.Windows.Forms.TextBox();
             this.tbOrignalSNCh2 = new System.Windows.Forms.TextBox();
-            this.bCfgFileComparsion = new System.Windows.Forms.Button();
             this.gbOperatorMode.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -447,6 +447,21 @@
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "MP information";
             this.gbOperatorMode.Visible = false;
+            // 
+            // bCfgFileComparsion
+            // 
+            this.bCfgFileComparsion.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bCfgFileComparsion.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bCfgFileComparsion.FlatAppearance.BorderSize = 0;
+            this.bCfgFileComparsion.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bCfgFileComparsion.ForeColor = System.Drawing.Color.White;
+            this.bCfgFileComparsion.Location = new System.Drawing.Point(107, 25);
+            this.bCfgFileComparsion.Name = "bCfgFileComparsion";
+            this.bCfgFileComparsion.Size = new System.Drawing.Size(121, 40);
+            this.bCfgFileComparsion.TabIndex = 89;
+            this.bCfgFileComparsion.Text = "CfgFile comparison";
+            this.bCfgFileComparsion.UseVisualStyleBackColor = false;
+            this.bCfgFileComparsion.Click += new System.EventHandler(this.bCfgFileComparsion_Click);
             // 
             // groupBox1
             // 
@@ -1009,21 +1024,6 @@
             this.tbOrignalSNCh2.Size = new System.Drawing.Size(70, 18);
             this.tbOrignalSNCh2.TabIndex = 87;
             this.tbOrignalSNCh2.Visible = false;
-            // 
-            // bCfgFileComparsion
-            // 
-            this.bCfgFileComparsion.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
-            this.bCfgFileComparsion.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bCfgFileComparsion.FlatAppearance.BorderSize = 0;
-            this.bCfgFileComparsion.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.bCfgFileComparsion.ForeColor = System.Drawing.Color.White;
-            this.bCfgFileComparsion.Location = new System.Drawing.Point(107, 25);
-            this.bCfgFileComparsion.Name = "bCfgFileComparsion";
-            this.bCfgFileComparsion.Size = new System.Drawing.Size(121, 40);
-            this.bCfgFileComparsion.TabIndex = 89;
-            this.bCfgFileComparsion.Text = "CfgFile comparison";
-            this.bCfgFileComparsion.UseVisualStyleBackColor = false;
-            this.bCfgFileComparsion.Click += new System.EventHandler(this.bCfgFileComparsion_Click);
             // 
             // CustomerAndMpForm
             // 
