@@ -42,7 +42,7 @@
             this.lLogin = new System.Windows.Forms.Label();
             this.cbProducts = new System.Windows.Forms.ComboBox();
             this.lProduct = new System.Windows.Forms.Label();
-            this.lBackToLogin = new System.Windows.Forms.Label();
+            this.lBackToMain = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // kryptonPalette1
@@ -210,18 +210,18 @@
             this.lProduct.TabIndex = 55;
             this.lProduct.Text = "Product:";
             // 
-            // lBackToLogin
+            // lBackToMain
             // 
-            this.lBackToLogin.AutoSize = true;
-            this.lBackToLogin.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.lBackToLogin.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lBackToLogin.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
-            this.lBackToLogin.Location = new System.Drawing.Point(62, 333);
-            this.lBackToLogin.Name = "lBackToLogin";
-            this.lBackToLogin.Size = new System.Drawing.Size(131, 19);
-            this.lBackToLogin.TabIndex = 57;
-            this.lBackToLogin.Text = "Back to MainForm";
-            this.lBackToLogin.Click += new System.EventHandler(this.lBackToLogin_Click);
+            this.lBackToMain.AutoSize = true;
+            this.lBackToMain.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.lBackToMain.Font = new System.Drawing.Font("Nirmala UI", 10.2F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lBackToMain.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(147)))), ((int)(((byte)(183)))), ((int)(((byte)(43)))));
+            this.lBackToMain.Location = new System.Drawing.Point(62, 333);
+            this.lBackToMain.Name = "lBackToMain";
+            this.lBackToMain.Size = new System.Drawing.Size(131, 19);
+            this.lBackToMain.TabIndex = 57;
+            this.lBackToMain.Text = "Back to MainForm";
+            this.lBackToMain.Click += new System.EventHandler(this.lBackToMain_Click);
             // 
             // LoginForm
             // 
@@ -229,7 +229,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(234)))), ((int)(((byte)(241)))), ((int)(((byte)(212)))));
             this.ClientSize = new System.Drawing.Size(250, 350);
-            this.Controls.Add(this.lBackToLogin);
+            this.Controls.Add(this.lBackToMain);
             this.Controls.Add(this.lProduct);
             this.Controls.Add(this.cbProducts);
             this.Controls.Add(this.lExit);
@@ -270,6 +270,6 @@
         private System.Windows.Forms.Label lLogin;
         private System.Windows.Forms.ComboBox cbProducts;
         private System.Windows.Forms.Label lProduct;
-        private System.Windows.Forms.Label lBackToLogin;
+        private System.Windows.Forms.Label lBackToMain;
     }
 }

@@ -33,6 +33,8 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Timer timer;
         private int SequenceIndexA = 0;
         private int SequenceIndexB = 0;
+        private int SequenceIndexDirectionA = 0;
+        private int SequenceIndexDirectionB = 0;
         private bool DoubleSideMode = false;
         private int ProcessingChannel = 1;
         private int SerialNumber = 1;
@@ -51,6 +53,7 @@ namespace IntegratedGuiV2
 
         private Thread RxPowerUpdateThread;
         private bool ContinueRxPowerUpdate = true;
+        private WaitFormFunc loadingForm = new WaitFormFunc();
 
         private void MainForm_MainMessageUpdated(object sender, MessageEventArgs e)
         {
@@ -140,7 +143,8 @@ namespace IntegratedGuiV2
             this.Load += MainForm_Load;
             this.KeyPreview = true;
             this.KeyDown += _HideKeys_KeyDown;
-            
+            this.tbVenderSnCh1.KeyDown += TbVenderSnCh1_KeyDown;
+
             if (!(mainForm.I2cMasterConnectApi(true, true) < 0)) // (bool setMode, bool setPassword)
                 I2cConnected = true;
             else {
@@ -248,7 +252,7 @@ namespace IntegratedGuiV2
 
         private void MainForm_Load(object sender, EventArgs e)
         {
-            bStart.Select();
+            tbRssiCh1_3.Select();
         }
 
         private void _InitialUi()
@@ -293,32 +297,70 @@ namespace IntegratedGuiV2
             tbReNewSnCh2.ForeColor = Color.Black;
         }
 
-
-            private void _HideKeys_KeyDown(object sender, KeyEventArgs e)
+        private void _HideKeys_KeyDown(object sender, KeyEventArgs e)
         {
-            Keys[] expectedKeysA = { Keys.NumPad4, Keys.NumPad4, Keys.NumPad6, Keys.NumPad6 };
-            Keys[] expectedKeysB = { Keys.NumPad8, Keys.NumPad8, Keys.NumPad2, Keys.NumPad2 };
+            Keys[][] expectedKeys = {
+                new Keys[] { Keys.NumPad4, Keys.NumPad4, Keys.NumPad6, Keys.NumPad6 },
+                new Keys[] { Keys.NumPad8, Keys.NumPad8, Keys.NumPad2, Keys.NumPad2 },
+                new Keys[] { Keys.Left, Keys.Left, Keys.Right, Keys.Right },
+                new Keys[] { Keys.Up, Keys.Up, Keys.Down, Keys.Down }
+            };
 
-            if (e.KeyCode == expectedKeysA[SequenceIndexA]) {
-                SequenceIndexA++;
-                if (CheckSequenceComplete(SequenceIndexA, expectedKeysA)) {
-                    if (!(mainForm.I2cMasterDisconnectApi() < 0))
-                        I2cConnected = false;
-                    OpenLoginForm();
+            Action[] actions = {
+                () => OpenLoginForm(),
+                () => OpenAdminAuthenticationForm(),
+                () => OpenLoginForm(),
+                () => OpenAdminAuthenticationForm(),
+            };
+
+            int[] sequenceIndices = { SequenceIndexA, SequenceIndexB, SequenceIndexDirectionA, SequenceIndexDirectionB };
+
+            for (int i = 0; i < expectedKeys.Length; i++) {
+                if (e.KeyCode == expectedKeys[i][sequenceIndices[i]]) {
+                    sequenceIndices[i]++;
+                    if (CheckSequenceComplete(sequenceIndices[i], expectedKeys[i])) {
+                        if (!(mainForm.I2cMasterDisconnectApi() < 0))
+                            I2cConnected = false;
+
+                        actions[i]();
+                        ResetSequence();
+                    }
+                }
+                else {
                     ResetSequence();
                 }
             }
-            else if (e.KeyCode == expectedKeysB[SequenceIndexB]) {
-                SequenceIndexB++;
-                if (CheckSequenceComplete(SequenceIndexB, expectedKeysB)) {
-                    if (!(mainForm.I2cMasterDisconnectApi() < 0))
-                        I2cConnected = false;
-                    OpenAdminAuthenticationForm();
-                    ResetSequence();
+
+            SequenceIndexA = sequenceIndices[0];
+            SequenceIndexB = sequenceIndices[1];
+            SequenceIndexDirectionA = sequenceIndices[2];
+            SequenceIndexDirectionB = sequenceIndices[3];
+        }
+
+        private void TbVenderSnCh1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (cbBarcodeMode.Enabled && e.KeyCode == Keys.Enter) {
+                tbVenderSnCh1.Enabled = false;
+
+                if (ValidateVenderSn() >= 0) {
+                    tbDateCode.Text = tbVenderSnCh1.Text.Substring(0, 6);
+                    //MessageBox.Show("Serial number validation passed.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    
+                    if (!cbOnlySN.Checked) { //Handle CfgFile
+                        bool isCustomerMode = lMode.Text == "Customer";
+                        if ((isCustomerMode || lMode.Text == "MP") &&
+                            _Processor(isCustomerMode) < 0) {
+                            MessageBox.Show("There are some problems", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                            return;
+                        }
+                    }
+                    
+                    WriteSnDateCode(); //Handle SN & Datecode
                 }
-            }
-            else {
-                ResetSequence();
+
+                tbVenderSnCh1.Text = "";
+                tbVenderSnCh1.Enabled = true;
+                tbVenderSnCh1.Select();
             }
         }
 
@@ -353,6 +395,8 @@ namespace IntegratedGuiV2
         {
             SequenceIndexA = 0;
             SequenceIndexB = 0;
+            SequenceIndexDirectionA = 0;
+            SequenceIndexDirectionB = 0;
         }
 
         private void MainForm_ReadStateUpdated(object sender, string e)
@@ -601,38 +645,6 @@ namespace IntegratedGuiV2
             xmlDoc.Save(xmlFilePath);
         }
 
-        /*
-        private void _SaveLastBinPaths(string zipPath, string logFilePath)
-        {
-            string exeFolderPath = Application.StartupPath;
-            string combinedPath = Path.Combine(exeFolderPath, "XmlFolder");
-
-            if (!Directory.Exists(combinedPath))
-                Directory.CreateDirectory(combinedPath);
-
-            string xmlFilePath = Path.Combine(combinedPath, "MainFormPaths.xml");
-            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
-
-            XmlDocument xmlDoc = new XmlDocument();
-            XmlElement root = xmlDoc.CreateElement("Paths");
-            
-            if (!string.IsNullOrEmpty(zipPath)) {
-                XmlElement zipPathElement = xmlDoc.CreateElement("ZipPath");
-                zipPathElement.InnerText = Path.GetDirectoryName(zipPath);
-                root.AppendChild(zipPathElement);
-            }
-
-            if (!string.IsNullOrEmpty(logFilePath)) {
-                XmlElement logFilePathElement = xmlDoc.CreateElement("LogFilePath");
-                logFilePathElement.InnerText = Path.GetDirectoryName(logFilePath);
-                root.AppendChild(logFilePathElement);
-            }
-
-            xmlDoc.AppendChild(root);
-            xmlDoc.Save(xmlFilePath);
-        }
-        */
-
         private LastBinPaths _LoadLastPaths()
         {
             string folderPath = Application.StartupPath;
@@ -726,75 +738,6 @@ namespace IntegratedGuiV2
             dirInfo.Attributes |= FileAttributes.Hidden;
         }
 
-        /*
-        private void _LoadXmlFile_original()
-        {
-            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
-
-            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                openFileDialog.Title = "Files position";
-                openFileDialog.Filter = "Xml Files (*.xml)|*.xml";
-                openFileDialog.InitialDirectory = initialDirectory;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                    tbFilePath.Text = openFileDialog.FileName;
-                    _ParserXmlForProjectInformation(openFileDialog.FileName);
-                    tbFilePath.SelectionStart = tbFilePath.Text.Length;
-                }
-            }
-        }
-        */
-        /*
-        private void _LoadXmlFile()
-        {
-            string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            string selectedFilePath;
-            string extension;
-
-            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                openFileDialog.Title = "Files position";
-                openFileDialog.Filter = "Zip Files (*.zip)|*.zip";
-                openFileDialog.InitialDirectory = initialDirectory;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                    selectedFilePath = openFileDialog.FileName;
-                    extension = Path.GetExtension(selectedFilePath).ToLower();
-
-                    if (extension == ".zip") {
-                        try {
-                            tbFilePath.Text = selectedFilePath;
-                            XmlDocument xmlDoc = LoadXmlFromZip(selectedFilePath, "Cfg.xml");
-                            _ParserXmlForProjectInformation_method2(xmlDoc);
-                        }
-                        catch (Exception ex) {
-                            MessageBox.Show("Failed to load XML from zip file: " + ex.Message);
-                        }
-                    }
-                    
-                    tbFilePath.SelectionStart = tbFilePath.Text.Length;
-                }
-            }
-        }
-
-        private XmlDocument LoadXmlFromZip(string zipFilePath, string xmlFileName)
-        {
-            using (ZipFile zip = ZipFile.Read(zipFilePath)) {
-                ZipEntry xmlEntry = zip[xmlFileName];
-                if (xmlEntry != null) {
-                    using (MemoryStream ms = new MemoryStream()) {
-                        xmlEntry.ExtractWithPassword(ms, "2368");
-                        ms.Seek(0, SeekOrigin.Begin);
-                        XmlDocument xmlDoc = new XmlDocument();
-                        xmlDoc.Load(ms);
-                        return xmlDoc;
-                    }
-                }
-                else {
-                    throw new FileNotFoundException($"File {xmlFileName} not found in zip archive.");
-                }
-            }
-        }
-        */
         private void _SetLogFilePath()
         {
             string initialDirectory = Application.StartupPath;
@@ -960,7 +903,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh2.Visible = false;
                 lOriginalSN.Visible = false;
                 lReNewSn.Visible = false;
-                bCfgFileComparsion.Visible = false;
+                bCfgFileComparison.Visible = false;
             }
 
             else if (lMode.Text == "MP") {
@@ -978,7 +921,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh2.Visible = true;
                 lOriginalSN.Visible = true;
                 lReNewSn.Visible = true;
-                bCfgFileComparsion.Visible = true;
+                bCfgFileComparison.Visible = true;
 
                 if (rbBoth.Checked) {
                     tbOrignalSNCh2.Visible = true;
@@ -1134,9 +1077,29 @@ namespace IntegratedGuiV2
                 }
             }
         }
+        private void _DisableButtonsForBarcodeMode()
+        {
+            bStart.Enabled = false;
+            bWriteSnDateCone.Enabled = false;
+            bCfgFileComparison.Enabled = false;
+            gbCodeEditor.Enabled = false;
+            cbOnlySN.Enabled = false;
+            tbVenderSnCh1.Enabled = true;
+        }
+        private void _EnableButtonsForBarcodeMode()
+        {
+            bStart.Enabled = true;
+            bWriteSnDateCone.Enabled = true;
+            bCfgFileComparison.Enabled = true;
+            gbCodeEditor.Enabled = true;
+            cbOnlySN.Enabled = true;
+            tbVenderSnCh1.Enabled = false;
+            tbFilePath.Enabled = true;
+        }
 
         private void _DisableButtons()
         {
+            //loadingForm.Show(this);
             tbFilePath.Enabled = false;
             bStart.Enabled = false;
             rbSingle.Enabled = false;
@@ -1144,11 +1107,12 @@ namespace IntegratedGuiV2
             cbSecurityLock.Enabled = false;
             cbI2cConnect.Enabled = false;
             //cbBypassW.Enabled = false;
-            gbOperatorMode.Enabled = false;
+            cbEngineerMode.Enabled = false;
+            //gbOperatorMode.Enabled = false;
             button1.Enabled = false;
             button2.Enabled = false;
             bWriteSnDateCone.Enabled = false;
-            bCfgFileComparsion.Enabled = false;
+            bCfgFileComparison.Enabled = false;
         }
 
         private void _EnableButtons()
@@ -1160,11 +1124,13 @@ namespace IntegratedGuiV2
             cbSecurityLock.Enabled = true;
             cbI2cConnect.Enabled = true;
             //cbBypassW.Enabled = true;
-            gbOperatorMode.Enabled = true;
+            cbEngineerMode.Enabled = true;
+            //gbOperatorMode.Enabled = true;
             button1.Enabled = true;
             button2.Enabled = true;
             bWriteSnDateCone.Enabled = true;
-            bCfgFileComparsion.Enabled = true;
+            bCfgFileComparison.Enabled = true;
+            //loadingForm.Close();
         }
 
         private int _RemoteControl2(bool customerMode)
@@ -1216,8 +1182,10 @@ namespace IntegratedGuiV2
                 mainForm._GlobalWriteFromRegisterMap(customerMode, RegisterFilePath);
                 Thread.Sleep(10);
 
+                /*
                 if (!customerMode)
-                    mainForm.ComparationRegisterApi(RegisterFilePath, false);
+                    mainForm.ComparisonRegisterApi(RegisterFilePath, false , cbEngineerMode.Checked);
+                */
                 
                 Thread.Sleep(10);
 
@@ -1537,6 +1505,7 @@ namespace IntegratedGuiV2
         */
         private int _Processor(bool customerMode) // True: Customer Mode, Flase: MP mode
         {
+            loadingForm.Show(this);
             _InitialUi();
             _SaveLastBinPaths(tbFilePath.Text, null);
 
@@ -1550,11 +1519,16 @@ namespace IntegratedGuiV2
                 I2cConnected = true;
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
-                if (_RemoteInitial(customerMode) < 0)
+                if (_RemoteInitial(customerMode) < 0) {
+                    loadingForm.Close();
                     return -1;
+                }
+                    
 
-                if (_RemoteControl2(customerMode) < 0)
+                if (_RemoteControl2(customerMode) < 0) {
+                    loadingForm.Close();
                     return -1;
+                }
 
                 //if (!customerMode)
                 //_WriteSnDatecode(ProcessingChannel); // Writing SN and DateCode, then export csv file.
@@ -1586,6 +1560,43 @@ namespace IntegratedGuiV2
             }
 
             ProcessingChannel = 1;
+            loadingForm.Close();
+            return 0;
+        }
+
+        private int ValidateVenderSn()
+        {
+            string venderSn = tbVenderSnCh1.Text;
+
+            if (venderSn.Length != 12) {
+                MessageBox.Show("The serial number must be 12 characters long.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int yy = int.Parse(venderSn.Substring(0, 2));
+            if (yy < 23 || yy > 30) {
+                MessageBox.Show("The first two digits(YY) must be between 23 and 30.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int mm = int.Parse(venderSn.Substring(2, 2));
+            if (mm < 1 || mm > 12) {
+                MessageBox.Show("The 3~4 digits(MM) must be between 01 and 12.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int dd = int.Parse(venderSn.Substring(4, 2));
+            if (dd < 1 || dd > 31) {
+                MessageBox.Show("The 5~6 digits(DD) must be between 01 and 31.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int ssss = int.Parse(venderSn.Substring(8, 4));
+            if (ssss < 1 || ssss > 9999) {
+                MessageBox.Show("The 9~12 digits(SSSS) must be between 0001 and 9999.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
             return 0;
         }
 
@@ -1602,12 +1613,6 @@ namespace IntegratedGuiV2
                 }
             }
             finally {
-                /*
-                if (!(mainForm.I2cMasterDisconnectApi() < 0))
-                    I2cConnected = false;
-
-                _UpdateButtonState();
-                */
                 _EnableButtons();
             }
         }
@@ -1684,20 +1689,26 @@ namespace IntegratedGuiV2
             */
 
             _EnableButtons();
-
         }
-        
-        private void bWriteSnDateCone_Click(object sender, EventArgs e)
+
+        private void WriteSnDateCode()
         {
+            loadingForm.Show(this);
+            string DirectoryPath = TempFolderPath;
+            string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
+            FirstRound = true;  //??
+            
             _DisableButtons();
             _InitialUi();
             _InitialUiForWriteSn();
-            if (_VenderSnInputFormatCheck() < 0) return;
+
+            if (_VenderSnInputFormatCheck() < 0)
+                return;
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 _WriteSnDatecode(ProcessingChannel); // Writing SN and DateCode, then export csv file.
 
-                if (ProcessingChannel == 1) 
+                if (ProcessingChannel == 1)
                     tbVenderSnCh1.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
 
                 Thread.Sleep(100);
@@ -1715,7 +1726,25 @@ namespace IntegratedGuiV2
 
             SerialNumber++;
             tbVenderSnCh1.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
-            _EnableButtons();
+
+            // Comparison the register map between Module and CfgFile
+            if (ProcessingChannel == 1) {
+                mainForm.SetToChannle2Api(false);
+                tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+            else if (ProcessingChannel == 2) {
+                mainForm.SetToChannle2Api(true);
+                tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+
+            this.BringToFront();
+            this.Activate();
+            mainForm.ComparisonRegisterApi(RegisterFilePath, true, cbEngineerMode.Checked);
+
+            if(!cbBarcodeMode.Checked)
+                _EnableButtons();
+
+            loadingForm.Close();
         }
 
         private void _GenerateDateCode()
@@ -1775,8 +1804,20 @@ namespace IntegratedGuiV2
 
         }
 
-        private void bCfgFileComparsion_Click(object sender, EventArgs e)
+        private void bWriteSnDateCode_Click(object sender, EventArgs e)
         {
+            try {
+                this.Enabled = false;
+                WriteSnDateCode();
+            }
+            finally {
+                this.Enabled = true;
+            }
+        }
+
+        private void bCfgFileComparison_Click(object sender, EventArgs e)
+        {
+            loadingForm.Show(this);
             string DirectoryPath = TempFolderPath;
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;
@@ -1793,8 +1834,53 @@ namespace IntegratedGuiV2
                 tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
             }
 
-            mainForm.ComparationRegisterApi(RegisterFilePath, true);
+            loadingForm.Close();
+            this.BringToFront();
+            this.Activate();
+            mainForm.ComparisonRegisterApi(RegisterFilePath, true , cbEngineerMode.Checked);
+            
             _EnableButtons();
+        }
+
+        private void bLogFileComparison_Click(object sender, EventArgs e)
+        {
+            //Path 有效性檢查
+            //File 存在性檢查
+            //
+
+        }
+
+        private void cbBarcodeMode_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbBarcodeMode.Checked) {
+                _DisableButtonsForBarcodeMode();
+                tbVenderSnCh1.Text = "";
+                tbVenderSnCh1.Select();
+            }
+            else {
+                UpdateTextBoxAA();
+                _EnableButtonsForBarcodeMode();
+            }
+        }
+
+        private void Button_Click(object sender, EventArgs e)
+        {
+            try {
+                Cursor.Current = Cursors.WaitCursor;
+
+                this.Enabled = false;
+
+                PerformLongRunningOperation();
+            }
+            finally {
+                Cursor.Current = Cursors.Default;
+                this.Enabled = true;
+            }
+        }
+
+        private void PerformLongRunningOperation()
+        {
+            System.Threading.Thread.Sleep(5000); // 模擬一個5秒的操作
         }
 
     }

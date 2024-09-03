@@ -53,8 +53,10 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
-            this.bCfgFileComparsion = new System.Windows.Forms.Button();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cbEngineerMode = new System.Windows.Forms.CheckBox();
+            this.cbBarcodeMode = new System.Windows.Forms.CheckBox();
+            this.bCfgFileComparison = new System.Windows.Forms.Button();
+            this.gbCodeEditor = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -105,8 +107,11 @@
             this.lReNewSn = new System.Windows.Forms.Label();
             this.tbReNewSnCh2 = new System.Windows.Forms.TextBox();
             this.tbOrignalSNCh2 = new System.Windows.Forms.TextBox();
+            this.button3 = new System.Windows.Forms.Button();
+            this.cbOnlySN = new System.Windows.Forms.CheckBox();
+            this.bLogFileComparison = new System.Windows.Forms.Button();
             this.gbOperatorMode.SuspendLayout();
-            this.groupBox1.SuspendLayout();
+            this.gbCodeEditor.SuspendLayout();
             this.SuspendLayout();
             // 
             // kryptonPalette1
@@ -414,8 +419,12 @@
             // 
             // gbOperatorMode
             // 
-            this.gbOperatorMode.Controls.Add(this.bCfgFileComparsion);
-            this.gbOperatorMode.Controls.Add(this.groupBox1);
+            this.gbOperatorMode.Controls.Add(this.bLogFileComparison);
+            this.gbOperatorMode.Controls.Add(this.cbOnlySN);
+            this.gbOperatorMode.Controls.Add(this.cbEngineerMode);
+            this.gbOperatorMode.Controls.Add(this.cbBarcodeMode);
+            this.gbOperatorMode.Controls.Add(this.bCfgFileComparison);
+            this.gbOperatorMode.Controls.Add(this.gbCodeEditor);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_3);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_2);
             this.gbOperatorMode.Controls.Add(this.lRssiCh2_1);
@@ -448,41 +457,66 @@
             this.gbOperatorMode.Text = "MP information";
             this.gbOperatorMode.Visible = false;
             // 
-            // bCfgFileComparsion
+            // cbEngineerMode
             // 
-            this.bCfgFileComparsion.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
-            this.bCfgFileComparsion.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bCfgFileComparsion.FlatAppearance.BorderSize = 0;
-            this.bCfgFileComparsion.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.bCfgFileComparsion.ForeColor = System.Drawing.Color.White;
-            this.bCfgFileComparsion.Location = new System.Drawing.Point(107, 25);
-            this.bCfgFileComparsion.Name = "bCfgFileComparsion";
-            this.bCfgFileComparsion.Size = new System.Drawing.Size(121, 40);
-            this.bCfgFileComparsion.TabIndex = 89;
-            this.bCfgFileComparsion.Text = "CfgFile comparison";
-            this.bCfgFileComparsion.UseVisualStyleBackColor = false;
-            this.bCfgFileComparsion.Click += new System.EventHandler(this.bCfgFileComparsion_Click);
+            this.cbEngineerMode.AutoSize = true;
+            this.cbEngineerMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbEngineerMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbEngineerMode.Location = new System.Drawing.Point(413, 149);
+            this.cbEngineerMode.Name = "cbEngineerMode";
+            this.cbEngineerMode.Size = new System.Drawing.Size(90, 15);
+            this.cbEngineerMode.TabIndex = 95;
+            this.cbEngineerMode.Text = "Register map view";
+            this.cbEngineerMode.UseVisualStyleBackColor = true;
             // 
-            // groupBox1
+            // cbBarcodeMode
             // 
-            this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.lMm);
-            this.groupBox1.Controls.Add(this.dudSsss);
-            this.groupBox1.Controls.Add(this.dudRr);
-            this.groupBox1.Controls.Add(this.dudDd);
-            this.groupBox1.Controls.Add(this.dudMm);
-            this.groupBox1.Controls.Add(this.dudYy);
-            this.groupBox1.Controls.Add(this.lYy);
-            this.groupBox1.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.groupBox1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.groupBox1.Location = new System.Drawing.Point(245, 61);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(256, 56);
-            this.groupBox1.TabIndex = 93;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Code Editor";
+            this.cbBarcodeMode.AutoSize = true;
+            this.cbBarcodeMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbBarcodeMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbBarcodeMode.Location = new System.Drawing.Point(413, 119);
+            this.cbBarcodeMode.Name = "cbBarcodeMode";
+            this.cbBarcodeMode.Size = new System.Drawing.Size(77, 15);
+            this.cbBarcodeMode.TabIndex = 94;
+            this.cbBarcodeMode.Text = "Barcode mode";
+            this.cbBarcodeMode.UseVisualStyleBackColor = true;
+            this.cbBarcodeMode.CheckedChanged += new System.EventHandler(this.cbBarcodeMode_CheckedChanged);
+            // 
+            // bCfgFileComparison
+            // 
+            this.bCfgFileComparison.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bCfgFileComparison.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bCfgFileComparison.FlatAppearance.BorderSize = 0;
+            this.bCfgFileComparison.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bCfgFileComparison.ForeColor = System.Drawing.Color.White;
+            this.bCfgFileComparison.Location = new System.Drawing.Point(107, 22);
+            this.bCfgFileComparison.Name = "bCfgFileComparison";
+            this.bCfgFileComparison.Size = new System.Drawing.Size(121, 25);
+            this.bCfgFileComparison.TabIndex = 89;
+            this.bCfgFileComparison.Text = "CfgFile comparison";
+            this.bCfgFileComparison.UseVisualStyleBackColor = false;
+            this.bCfgFileComparison.Click += new System.EventHandler(this.bCfgFileComparison_Click);
+            // 
+            // gbCodeEditor
+            // 
+            this.gbCodeEditor.Controls.Add(this.label5);
+            this.gbCodeEditor.Controls.Add(this.label4);
+            this.gbCodeEditor.Controls.Add(this.label3);
+            this.gbCodeEditor.Controls.Add(this.lMm);
+            this.gbCodeEditor.Controls.Add(this.dudSsss);
+            this.gbCodeEditor.Controls.Add(this.dudRr);
+            this.gbCodeEditor.Controls.Add(this.dudDd);
+            this.gbCodeEditor.Controls.Add(this.dudMm);
+            this.gbCodeEditor.Controls.Add(this.dudYy);
+            this.gbCodeEditor.Controls.Add(this.lYy);
+            this.gbCodeEditor.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.gbCodeEditor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.gbCodeEditor.Location = new System.Drawing.Point(245, 61);
+            this.gbCodeEditor.Name = "gbCodeEditor";
+            this.gbCodeEditor.Size = new System.Drawing.Size(256, 56);
+            this.gbCodeEditor.TabIndex = 93;
+            this.gbCodeEditor.TabStop = false;
+            this.gbCodeEditor.Text = "Code Editor";
             // 
             // label5
             // 
@@ -700,14 +734,14 @@
             this.bWriteSnDateCone.FlatAppearance.BorderSize = 0;
             this.bWriteSnDateCone.Font = new System.Drawing.Font("Nirmala UI", 12F, System.Drawing.FontStyle.Bold);
             this.bWriteSnDateCone.ForeColor = System.Drawing.Color.White;
-            this.bWriteSnDateCone.Location = new System.Drawing.Point(6, 25);
+            this.bWriteSnDateCone.Location = new System.Drawing.Point(6, 21);
             this.bWriteSnDateCone.Name = "bWriteSnDateCone";
-            this.bWriteSnDateCone.Size = new System.Drawing.Size(95, 40);
+            this.bWriteSnDateCone.Size = new System.Drawing.Size(95, 52);
             this.bWriteSnDateCone.TabIndex = 82;
             this.bWriteSnDateCone.Text = "Write SN";
             this.bWriteSnDateCone.UseVisualStyleBackColor = false;
             this.bWriteSnDateCone.Visible = false;
-            this.bWriteSnDateCone.Click += new System.EventHandler(this.bWriteSnDateCone_Click);
+            this.bWriteSnDateCone.Click += new System.EventHandler(this.bWriteSnDateCode_Click);
             // 
             // lRssiCh1_2
             // 
@@ -1025,12 +1059,56 @@
             this.tbOrignalSNCh2.TabIndex = 87;
             this.tbOrignalSNCh2.Visible = false;
             // 
+            // button3
+            // 
+            this.button3.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.button3.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.button3.FlatAppearance.BorderSize = 0;
+            this.button3.Font = new System.Drawing.Font("Nirmala UI", 16F, System.Drawing.FontStyle.Bold);
+            this.button3.ForeColor = System.Drawing.Color.White;
+            this.button3.Location = new System.Drawing.Point(226, 95);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(76, 39);
+            this.button3.TabIndex = 89;
+            this.button3.Text = "Start";
+            this.button3.UseVisualStyleBackColor = false;
+            this.button3.Visible = false;
+            this.button3.Click += new System.EventHandler(this.Button_Click);
+            // 
+            // cbOnlySN
+            // 
+            this.cbOnlySN.AutoSize = true;
+            this.cbOnlySN.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbOnlySN.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbOnlySN.Location = new System.Drawing.Point(413, 134);
+            this.cbOnlySN.Name = "cbOnlySN";
+            this.cbOnlySN.Size = new System.Drawing.Size(76, 15);
+            this.cbOnlySN.TabIndex = 96;
+            this.cbOnlySN.Text = "Only SN mode";
+            this.cbOnlySN.UseVisualStyleBackColor = true;
+            // 
+            // bLogFileComparison
+            // 
+            this.bLogFileComparison.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bLogFileComparison.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bLogFileComparison.FlatAppearance.BorderSize = 0;
+            this.bLogFileComparison.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bLogFileComparison.ForeColor = System.Drawing.Color.White;
+            this.bLogFileComparison.Location = new System.Drawing.Point(107, 48);
+            this.bLogFileComparison.Name = "bLogFileComparison";
+            this.bLogFileComparison.Size = new System.Drawing.Size(121, 25);
+            this.bLogFileComparison.TabIndex = 97;
+            this.bLogFileComparison.Text = "LogFile comparison";
+            this.bLogFileComparison.UseVisualStyleBackColor = false;
+            this.bLogFileComparison.Click += new System.EventHandler(this.bLogFileComparison_Click);
+            // 
             // CustomerAndMpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
             this.ClientSize = new System.Drawing.Size(534, 406);
+            this.Controls.Add(this.button3);
             this.Controls.Add(this.tbReNewSnCh2);
             this.Controls.Add(this.tbOrignalSNCh2);
             this.Controls.Add(this.lReNewSn);
@@ -1080,8 +1158,8 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.gbOperatorMode.ResumeLayout(false);
             this.gbOperatorMode.PerformLayout();
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
+            this.gbCodeEditor.ResumeLayout(false);
+            this.gbCodeEditor.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1144,7 +1222,7 @@
         private System.Windows.Forms.Label lReNewSn;
         private System.Windows.Forms.TextBox tbReNewSnCh2;
         private System.Windows.Forms.TextBox tbOrignalSNCh2;
-        private System.Windows.Forms.Button bCfgFileComparsion;
+        private System.Windows.Forms.Button bCfgFileComparison;
         private System.Windows.Forms.TextBox tbRssiCh2_3;
         private System.Windows.Forms.TextBox tbRssiCh2_2;
         private System.Windows.Forms.TextBox tbRssiCh2_1;
@@ -1153,7 +1231,7 @@
         private System.Windows.Forms.Label lRssiCh2_2;
         private System.Windows.Forms.Label lRssiCh2_1;
         private System.Windows.Forms.Label lRssiCh2_0;
-        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox gbCodeEditor;
         private System.Windows.Forms.Label lYy;
         private System.Windows.Forms.DomainUpDown dudSsss;
         private System.Windows.Forms.DomainUpDown dudRr;
@@ -1164,5 +1242,10 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label lMm;
+        private System.Windows.Forms.CheckBox cbBarcodeMode;
+        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.CheckBox cbEngineerMode;
+        private System.Windows.Forms.CheckBox cbOnlySN;
+        private System.Windows.Forms.Button bLogFileComparison;
     }
 }

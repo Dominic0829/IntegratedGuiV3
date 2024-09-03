@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.OleDb;
 using ComponentFactory.Krypton.Toolkit;
+using System.Diagnostics;
 
 namespace IntegratedGuiV2
 {
@@ -19,6 +20,7 @@ namespace IntegratedGuiV2
         OleDbConnection dbConnect = new OleDbConnection($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=dbUsers.mdb;Jet OLEDB:Database Password={decryptionPassword}");
         OleDbCommand dbCommand = new OleDbCommand();
         OleDbDataAdapter dbAdapter = new OleDbDataAdapter();
+        WaitFormFunc loadingForm = new WaitFormFunc();
 
         public LoginForm()
         {
@@ -26,7 +28,6 @@ namespace IntegratedGuiV2
             cbProducts.SelectedIndex = 1;
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
         }
-        WaitFormFunc loadingForm = new WaitFormFunc();
 
         private void bLogin_Click(object sender, EventArgs e)
         {
@@ -106,9 +107,15 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void lBackToLogin_Click(object sender, EventArgs e)
+        private void lBackToMain_Click(object sender, EventArgs e)
         {
             Application.Restart();
+            var process = Process.GetCurrentProcess();
+            process.WaitForInputIdle();
+            SetForegroundWindow(process.MainWindowHandle);
         }
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
     }
 }

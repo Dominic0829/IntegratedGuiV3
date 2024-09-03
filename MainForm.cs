@@ -28,6 +28,7 @@ using System.Runtime.Remoting.Messaging;
 using Gn1190Corrector;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using System.Globalization;
+using System.Diagnostics;
 
 namespace IntegratedGuiV2
 {
@@ -35,6 +36,7 @@ namespace IntegratedGuiV2
     {
         private I2cMaster i2cMaster = new I2cMaster();
         private DataTable dtWriteConfig = new DataTable();
+        private WaitFormFunc loadingForm = new WaitFormFunc();
 
         private short iBitrate = 400; //kbps
         private short TriggerDelay = 100; //ms
@@ -199,12 +201,12 @@ namespace IntegratedGuiV2
                 throw new ArgumentException("Invalid Var Name or Var is not a bool type");
             }
         }
-        public void ComparationRegisterApi(string filePath, bool onlyVerifyMode)
+        public void ComparisonRegisterApi(string filePath, bool onlyVerifyMode , bool engineerMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ComparationRegister(filePath, onlyVerifyMode)));
+                this.Invoke(new Action(() => _ComparisonRegister(filePath, onlyVerifyMode, engineerMode)));
             else
-                _ComparationRegister(filePath, onlyVerifyMode);
+                _ComparisonRegister(filePath, onlyVerifyMode, engineerMode);
         }
         
         public void ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
@@ -1709,7 +1711,7 @@ namespace IntegratedGuiV2
         private void _GenerateXmlFileForProject()
         {
             string LogFileName = "RegisterFile";
-
+            
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Project");
             xmlDoc.AppendChild(root);
@@ -1758,6 +1760,9 @@ namespace IntegratedGuiV2
             }
 
             if (saveFileDialog.ShowDialog() == DialogResult.OK) {
+                loadingForm.Show(this);
+                Application.DoEvents();
+
                 string selectedFileName = saveFileDialog.FileName;
                 string folderName = Path.GetFileNameWithoutExtension(selectedFileName);
                 string folderPath = Path.Combine(Path.GetDirectoryName(selectedFileName), folderName);
@@ -1784,6 +1789,7 @@ namespace IntegratedGuiV2
 
                 CompressAndDeleteFolder(folderPath);
             }
+            loadingForm.Close();
         }
 
         private void CompressAndDeleteFolder(string folderPath)
@@ -2221,11 +2227,13 @@ namespace IntegratedGuiV2
 
         private void bGlobalRead_Click(object sender, EventArgs e)
         {
+            loadingForm.Show(this);
             _DisableButtons();
             _InitialStateBar();
             _GlobalRead();
             FirstRead = true;
             _EnableButtons();
+            loadingForm.Close();
         }
 
         internal int _GlobalRead()
@@ -2721,6 +2729,76 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
+        internal int _ComparisonRegister(string RegisterFilePath, bool onlyVerifyMode, bool engineerMode)
+        {
+            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
+            string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
+            string filePath1;
+            string filePath2 = RegisterFilePath; // Reference cfg file
+            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
+            var masks = new List<(string page, int row, int[] columns)>
+            {
+                ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
+            };
+
+            if (!onlyVerifyMode)
+                StateUpdated("Verify State:\nCfgFile check...", 93);
+            else
+                StateUpdated("Verify State:\nCfgFile check...", null);
+
+            // Export current module Cfg file
+            if (_ExportModuleCfg(fileName1) < 0)
+                return -1;
+
+            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
+            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath);
+            _ReformatedCsvFile(filePath2, 2, executableFileFolderPath);
+            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
+            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
+
+            // Data compare between Module_cfg(filePath1) and File_Cfg(filePath2)
+            DataTable dt1 = _ReadCsvToDataTable(filePath1);
+            DataTable dt2 = _ReadCsvToDataTable(filePath2);
+
+            RemoveDoubleQuotes(dt1);
+            RemoveDoubleQuotes(dt2);
+
+            if (DebugMode && engineerMode) {
+                DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+            }
+            
+            ApplyMask(dt1, dt2, masks);
+            
+            if (engineerMode) {
+                DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+                //MessageBox.Show("dt1: \n" + DataTableToString(dt1) +
+                //            "\n\ndt2: \n" + DataTableToString(dt2));
+            }
+
+            // Error alarm, if there are differences
+            if (!CompareDataTables(dt1, dt2)) {
+                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
+                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                StateUpdated("Verify State:\nVerify failed", null);
+                return -1;
+            }
+
+            // Delete the temp file, if there are no errors
+            if (File.Exists(filePath1))
+                File.Delete(filePath1);
+
+            if (File.Exists(filePath2))
+                File.Delete(filePath2);
+
+            if (!onlyVerifyMode)
+                StateUpdated("Verify State:\nCfgFile are matching", 97);
+            else
+                StateUpdated("Verify State:\nCfgFile are matching", null);
+
+            return 0;
+        }
+
         private void _ReformatedCsvFile(string FilePath, int fineNumber, string tempFilePath)
         {
             if (fineNumber == 1)
@@ -2757,63 +2835,120 @@ namespace IntegratedGuiV2
             }
         }
 
-        internal int _ComparationRegister(string RegisterFilePath, bool onlyVerifyMode)
+        private void DisplayDifferencesInGrid(DataTable dt1, DataTable dt2, List<(string page, int row, int[] columns)> masks)
         {
-            string fileName1 = "UpdatedModuleRegisterFile"; //Module cfg file
-            string fileName2 = Path.GetFileName(RegisterFilePath); //Reference cfg file
-            string filePath1;
-            string filePath2 = RegisterFilePath; //Reference cfg file
-            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
+            Form form = new Form {
+                Text = "Differences",
+                Width = 1300,
+                Height = 450,
+                Font = new Font("Times New Roman", 8)
+            };
 
-            if (!onlyVerifyMode)
-                StateUpdated("Verify State:\nCfgFile check...", 93);
-            else
-                StateUpdated("Verify State:\nCfgFile check...", null);
-            //Export current module Cfg file
-            if (_ExportModuleCfg(fileName1) < 0)
-                return -1;
-            
-            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
-            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath);
-            _ReformatedCsvFile(filePath2, 2, executableFileFolderPath);
-            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
-            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
+            DataGridView dgv = new DataGridView {
+                Dock = DockStyle.Fill,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
+                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
+                Font = new Font("Times New Roman", 8),
+                EnableHeadersVisualStyles = false
+            };
 
-            if (DebugMode) {
-                MessageBox.Show("filePath1: \n" + filePath1 +
-                            "\n\nfilePath2: \n" + filePath2);
+            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
+            dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.Silver;
+
+            foreach (DataColumn col in dt1.Columns) {
+                DataGridViewColumn newCol;
+                if (col.ColumnName != "Page" && col.ColumnName != "Row") {
+                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName + "_dt1", "M" + col.ColumnName)];
+                    newCol.Width = 35;
+                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName + "_dt2", "F" + col.ColumnName)];
+                    newCol.Width = 35;
+                }
+                else if (col.ColumnName == "Row") {
+                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
+                    newCol.Width = 35;
+                    newCol.DefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
+                    newCol.DefaultCellStyle.BackColor = Color.Silver;
+                }
+                else if (col.ColumnName == "Page") {
+                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
+                    newCol.Width = 50;
+                    newCol.DefaultCellStyle.BackColor = Color.Gray;
+                }
             }
 
-            //Data compare between Module_cfg(filePath1) and File_Cfg(filePath2)
-            DataTable dt1 = _ReadCsvToDataTable(filePath1);
-            DataTable dt2 = _ReadCsvToDataTable(filePath2);
+            for (int row = 0; row < dt1.Rows.Count; row++) {
+                dgv.Rows.Add();
+                for (int col = 0; col < dt1.Columns.Count; col++) {
+                    if (col == 0 || col == 1) {
+                        dgv.Rows[row].Cells[col].Value = dt1.Rows[row][col];
+                    }
+                    else {
+                        string dt1Value = dt1.Rows[row][col].ToString();
+                        string dt2Value = dt2.Rows[row][col].ToString();
+                        dgv.Rows[row].Cells[col * 2 - 2].Value = dt1Value;
 
-            if (DebugMode) {
-                MessageBox.Show("dt1: \n" + DataTableToString(dt1) +
-                            "\n\ndt2: \n" + DataTableToString(dt2));
+                        if (dt1Value == dt2Value) {
+                            dgv.Rows[row].Cells[col * 2 - 1].Value = "";
+                        }
+                        else {
+                            dgv.Rows[row].Cells[col * 2 - 1].Value = dt2Value;
+                            dgv.Rows[row].Cells[col * 2 - 2].Style.BackColor = Color.Red;
+                            dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Yellow;
+                        }
+
+                        // 檢查是否需要對應的 Mask
+                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value), col - 2, masks)) {
+                            dgv.Rows[row].Cells[col * 2 - 2].Style.BackColor = Color.Black;
+                            dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Black;
+                        }
+                    }
+                }
             }
 
-            //Error alarm, if there are differences
-            if (!CompareDataTables(dt1, dt2)) {
-                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
-                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                StateUpdated("Verify State:\nVerify failed", null);
-                return -1;
+            form.Controls.Add(dgv);
+            form.ShowDialog();
+        }
+
+        private bool IsMasked(string page, int row, int col, List<(string page, int row, int[] columns)> masks)
+        {
+            foreach (var mask in masks) {
+                if (mask.page == page && mask.row == row && mask.columns.Contains(col)) {
+                    return true;
+                }
             }
+            return false;
+        }
 
-            //Delet the temp file, if there are no errors
-            if (File.Exists(filePath1))
-                File.Delete(filePath1);
+        private void ApplyMask(DataTable dt1, DataTable dt2, List<(string page, int row, int[] columns)> masks)
+        {
+            foreach (var mask in masks) {
+                foreach (DataRow row in dt1.Rows) {
+                    if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
+                        foreach (int columnIndex in mask.columns) {
+                            row[columnIndex + 2] = "FF"; // 覆蓋 dt1
+                        }
+                    }
+                }
 
-            if (File.Exists(filePath2))
-                File.Delete(filePath2);
+                foreach (DataRow row in dt2.Rows) {
+                    if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
+                        foreach (int columnIndex in mask.columns) {
+                            row[columnIndex + 2] = "FF"; // 覆蓋 dt2
+                        }
+                    }
+                }
+            }
+        }
 
-            if (!onlyVerifyMode)
-                StateUpdated("Verify State:\nCfgFile are matching", 97);
-            else
-                StateUpdated("Verify State:\nCfgFile are matching", null);
-
-            return 0;
+        private void RemoveDoubleQuotes(DataTable dataTable)
+        {
+            foreach (DataRow row in dataTable.Rows) {
+                foreach (DataColumn column in dataTable.Columns) {
+                    if (row[column] is string) {
+                        row[column] = ((string)row[column]).Replace("\"", ""); // 替換雙引號
+                    }
+                }
+            }
         }
 
         private string DataTableToString(DataTable dt)
@@ -2878,12 +3013,14 @@ namespace IntegratedGuiV2
 
         private void bGlobalWrite_Click(object sender, EventArgs e)
         {
+            loadingForm.Show(this);
             _DisableButtons();
             _InitialStateBar();
 
             _GlobalWriteFromUi(false);
             ucInformation.StoreIntoFlashApi();
             _EnableButtons();
+            loadingForm.Close();
         }
 
         private void bStoreIntoFlash_Click(object sender, EventArgs e)
@@ -2895,6 +3032,7 @@ namespace IntegratedGuiV2
 
         private void bSaveCfgFile_Click(object sender, EventArgs e)
         {
+            loadingForm.Show(this);
             string LogFileName = "EngRegisterFile";
             lastUsedDirectory = Path.Combine(Application.StartupPath, "RegisterFiles");
             _DisableButtons();
@@ -2903,12 +3041,13 @@ namespace IntegratedGuiV2
             _InitialStateBar();
 
             _ExportLogfile(LogFileName, false, false);
-
             _EnableButtons();
+            loadingForm.Close();
         }
 
         private void bLoadCfgFile_Click(object sender, EventArgs e)
         {
+            loadingForm.Show(this);
             string DirectoryPath = Path.Combine(Application.StartupPath, "RegisterFiles");
             string RegisterFileName = Path.Combine(DirectoryPath, "EngRegisterFile.csv");
 
@@ -2948,6 +3087,7 @@ namespace IntegratedGuiV2
             progressBar1.Value = 100;
 
             _EnableButtons();
+            loadingForm.Close();
         }
 
         private void bReNew_Click(object sender, EventArgs e)
@@ -3005,8 +3145,14 @@ namespace IntegratedGuiV2
         private void bBackToMainForm_Click(object sender, EventArgs e)
         {
             Application.Restart();
+            var process = Process.GetCurrentProcess();
+            process.WaitForInputIdle();
+            SetForegroundWindow(process.MainWindowHandle);
         }
-
+        
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+        
         private void cbContinuousMode_CheckedChanged(Object sender, EventArgs e)
         {
             MessageBox.Show("Function to be confirmed");
@@ -3094,7 +3240,6 @@ namespace IntegratedGuiV2
             {
                 APROMPath = "";
             }
-            
         }
 
         private void cbDAPath_CheckedChanged(object sender, EventArgs e)
@@ -3133,8 +3278,6 @@ namespace IntegratedGuiV2
             else
                 ChannelSetApi(0);
         }
-
-
     }
 
     public class ComboBoxItem

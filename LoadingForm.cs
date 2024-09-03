@@ -36,12 +36,12 @@ namespace IntegratedGuiV2
         public LoadingForm(Form parent)
         {
             InitializeComponent();
-            Region = System.Drawing.Region.FromHrgn(CreateRoundRectRgn(0, 0, Width, Height, 40, 40));
+            Region = System.Drawing.Region.FromHrgn(CreateRoundRectRgn(0, 0, Width, Height, 20, 20));
             if (parent != null)
             {
                 this.StartPosition = FormStartPosition.Manual;
                 this.Location = new Point(parent.Location.X + parent.Width / 2 - this.Width / 2,
-                    parent.Location.Y + parent.Height / 2 - this.Height / 2);
+                    parent.Location.Y + parent.Height / 3 - this.Height / 2);
             }
             else
                 this.StartPosition = FormStartPosition.CenterParent;

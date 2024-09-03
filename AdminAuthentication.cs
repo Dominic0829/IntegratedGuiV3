@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -57,7 +58,13 @@ namespace IntegratedGuiV2
         private void lBackToLogin_Click(object sender, EventArgs e)
         {
             Application.Restart();
+            var process = Process.GetCurrentProcess();
+            process.WaitForInputIdle();
+            SetForegroundWindow(process.MainWindowHandle);
         }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private void _FormClosing(object sender, FormClosingEventArgs e)
         {

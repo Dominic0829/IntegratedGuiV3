@@ -12,6 +12,7 @@ using System.Windows.Forms;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using ComponentFactory.Krypton.Toolkit;
 using System.Threading;
+using System.Diagnostics;
 
 namespace IntegratedGuiV2
 {
@@ -157,7 +158,13 @@ namespace IntegratedGuiV2
         private void lExit_Click(object sender, EventArgs e)
         {
             Application.Exit();
+            var process = Process.GetCurrentProcess();
+            process.WaitForInputIdle();
+            SetForegroundWindow(process.MainWindowHandle);
         }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         private void _FormClosing(object sender, FormClosingEventArgs e)
         {
