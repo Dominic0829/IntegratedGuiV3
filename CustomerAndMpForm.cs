@@ -1133,7 +1133,7 @@ namespace IntegratedGuiV2
             //loadingForm.Close();
         }
 
-        private int _RemoteControl2(bool customerMode)
+        private int _RemoteControl(bool customerMode)
         {
             string DirectoryPath = TempFolderPath;
             string RegisterFileName = "RegisterFile.csv";
@@ -1209,6 +1209,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
+        /*
         private int _RemoteControl()
         {
             string errorCountCh1R = "", errorCountCh1W = "";
@@ -1337,6 +1338,7 @@ namespace IntegratedGuiV2
 
             return 0;
         }
+        */
 
         private void _WriteSnDatecode(int ch)
         {
@@ -1510,7 +1512,7 @@ namespace IntegratedGuiV2
             _SaveLastBinPaths(tbFilePath.Text, null);
 
             if (!customerMode)
-                _StopRxPowerUpdateThread();
+                //_StopRxPowerUpdateThread();
 
             if (!(mainForm.I2cMasterDisconnectApi() < 0))
                 I2cConnected = false;
@@ -1525,7 +1527,7 @@ namespace IntegratedGuiV2
                 }
                     
 
-                if (_RemoteControl2(customerMode) < 0) {
+                if (_RemoteControl(customerMode) < 0) {
                     loadingForm.Close();
                     return -1;
                 }
@@ -1739,7 +1741,7 @@ namespace IntegratedGuiV2
 
             this.BringToFront();
             this.Activate();
-            mainForm.ComparisonRegisterApi(RegisterFilePath, true, cbEngineerMode.Checked);
+            mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
 
             if(!cbBarcodeMode.Checked)
                 _EnableButtons();
@@ -1817,10 +1819,11 @@ namespace IntegratedGuiV2
 
         private void bCfgFileComparison_Click(object sender, EventArgs e)
         {
-            loadingForm.Show(this);
             string DirectoryPath = TempFolderPath;
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;
+
+            loadingForm.Show(this);
 
             _DisableButtons();
             _InitialUi();
@@ -1837,17 +1840,53 @@ namespace IntegratedGuiV2
             loadingForm.Close();
             this.BringToFront();
             this.Activate();
-            mainForm.ComparisonRegisterApi(RegisterFilePath, true , cbEngineerMode.Checked);
+            mainForm.ComparisonRegisterApi(RegisterFilePath, true,"CfgFile" , cbEngineerMode.Checked);
             
             _EnableButtons();
         }
 
         private void bLogFileComparison_Click(object sender, EventArgs e)
         {
-            //Path 有效性檢查
-            //File 存在性檢查
-            //
+            string DirectoryPath = tbLogFilePath.Text;
+            string ObjectFileName = tbVenderSnCh1.Text + "A";
+            string RegisterFilePath = Path.Combine(DirectoryPath, ObjectFileName + ".csv"); //Generate the CfgFilePath with config folder
+            //mainForm.InformationReadApi();
+            //string OriginalVenderSn = mainForm.GetVendorSnFromDdmiApi();
+            //string OriginalDateCode = mainForm.GetDateCodeFromDdmiApi();
+            FirstRound = true;
 
+
+            if (!Directory.Exists(DirectoryPath)) {
+                MessageBox.Show("Please check if the log file path has been correctly specified?");
+                return;
+            }
+
+            if (!File.Exists(RegisterFilePath)) {
+                MessageBox.Show("Please check if the log file exists at the specified path?" + 
+                                "\n\nTarget path: " + DirectoryPath + "\\..." +
+                                "\nModule SN: " + ObjectFileName + ".csv" + "   <<Missing file");
+                return;
+            }
+
+            loadingForm.Show(this);
+            _DisableButtons();
+            _InitialUi();
+
+            if (ProcessingChannel == 1) {
+                mainForm.SetToChannle2Api(false);
+                tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+            else if (ProcessingChannel == 2) {
+                mainForm.SetToChannle2Api(true);
+                tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+
+            this.BringToFront();
+            this.Activate();
+            mainForm.ComparisonRegisterApi(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked);
+
+            _EnableButtons();
+            loadingForm.Close();
         }
 
         private void cbBarcodeMode_CheckedChanged(object sender, EventArgs e)

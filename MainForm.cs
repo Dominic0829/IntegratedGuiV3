@@ -201,12 +201,12 @@ namespace IntegratedGuiV2
                 throw new ArgumentException("Invalid Var Name or Var is not a bool type");
             }
         }
-        public void ComparisonRegisterApi(string filePath, bool onlyVerifyMode , bool engineerMode)
+        public void ComparisonRegisterApi(string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ComparisonRegister(filePath, onlyVerifyMode, engineerMode)));
+                this.Invoke(new Action(() => _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode)));
             else
-                _ComparisonRegister(filePath, onlyVerifyMode, engineerMode);
+                _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode);
         }
         
         public void ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
@@ -1016,7 +1016,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _ExportModuleCfg(string fileName)
+        private int _ExportModuleCfg(string fileName, string comparisonObject)
         {
             string executableFileFolderPath = Application.StartupPath;
             string exportFilePath;
@@ -1034,13 +1034,16 @@ namespace IntegratedGuiV2
                 File.Delete(exportFilePath);
 
             tempUcMemoryFile = Path.Combine(folderPath, "temp_" + fileName);
-            //exportFilePath = exportFilePath.Replace("\\\\", "\\");
-            //tempUcMemoryFile = tempUcMemoryFile.Replace("\\\\", "\\");
 
             if (ucMemoryDump.ExportAllPagesDataApi(tempUcMemoryFile) < 0)
                 return -1;
 
             AppendFileContentToAnother(tempUcMemoryFile, exportFilePath);
+            
+            if (comparisonObject == "LogFile") {
+                AppendRxRegisterContents(exportFilePath);
+                AppendTxRegisterContents(exportFilePath);
+            }
 
             if (File.Exists(tempUcMemoryFile))
                 File.Delete(tempUcMemoryFile);
@@ -1074,8 +1077,6 @@ namespace IntegratedGuiV2
             fileName = fileName.Replace(" ", "") + ".csv";
             exportFilePath = Path.Combine(folderPath, fileName);
             tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
-            //exportFilePath = exportFilePath.Replace("\\\\", "\\");
-            //tempExportFilePath = tempExportFilePath.Replace("\\\\", "\\");
 
             if (File.Exists(exportFilePath)) {
                 if (fileName == "ModuleRegisterFile.csv") {
@@ -2729,52 +2730,58 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
-        internal int _ComparisonRegister(string RegisterFilePath, bool onlyVerifyMode, bool engineerMode)
+        internal int _ComparisonRegister(string RegisterFilePath, bool onlyVerifyMode,string comparisonObject, bool engineerMode)
         {
             string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
             string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
             string filePath1;
             string filePath2 = RegisterFilePath; // Reference cfg file
             string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            var masks = new List<(string page, int row, int[] columns)>
-            {
-                ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
-            };
+            List<(string page, int row, int[] columns)> masks;
+
+            if (comparisonObject == "CfgFile") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
+                };
+            }
+            else if (comparisonObject == "LogFile") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("81h", 70, new[] {15}),
+                };
+            }
+            else {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("81h", 70, new[] {15}),
+                };
+            }
 
             if (!onlyVerifyMode)
                 StateUpdated("Verify State:\nCfgFile check...", 93);
             else
                 StateUpdated("Verify State:\nCfgFile check...", null);
 
-            // Export current module Cfg file
-            if (_ExportModuleCfg(fileName1) < 0)
-                return -1;
+            // Export current module register file
+            if (_ExportModuleCfg(fileName1, comparisonObject) < 0)
+                    return -1;
 
             filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
-            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath);
-            _ReformatedCsvFile(filePath2, 2, executableFileFolderPath);
+            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath, comparisonObject);
+            _ReformatedCsvFile(filePath2, 2, executableFileFolderPath, comparisonObject);
             filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
             filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
-
-            // Data compare between Module_cfg(filePath1) and File_Cfg(filePath2)
             DataTable dt1 = _ReadCsvToDataTable(filePath1);
             DataTable dt2 = _ReadCsvToDataTable(filePath2);
 
             RemoveDoubleQuotes(dt1);
             RemoveDoubleQuotes(dt2);
-
-            if (DebugMode && engineerMode) {
-                DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-            }
-            
             ApplyMask(dt1, dt2, masks);
             
-            if (engineerMode) {
+            if (engineerMode) 
                 DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-                //MessageBox.Show("dt1: \n" + DataTableToString(dt1) +
-                //            "\n\ndt2: \n" + DataTableToString(dt2));
-            }
 
             // Error alarm, if there are differences
             if (!CompareDataTables(dt1, dt2)) {
@@ -2799,8 +2806,15 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private void _ReformatedCsvFile(string FilePath, int fineNumber, string tempFilePath)
+        private void _ReformatedCsvFile(string FilePath, int fineNumber, string tempFilePath, string comparisonObject)
         {
+            int NumberOfSearchRows;
+
+            if (comparisonObject == "LogFile")
+                NumberOfSearchRows = 32; // Up00h, 03h, 80h, 81h, 8x4=32 rows. with Rx/TxCfg (16x2)=32+32=64 rows.
+            else
+                NumberOfSearchRows = 16; // Up00h, 03h 8+8 rows
+
             if (fineNumber == 1)
                 tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
             else if (fineNumber == 2)
@@ -2823,12 +2837,22 @@ namespace IntegratedGuiV2
                 }
 
                 while ((line = reader.ReadLine()) != null) {
-                    if (line.Contains("\"Up 00h\"") || line.Contains("\"Up 03h\"")) {
-                        writer.WriteLine(line);
-                        rowCount++;
+                    if (comparisonObject == "CfgFile") {
+                        if (line.Contains("\"Up 00h\"") || line.Contains("\"Up 03h\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else {
+                        if (line.Contains("\"Up 00h\"") || line.Contains("\"Up 03h\"") ||
+                            line.Contains("\"80h\"") || line.Contains("\"81h\"") ||
+                            line.Contains("\"Rx\"") || line.Contains("\"Tx\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
                     }
 
-                    if (rowCount >= 16) {
+                    if (rowCount >= NumberOfSearchRows) {
                         break;
                     }
                 }
@@ -2896,8 +2920,8 @@ namespace IntegratedGuiV2
                             dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Yellow;
                         }
 
-                        // 檢查是否需要對應的 Mask
-                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value), col - 2, masks)) {
+                        // 檢查對應的 Mask address
+                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value.ToString(), 16), col - 2, masks)) {
                             dgv.Rows[row].Cells[col * 2 - 2].Style.BackColor = Color.Black;
                             dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Black;
                         }
