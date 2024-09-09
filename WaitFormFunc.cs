@@ -30,7 +30,7 @@ namespace IntegratedGuiV2
         {
             if (wait != null)
             {
-                wait.BeginInvoke(new System.Threading.ThreadStart(wait.CloseWaitForm));
+                wait.BeginInvoke(new ThreadStart(wait.CloseWaitForm));
                 wait = null;
                 loadthread = null;
             }
@@ -47,6 +47,26 @@ namespace IntegratedGuiV2
             Form parent1 = parent as Form;
             wait = new LoadingForm(parent1);
             wait.ShowDialog();
+        }
+
+        internal void OnPluginWaiting()
+        {
+            if (wait != null && wait.InvokeRequired) {
+                wait.Invoke(new MethodInvoker(() => wait.OnPluginWattingState()));
+            }
+            else {
+                wait.OnPluginWattingState();
+            }
+        }
+
+        internal void PluginDetected()
+        {
+            if (wait != null && wait.InvokeRequired) {
+                wait.Invoke(new MethodInvoker(() => wait.InitialState()));
+            }
+            else {
+                wait.InitialState();
+            }
         }
     }
 }

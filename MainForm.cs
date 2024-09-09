@@ -29,6 +29,7 @@ using Gn1190Corrector;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using System.Globalization;
 using System.Diagnostics;
+using System.Web.Configuration;
 
 namespace IntegratedGuiV2
 {
@@ -40,7 +41,7 @@ namespace IntegratedGuiV2
 
         private short iBitrate = 400; //kbps
         private short TriggerDelay = 100; //ms
-        private int ProcessingChannel = 0;
+        private int ProcessingChannel = 1;
         private bool FirstRead = false;
         private bool AutoSelectIcConfig = false;
         private int ErrorState = 0;
@@ -66,8 +67,10 @@ namespace IntegratedGuiV2
         public event EventHandler<int> ProgressValue;
         public event EventHandler<MessageEventArgs> MainMessageUpdated;
         public event EventHandler<TextBoxTextEventArgs> TextBoxTextChanged;
+        public event Action<bool> OnPluginWaiting;
+        public event Action<bool> OnPluginDetected;
 
-        
+
         protected virtual void StateUpdated(string message, int? value)
         {
             ReadStateUpdated?.Invoke(this, message);
@@ -201,20 +204,20 @@ namespace IntegratedGuiV2
                 throw new ArgumentException("Invalid Var Name or Var is not a bool type");
             }
         }
-        public void ComparisonRegisterApi(string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode)
+        public int ComparisonRegisterApi(string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode)));
+                return (int)this.Invoke(new Action(() => _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode)));
             else
-                _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode);
+                return _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode);
         }
         
-        public void ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
+        public int ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ExportLogfile(fileName, logFileMode, writeSnMode)));
+                return (int)this.Invoke(new Action(() => _ExportLogfile(fileName, logFileMode, writeSnMode)));
             else
-                _ExportLogfile(fileName, logFileMode, writeSnMode);
+                return _ExportLogfile(fileName, logFileMode, writeSnMode);
         }
 
         public void ForceConnectSingleApi() // Used for MpForm
@@ -233,20 +236,20 @@ namespace IntegratedGuiV2
                 ucNuvotonIcpTool.StartFlashingApi();
         }
 
-        public void StoreIntoFlashApi()
+        public int StoreIntoFlashApi()
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
+                return (int)this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
             else
-                ucInformation.StoreIntoFlashApi();
+                return ucInformation.StoreIntoFlashApi();
         }
 
-        public void InformationWriteApi() // Used for MpForm
+        public int InformationWriteApi() // Used for MpForm
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucInformation.WriteApi()));
+                return (int)this.Invoke(new Action(() => ucInformation.WriteApi()));
             else
-                ucInformation.WriteApi();
+                return ucInformation.WriteApi();
         }
         /*
         public void WriteUpPage0LiteApi(string vendorSn, string dataCode)
@@ -257,20 +260,20 @@ namespace IntegratedGuiV2
                 ucInformation.WriteUpPage0LiteApi(vendorSn, dataCode);
         }
         */
-        public void InformationStoreIntoFlashApi() // Used for MpForm
+        public int InformationStoreIntoFlashApi() // Used for MpForm
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
+                return (int)this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
             else
-                ucInformation.StoreIntoFlashApi();
+                return ucInformation.StoreIntoFlashApi();
         }
 
-        public void InformationReadApi() // Used for MpForm
+        public int InformationReadApi() // Used for MpForm
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucInformation.ReadApi()));
+                return (int)this.Invoke(new Action(() => ucInformation.ReadApi()));
             else
-                ucInformation.ReadApi();
+                return ucInformation.ReadApi();
         }
 
         public void SetToChannle2Api(bool mode)
@@ -514,10 +517,16 @@ namespace IntegratedGuiV2
 
             return 0;
         }
-        
-        private int _ChannelSwitch()
+
+        private int _ChannelSwitch(bool customerMode)
         {
-            ProcessingChannel = (ProcessingChannel == 13) ? 23 : 13;
+            int newChannel;
+            if (customerMode)
+                newChannel = (ProcessingChannel == 1) ? 2 : 1;
+            else
+                newChannel = (ProcessingChannel == 13) ? 23 : 13;
+
+            ProcessingChannel = newChannel;
             _ChannelSet(ProcessingChannel);
             _UpdateButtonState();
 
@@ -526,49 +535,43 @@ namespace IntegratedGuiV2
 
         private int _ChannelSet(int ch)
         {
-            int chSet;
+            //int chSet;
 
             if (!I2cConnected)
             {
-                if (_I2cMasterConnect(true, false) < 0)
+                if (_I2cMasterConnect(true, true) < 0)
                     return -1;
 
                 I2cConnected = true;
             }
 
             Thread.Sleep(10);
+            /*
             if (ch == 1 || ch == 13)
                 chSet = 13;
             else if (ch == 2 || ch == 23)
                 chSet = 23;
             else
                 chSet = 0;
+            */
 
-            int result = i2cMaster.ChannelSetApi(chSet);
+            int result = i2cMaster.ChannelSetApi(ch);
 
             if (result < 0)
                 return -1; 
 
             if (ch == 0)
             {
-                i2cMaster.DisconnectApi();
+                if (i2cMaster.DisconnectApi() < 0)
+                    return -1;
+
+                cbConnect.Checked = false;
                 I2cConnected = false;
             }
 
             return 0;
         }
-
-        public int I2cMasterConnectApi(bool setMode, bool setPassword)
-        {
-            int result = -1;
-
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => result = _I2cMasterConnect(setMode, setPassword)));
-            else
-                result = _I2cMasterConnect(setMode, setPassword);
-
-            return result;
-        }
+        
 
         public int I2cMasterDisconnectApi()
         {
@@ -582,24 +585,24 @@ namespace IntegratedGuiV2
             return result;
         }
 
-        public int ChannelSwitchApi()
+        public int ChannelSwitchApi(bool customerMode)
         {
             int result = -1;
 
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => result = _ChannelSwitch()));
+                this.Invoke(new Action(() => result = _ChannelSwitch(customerMode)));
             else
-                result = _ChannelSwitch();
+                result = _ChannelSwitch(customerMode);
 
             return result;
         }
 
-        public void ChannelSetApi(int ch)
+        public int ChannelSetApi(int ch)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _ChannelSet(ch)));
+                return (int)this.Invoke(new Action(() => _ChannelSet(ch)));
             else
-                _ChannelSet(ch);
+                return _ChannelSet(ch);
         }
 
         private int _I2cReadIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
@@ -610,9 +613,6 @@ namespace IntegratedGuiV2
                 if (_I2cMasterConnect(true, false) < 0)
                     return -1;
             }
-
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
 
             if (writeToFile == false)
             {
@@ -691,9 +691,6 @@ namespace IntegratedGuiV2
                     return -1;
             }
 
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
-
             if (writeToFile == false)
             {
 
@@ -728,12 +725,9 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true, false) < 0)
+                if (_I2cMasterConnect(true, true) < 0)
                     return -1;
             }
-
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
 
             if (writeToFile == false)
             {
@@ -800,9 +794,6 @@ namespace IntegratedGuiV2
                 if (_I2cMasterConnect(true, false) < 0)
                     return -1;
             }
-
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
 
             if (writeToFile == false)
             {
@@ -1205,6 +1196,17 @@ namespace IntegratedGuiV2
             TextBoxTextChanged?.Invoke(this, e);
         }
 
+        private void HandlePluginWaiting(bool isWaiting)
+        {
+            OnPluginWaiting?.Invoke(isWaiting);
+        }
+
+        // 當DUT插入檢測成功時的處理程序
+        private void HandlePluginDetected(bool isDetected)
+        {
+            OnPluginDetected?.Invoke(isDetected);
+        }
+
         public MainForm(bool visible)
         {
             InitializeComponent();
@@ -1218,6 +1220,8 @@ namespace IntegratedGuiV2
             this.FormClosing += new FormClosingEventHandler(_MainForm_FormClosing);
             ucNuvotonIcpTool.MessageUpdated += UcNuvotonIcpTool_MessageUpdated;
             ucNuvotonIcpTool.RequestI2cOperation += UcNuvotonIcpControl_RequestI2cOperation;
+            ucNuvotonIcpTool.OnPluginWaiting += HandlePluginWaiting;
+            ucNuvotonIcpTool.OnPluginDetected += HandlePluginDetected;
             ucDigitalDiagnosticsMonitoring.TextBoxTextChanged += ucDigitalDiagnosticsMonitoring_TextBoxTextChanged;
             this.Size = new System.Drawing.Size(1170, 870);
             _InitialStateBar();
@@ -2066,7 +2070,7 @@ namespace IntegratedGuiV2
                 bOutterSwitch.Enabled = false;
                 //_DisableButtons(); //為了避免切換期間，限制輸入其他狀態
 
-            _ChannelSwitch();
+            _ChannelSwitch(true);
             bGlobalRead.Select();
 
             if (bOutterSwitch.Enabled == false)
@@ -2079,7 +2083,7 @@ namespace IntegratedGuiV2
             if (bInnerSwitch.Enabled == true)
                 bInnerSwitch.Enabled = false;
                
-            _ChannelSwitch();
+            _ChannelSwitch(true);
 
             if (bInnerSwitch.Enabled == false)
                 bInnerSwitch.Enabled = true;
@@ -2090,7 +2094,7 @@ namespace IntegratedGuiV2
         private void _UpdateButtonState()
         {
            
-            if (ProcessingChannel == 13)
+            if ((ProcessingChannel == 1) || (ProcessingChannel == 13))
             {
                 rbCh1.Checked = true;
                 rbCh2.Checked = false;
@@ -2098,7 +2102,7 @@ namespace IntegratedGuiV2
                 tbInnerStateCh2.BackColor = Color.White;
             }
 
-            if (ProcessingChannel == 23)
+            if ((ProcessingChannel == 2) || (ProcessingChannel == 23))
             {
                 rbCh2.Checked = true;
                 rbCh1.Checked = false;
@@ -2108,16 +2112,7 @@ namespace IntegratedGuiV2
 
             System.Windows.Forms.Application.DoEvents();
         }
-        /*
-        private void _ContinuousMode()
-        {
-            while(cbContinuousMode.Checked){
-                ucNuvotonIcpTool.ConnectSingleApi();
-                ucNuvotonIcpTool.StartFlashingApi();
-                bInnerSwitch_Click(null, null);
-            }
-        }
-        */
+       
         private void _EnableIcConfig()
         {
             if (cbProductSelect.SelectedIndex != 0)
@@ -2788,7 +2783,7 @@ namespace IntegratedGuiV2
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 StateUpdated("Verify State:\nVerify failed", null);
-                return -1;
+                return 1;
             }
 
             // Delete the temp file, if there are no errors
@@ -2920,8 +2915,9 @@ namespace IntegratedGuiV2
                             dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Yellow;
                         }
 
-                        // 檢查對應的 Mask address
-                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value.ToString(), 16), col - 2, masks)) {
+                        // 對應Mask address著色...
+                        //if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value.ToString(), 16), col - 2, masks)) {
+                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value), col - 2, masks)) {
                             dgv.Rows[row].Cells[col * 2 - 2].Style.BackColor = Color.Black;
                             dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Black;
                         }
@@ -3195,7 +3191,7 @@ namespace IntegratedGuiV2
 
             if (FirstRound)
             {
-                ProcessingChannel = 13;
+                ProcessingChannel = 1;
                 FirstRound = false;
             }
 

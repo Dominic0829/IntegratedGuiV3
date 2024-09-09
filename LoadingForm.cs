@@ -41,10 +41,29 @@ namespace IntegratedGuiV2
             {
                 this.StartPosition = FormStartPosition.Manual;
                 this.Location = new Point(parent.Location.X + parent.Width / 2 - this.Width / 2,
-                    parent.Location.Y + parent.Height / 3 - this.Height / 2);
+                    //parent.Location.Y + parent.Height / 2 + this.Height);
+                    parent.Location.Y + this.Height );
             }
             else
                 this.StartPosition = FormStartPosition.CenterParent;
+        }
+
+        internal void OnPluginWattingState()
+        {
+            BackColor = Color.HotPink;
+            label1.Text = "Re-plug DUT\n重新插拔產品!";
+            label1.Location = new System.Drawing.Point(65, 12);
+            label1.ForeColor = Color.Black;
+            this.Refresh();
+        }
+
+        internal void InitialState()
+        {
+            BackColor = Color.White;
+            label1.Location = new System.Drawing.Point(65, 12);
+            label1.Text = "Please wait...\n執行中...";
+            label1.ForeColor = Color.Black;
+            this.Refresh();
         }
 
         public void CloseWaitForm()

@@ -16,11 +16,19 @@ namespace IntegratedGuiV2
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            //Application.Run(new MainForm(true));
-            //Application.Run(new LoginForm());
-            Application.Run(new CustomerAndMpForm());
+            try {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                //Application.Run(new MainForm(true));
+                //Application.Run(new LoginForm());
+                Application.Run(new CustomerAndMpForm());
+            }
+            catch ( Exception ex) {
+                File.WriteAllText("error_log.txt", ex.ToString());
+                MessageBox.Show("An error occurred: " + ex.Message);
+            }
+
+            
         }
 
     }
