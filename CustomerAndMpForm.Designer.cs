@@ -53,6 +53,8 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
+            this.bRelinkTest = new System.Windows.Forms.Button();
+            this.tbRelinkCount = new System.Windows.Forms.TextBox();
             this.rbLogFileMode = new System.Windows.Forms.RadioButton();
             this.bRenewRssi = new System.Windows.Forms.Button();
             this.rbOnlySN = new System.Windows.Forms.RadioButton();
@@ -425,6 +427,8 @@
             // 
             // gbOperatorMode
             // 
+            this.gbOperatorMode.Controls.Add(this.bRelinkTest);
+            this.gbOperatorMode.Controls.Add(this.tbRelinkCount);
             this.gbOperatorMode.Controls.Add(this.rbLogFileMode);
             this.gbOperatorMode.Controls.Add(this.bRenewRssi);
             this.gbOperatorMode.Controls.Add(this.rbOnlySN);
@@ -466,12 +470,38 @@
             this.gbOperatorMode.Text = "MP information";
             this.gbOperatorMode.Visible = false;
             // 
+            // bRelinkTest
+            // 
+            this.bRelinkTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bRelinkTest.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bRelinkTest.FlatAppearance.BorderSize = 0;
+            this.bRelinkTest.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bRelinkTest.ForeColor = System.Drawing.Color.White;
+            this.bRelinkTest.Location = new System.Drawing.Point(267, 120);
+            this.bRelinkTest.Name = "bRelinkTest";
+            this.bRelinkTest.Size = new System.Drawing.Size(39, 25);
+            this.bRelinkTest.TabIndex = 105;
+            this.bRelinkTest.Text = "Test";
+            this.bRelinkTest.UseVisualStyleBackColor = false;
+            this.bRelinkTest.Visible = false;
+            this.bRelinkTest.Click += new System.EventHandler(this.bRelinkTest_Click);
+            // 
+            // tbRelinkCount
+            // 
+            this.tbRelinkCount.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRelinkCount.ForeColor = System.Drawing.Color.Black;
+            this.tbRelinkCount.Location = new System.Drawing.Point(239, 123);
+            this.tbRelinkCount.Name = "tbRelinkCount";
+            this.tbRelinkCount.Size = new System.Drawing.Size(27, 18);
+            this.tbRelinkCount.TabIndex = 102;
+            this.tbRelinkCount.Visible = false;
+            // 
             // rbLogFileMode
             // 
             this.rbLogFileMode.AutoSize = true;
             this.rbLogFileMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.rbLogFileMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.rbLogFileMode.Location = new System.Drawing.Point(411, 148);
+            this.rbLogFileMode.Location = new System.Drawing.Point(408, 148);
             this.rbLogFileMode.Name = "rbLogFileMode";
             this.rbLogFileMode.Size = new System.Drawing.Size(89, 15);
             this.rbLogFileMode.TabIndex = 101;
@@ -489,7 +519,7 @@
             this.bRenewRssi.ForeColor = System.Drawing.Color.White;
             this.bRenewRssi.Location = new System.Drawing.Point(107, 21);
             this.bRenewRssi.Name = "bRenewRssi";
-            this.bRenewRssi.Size = new System.Drawing.Size(100, 52);
+            this.bRenewRssi.Size = new System.Drawing.Size(113, 52);
             this.bRenewRssi.TabIndex = 89;
             this.bRenewRssi.Text = "ReadRSSI";
             this.bRenewRssi.UseVisualStyleBackColor = false;
@@ -500,7 +530,7 @@
             this.rbOnlySN.AutoSize = true;
             this.rbOnlySN.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.rbOnlySN.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.rbOnlySN.Location = new System.Drawing.Point(411, 133);
+            this.rbOnlySN.Location = new System.Drawing.Point(408, 133);
             this.rbOnlySN.Name = "rbOnlySN";
             this.rbOnlySN.Size = new System.Drawing.Size(74, 15);
             this.rbOnlySN.TabIndex = 99;
@@ -511,10 +541,9 @@
             // 
             // tbTimeInterval
             // 
-            this.tbTimeInterval.Enabled = false;
             this.tbTimeInterval.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbTimeInterval.ForeColor = System.Drawing.Color.Black;
-            this.tbTimeInterval.Location = new System.Drawing.Point(226, 123);
+            this.tbTimeInterval.Location = new System.Drawing.Point(220, 123);
             this.tbTimeInterval.Name = "tbTimeInterval";
             this.tbTimeInterval.Size = new System.Drawing.Size(19, 18);
             this.tbTimeInterval.TabIndex = 90;
@@ -526,7 +555,7 @@
             this.rbFullMode.Checked = true;
             this.rbFullMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.rbFullMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.rbFullMode.Location = new System.Drawing.Point(411, 119);
+            this.rbFullMode.Location = new System.Drawing.Point(408, 119);
             this.rbFullMode.Name = "rbFullMode";
             this.rbFullMode.Size = new System.Drawing.Size(59, 15);
             this.rbFullMode.TabIndex = 98;
@@ -1002,7 +1031,7 @@
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Nirmala UI", 7F, System.Drawing.FontStyle.Bold);
             this.label1.ForeColor = System.Drawing.Color.White;
-            this.label1.Location = new System.Drawing.Point(293, 171);
+            this.label1.Location = new System.Drawing.Point(289, 171);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(36, 12);
             this.label1.TabIndex = 75;
@@ -1013,7 +1042,7 @@
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Nirmala UI", 7F, System.Drawing.FontStyle.Bold);
             this.label2.ForeColor = System.Drawing.Color.White;
-            this.label2.Location = new System.Drawing.Point(273, 151);
+            this.label2.Location = new System.Drawing.Point(269, 151);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(57, 12);
             this.label2.TabIndex = 77;
@@ -1099,7 +1128,7 @@
             this.lOriginalSN.AutoSize = true;
             this.lOriginalSN.Font = new System.Drawing.Font("Nirmala UI", 7F, System.Drawing.FontStyle.Bold);
             this.lOriginalSN.ForeColor = System.Drawing.Color.White;
-            this.lOriginalSN.Location = new System.Drawing.Point(268, 191);
+            this.lOriginalSN.Location = new System.Drawing.Point(264, 191);
             this.lOriginalSN.Name = "lOriginalSN";
             this.lOriginalSN.Size = new System.Drawing.Size(60, 12);
             this.lOriginalSN.TabIndex = 85;
@@ -1111,7 +1140,7 @@
             this.lReNewSn.AutoSize = true;
             this.lReNewSn.Font = new System.Drawing.Font("Nirmala UI", 7F, System.Drawing.FontStyle.Bold);
             this.lReNewSn.ForeColor = System.Drawing.Color.White;
-            this.lReNewSn.Location = new System.Drawing.Point(290, 211);
+            this.lReNewSn.Location = new System.Drawing.Point(286, 211);
             this.lReNewSn.Name = "lReNewSn";
             this.lReNewSn.Size = new System.Drawing.Size(38, 12);
             this.lReNewSn.TabIndex = 86;
@@ -1317,5 +1346,7 @@
         private System.Windows.Forms.RadioButton rbLogFileMode;
         private System.Windows.Forms.GroupBox gbPrompt;
         private System.Windows.Forms.Label lStatus;
+        private System.Windows.Forms.TextBox tbRelinkCount;
+        private System.Windows.Forms.Button bRelinkTest;
     }
 }

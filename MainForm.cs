@@ -220,12 +220,18 @@ namespace IntegratedGuiV2
                 return _ExportLogfile(fileName, logFileMode, writeSnMode);
         }
 
-        public void ForceConnectSingleApi() // Used for MpForm
+        public void ForceConnectApi(int relinkCount, int intervalTime) // Used for MpForm
         {
+            if (relinkCount != 0)
+                ucNuvotonIcpTool.RelinkCount = relinkCount;
+
+            if (intervalTime != 0)
+                ucNuvotonIcpTool.RelinkIntervalTime = intervalTime;
+
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucNuvotonIcpTool.ForceConnectSingleApi()));
+                this.Invoke(new Action(() => ucNuvotonIcpTool.ForceConnectApi()));
             else
-                ucNuvotonIcpTool.ForceConnectSingleApi();
+                ucNuvotonIcpTool.ForceConnectApi();
         }
 
         public void StartFlashingApi() // Used for MpForm
@@ -487,10 +493,12 @@ namespace IntegratedGuiV2
                 _AppendWriteToFile($"Write,0x50,0x7F,0x{mode:X2}");
             }
 
+            //MessageBox.Show("SetQsfpMode!!");
+
             return 0;
         }
 
-        private int _I2cMasterConnect(bool setMode, bool setPassword)
+        private int _I2cMasterConnect()
         {
             if (i2cMaster.ConnectApi(400) < 0)
                 return -1;
@@ -498,15 +506,12 @@ namespace IntegratedGuiV2
             cbConnect.Checked = true;
             I2cConnected = true;
 
-            if (setMode && _SetQsfpMode(0x4D) < 0)
+            if (_SetQsfpMode(0x4D) < 0)
                 return -1;
 
-            if (setPassword && _WriteModulePassword() < 0)
-                return -1;
-                    
             return 0;
         }
-        
+
         private int _I2cMasterDisconnect()
         {
             if (i2cMaster.DisconnectApi() < 0)
@@ -521,13 +526,19 @@ namespace IntegratedGuiV2
         private int _ChannelSwitch(bool customerMode)
         {
             int newChannel;
+           
             if (customerMode)
                 newChannel = (ProcessingChannel == 1) ? 2 : 1;
-            else
-                newChannel = (ProcessingChannel == 13) ? 23 : 13;
-
-            ProcessingChannel = newChannel;
-            _ChannelSet(ProcessingChannel);
+            else {
+                if (ProcessingChannel == 1)
+                    newChannel = 23;
+                else if (ProcessingChannel == 2)
+                    newChannel = 13;
+                else
+                    newChannel = (ProcessingChannel == 1) ? 2 : 1;
+            }
+            
+            _ChannelSet(newChannel);
             _UpdateButtonState();
 
             return ProcessingChannel;
@@ -535,26 +546,15 @@ namespace IntegratedGuiV2
 
         private int _ChannelSet(int ch)
         {
-            //int chSet;
-
             if (!I2cConnected)
             {
-                if (_I2cMasterConnect(true, true) < 0)
+                if (_I2cMasterConnect() < 0)
                     return -1;
 
                 I2cConnected = true;
             }
 
             Thread.Sleep(10);
-            /*
-            if (ch == 1 || ch == 13)
-                chSet = 13;
-            else if (ch == 2 || ch == 23)
-                chSet = 23;
-            else
-                chSet = 0;
-            */
-
             int result = i2cMaster.ChannelSetApi(ch);
 
             if (result < 0)
@@ -571,7 +571,6 @@ namespace IntegratedGuiV2
 
             return 0;
         }
-        
 
         public int I2cMasterDisconnectApi()
         {
@@ -608,18 +607,18 @@ namespace IntegratedGuiV2
         private int _I2cReadIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
-            if (i2cMaster.connected == false)
-            {
-                if (_I2cMasterConnect(true, false) < 0)
+            if (i2cMaster.connected == false) {
+                if (_I2cMasterConnect() < 0)
                     return -1;
             }
 
-            if (writeToFile == false)
-            {
+            if (_SetQsfpMode(0x4D) < 0)
+                return -1;
+
+            if (writeToFile == false) {
 
                 rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
-                if (rv < 0)
-                {
+                if (rv < 0) {
                     //MessageBox.Show("TRx module no response!!");
                     _I2cMasterDisconnect();
                     ErrorState = -2;
@@ -629,14 +628,12 @@ namespace IntegratedGuiV2
                     MessageBox.Show("Please confirm the module plug-in status");
                     ErrorState = -1;
                 }
-                    
+
 
                 return rv;
             }
-            else
-            {
-                for (i = 0; i < length; i++)
-                {
+            else {
+                for (i = 0; i < length; i++) {
                     if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
                         MessageBox.Show("_AppendWriteToFile() Error!!");
                 }
@@ -651,7 +648,7 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(false, false) < 0)
+                if (_I2cMasterConnect() < 0)
                     return -1;
             }
 
@@ -687,9 +684,12 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true, false) < 0)
+                if (_I2cMasterConnect() < 0)
                     return -1;
             }
+
+            if (_SetQsfpMode(0x4D) < 0)
+                return -1;
 
             if (writeToFile == false)
             {
@@ -725,9 +725,12 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true, true) < 0)
+                if (_I2cMasterConnect() < 0)
                     return -1;
             }
+
+            if (_SetQsfpMode(0x4D) < 0)
+                return -1;
 
             if (writeToFile == false)
             {
@@ -758,7 +761,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(false, false) < 0)
+                if (_I2cMasterConnect() < 0)
                     return -1;
             }
 
@@ -791,9 +794,12 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect(true, false) < 0)
+                if (_I2cMasterConnect() < 0)
                     return -1;
             }
+
+            if (_SetQsfpMode(0x4D) < 0)
+                return -1;
 
             if (writeToFile == false)
             {
@@ -816,7 +822,7 @@ namespace IntegratedGuiV2
 
                 return 0;
             }
-        }
+        } 
 
         private int _WriteModulePassword()
         {
@@ -832,7 +838,40 @@ namespace IntegratedGuiV2
 
             return 0;
         }
-        
+
+        private int _WritePassword()
+        {
+            byte[] data = new byte[4];
+
+            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB == null)
+                return -1;
+
+            if ((tbPasswordB0.Text.Length == 0) || (tbPasswordB1.Text.Length == 0) ||
+                (tbPasswordB2.Text.Length == 0) || (tbPasswordB3.Text.Length == 0)) {
+                MessageBox.Show("Please input 4 hex value password before write!!");
+                return -1;
+            }
+
+            try {
+                data[0] = (byte)Convert.ToInt32(tbPasswordB0.Text, 10);
+                data[1] = (byte)Convert.ToInt32(tbPasswordB1.Text, 10);
+                data[2] = (byte)Convert.ToInt32(tbPasswordB2.Text, 10);
+                data[3] = (byte)Convert.ToInt32(tbPasswordB3.Text, 10);
+            }
+            catch (Exception e) {
+                MessageBox.Show(e.ToString());
+                return -1;
+            }
+
+            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB(80, 123, 4, data) < 0) {
+                MessageBox.Show("_WritePassword1 rv: " + ucDigitalDiagnosticsMonitoring.i2cWriteCB(80, 123, 4, data));
+                return -1;
+            }
+
+            //MessageBox.Show("_WritePassword2 rv: " + i2cWriteCB(80, 123, 4, data));
+            return 0;
+        }
+
         private int _GetPassword(int length, byte[] data)
         {
             byte[] tmp = new byte[4];
@@ -867,43 +906,6 @@ namespace IntegratedGuiV2
             //MessageBox.Show("_GetPassword parse： " + dataS);
 
             return 4;
-        }
-
-        private int _WritePassword()
-        {
-            byte[] data = new byte[4];
-
-            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB == null)
-                return -1;
-
-            if ((tbPasswordB0.Text.Length == 0) || (tbPasswordB1.Text.Length == 0) ||
-                (tbPasswordB2.Text.Length == 0) || (tbPasswordB3.Text.Length == 0))
-            {
-                MessageBox.Show("Please input 4 hex value password before write!!");
-                return -1;
-            }
-
-            try
-            {
-                data[0] = (byte)Convert.ToInt32(tbPasswordB0.Text, 10);
-                data[1] = (byte)Convert.ToInt32(tbPasswordB1.Text, 10);
-                data[2] = (byte)Convert.ToInt32(tbPasswordB2.Text, 10);
-                data[3] = (byte)Convert.ToInt32(tbPasswordB3.Text, 10);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.ToString());
-                return -1;
-            }
-
-            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB(80, 123, 4, data) < 0)
-            {
-                MessageBox.Show("_WritePassword1 rv: " + ucDigitalDiagnosticsMonitoring.i2cWriteCB(80, 123, 4, data));
-                return -1;
-            }
-           
-            //MessageBox.Show("_WritePassword2 rv: " + i2cWriteCB(80, 123, 4, data));
-            return 0;
         }
 
         private void AppendRxRegisterContents(string exportFilePath)
@@ -1174,7 +1176,7 @@ namespace IntegratedGuiV2
             switch (e.OperationType)
             {
                 case I2cOperationType.Connect:
-                    _I2cMasterConnect(true, false);
+                    _I2cMasterConnect();
                     break;
                 case I2cOperationType.Disconnect:
                     _I2cMasterDisconnect();
@@ -2754,10 +2756,18 @@ namespace IntegratedGuiV2
                 };
             }
 
-            if (!onlyVerifyMode)
-                StateUpdated("Verify State:\nCfgFile check...", 93);
-            else
-                StateUpdated("Verify State:\nCfgFile check...", null);
+            if (!onlyVerifyMode) {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile check...", 93);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle check...", 93);
+            }
+            else {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile check...", null);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle check...", null);
+            }
 
             // Export current module register file
             if (_ExportModuleCfg(fileName1, comparisonObject) < 0)
@@ -2793,10 +2803,18 @@ namespace IntegratedGuiV2
             if (File.Exists(filePath2))
                 File.Delete(filePath2);
 
-            if (!onlyVerifyMode)
-                StateUpdated("Verify State:\nCfgFile are matching", 97);
-            else
-                StateUpdated("Verify State:\nCfgFile are matching", null);
+            if (!onlyVerifyMode) {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile are matching", 97);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle are matching", 97);
+            }
+            else {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile are matching", null);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle are matching", null);
+            }
 
             return 0;
         }
@@ -3202,7 +3220,8 @@ namespace IntegratedGuiV2
         private void _ConnectI2c()
         {
             if (cbConnect.Checked == true) {
-                _I2cMasterConnect(true, true);
+                _I2cMasterConnect();
+                _WriteModulePassword();
                 _ChannelSet(ProcessingChannel);
                 _UpdateButtonState();
                 gbChannelSwitcher.Enabled = true;

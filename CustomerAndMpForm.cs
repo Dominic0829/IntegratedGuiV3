@@ -47,6 +47,7 @@ namespace IntegratedGuiV2
         private bool FirstRound = true;
         private bool RxPowerUpdate = false;
         private bool I2cConnected = false;
+        private bool ForceConnectWithoutInvoke = false;
         private string CurrentDate = DateTime.Now.ToString("yyMMdd");
         private int Revision = 1;
         private string TempFolderPath = string.Empty;
@@ -132,14 +133,14 @@ namespace IntegratedGuiV2
 
         private void HandlePluginWaiting(bool isWaiting)
         {
-            if (isWaiting)
+            if (!ForceConnectWithoutInvoke && isWaiting )
                 loadingForm.OnPluginWaiting();
                 
         }
                 
         private void HandlePluginDetected(bool isDetected)
         {
-            if (isDetected)
+            if (!ForceConnectWithoutInvoke && isDetected)
                 loadingForm.PluginDetected();
         }
 
@@ -152,6 +153,7 @@ namespace IntegratedGuiV2
             mainForm = new MainForm(true);
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
             this.Size = new Size(550, 280);
+            this.Text = "OptiSync Manager";
             cProgressBar1.Value = 0;
             cProgressBar2.Value = 0;
             this.Load += MainForm_Load;
@@ -412,6 +414,8 @@ namespace IntegratedGuiV2
                 tbVenderSn.Text = "";
                 tbVenderSn.Enabled = true;
                 loadingForm.Close();
+                this.BringToFront();
+                this.Activate();
                 tbVenderSn.Select();
             }
         }
@@ -1184,7 +1188,7 @@ namespace IntegratedGuiV2
                                 );
                 }
 
-                mainForm.ForceConnectSingleApi(); // Link DUT and EraseAPROM
+                mainForm.ForceConnectApi(0,0); // Link DUT and EraseAPROM
                 Thread.Sleep(10);
                 mainForm.StartFlashingApi(); // Firmware update
                 Thread.Sleep(10);
@@ -1223,12 +1227,19 @@ namespace IntegratedGuiV2
             string venderSn;
             string originalVenderSn, originalDateCode;
             string LogFileName = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
-            int channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+            int channelNumber;
 
-            if (ch == 1)
+            if (ch == 1) {
                 LogFileName = LogFileName + "A";
-            else
+                channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+            }
+            else {
                 LogFileName = LogFileName + "B";
+                channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
+            }
+
+            I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+            Thread.Sleep(100);
 
             _UpdateMessage(ch, "CheckVendorSN");
             if (mainForm.InformationReadApi() < 0) return -1;
@@ -1287,8 +1298,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh2.BackColor = Color.DarkBlue;
                 tbReNewSnCh1.ForeColor = Color.White;
             }
-
-            I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+            
             if (_RxPowerUpdateWithoutThread() < 0) return -1;
             if (mainForm.ExportLogfileApi(LogFileName, true, true) < 0) return -1; //Must be implement
             Thread.Sleep(10);
@@ -1331,7 +1341,6 @@ namespace IntegratedGuiV2
                     loadingForm.Close();
                     return -1;
                 }
-                    
 
                 if (_RemoteControl(customerMode) < 0) {
                     loadingForm.Close();
@@ -1487,16 +1496,25 @@ namespace IntegratedGuiV2
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 if (_WriteSnDatecode(ProcessingChannel) < 0) return -1; // Writing SN and DateCode, then export csv file.
 
-                if (ProcessingChannel == 1)
-                    tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
+                _UpdateMessage(ProcessingChannel, "VenderSN writed");
 
-                Thread.Sleep(100);
-                if (ProcessingChannel == 1 && DoubleSideMode) {
-                    if (mainForm.ChannelSwitchApi(false) < 0) return -1; // switch to ch2
-                    Thread.Sleep(100);
+                if (ProcessingChannel == 1) {
+                    tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
+                    tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+                }
+                else if (ProcessingChannel == 2) {
+                    tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
                 }
 
-                _UpdateMessage(ProcessingChannel, "VenderSN writed");
+                if (mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked) < 0)
+                    return -1;
+                Application.DoEvents();
+
+                Thread.Sleep(100);
+                if (!DoubleSideMode) {
+                    break;
+                }
+                
             }
 
             if (DoubleSideMode) {
@@ -1506,20 +1524,9 @@ namespace IntegratedGuiV2
             SerialNumber++;
             tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
 
-            // Comparison the register map between Module and CfgFile
-            if (ProcessingChannel == 1) {
-                mainForm.SetToChannle2Api(false);
-                tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
-            }
-            else if (ProcessingChannel == 2) {
-                mainForm.SetToChannle2Api(true);
-                tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
-            }
-
             this.BringToFront();
             this.Activate();
-            if (mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked) < 0) return -1;
-
+            
             if(!cbBarcodeMode.Checked)
                 _EnableButtons();
 
@@ -1586,41 +1593,60 @@ namespace IntegratedGuiV2
 
         private void _PromptCorrect()
         {
-            gbPrompt.Visible = true;
-            gbPrompt.BackColor = Color.SpringGreen;
-            lStatus.Visible = true;
-            lStatus.Text = "Correct";
+            if (cbBarcodeMode.Checked) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.SpringGreen;
+                lStatus.Visible = true;
+                lStatus.Text = "Correct";
+            }
+           
+            _UpdateMessage(ProcessingChannel, "Verify State:\nLogfile are matching");
+
         }
         private void _PromptWrong()
         {
-            gbPrompt.Visible = true;
-            gbPrompt.BackColor = Color.Violet;
-            lStatus.Visible = true;
-            lStatus.Text = "Wrong !!";
+            if (cbBarcodeMode.Checked) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.Violet;
+                lStatus.Visible = true;
+                lStatus.Text = "Wrong !!";
+            }
+            
+            _UpdateMessage(ProcessingChannel, "Verify State:\nWrong !!");
         }
 
         private void _PromptError()
         {
-            gbPrompt.Visible = true;
-            gbPrompt.BackColor = Color.HotPink;
-            lStatus.Visible = true;
-            lStatus.Text = "Error !!";
+            if (cbBarcodeMode.Checked) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.HotPink;
+                lStatus.Visible = true;
+                lStatus.Text = "Error !!";
+            }
+            
+            _UpdateMessage(ProcessingChannel, "Verify State:\nLogfile Mismatch!!");
         }
 
         private void _PromptCompleted()
         {
-            gbPrompt.Visible = true;
-            gbPrompt.BackColor = Color.SpringGreen;
-            lStatus.Visible = true;
-            lStatus.Text = "Completed";
+            if (cbBarcodeMode.Checked) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.SpringGreen;
+                lStatus.Visible = true;
+                lStatus.Text = "Completed";
+            }
+            
+            _UpdateMessage(ProcessingChannel, "Completed");
         }
 
         private void _PromptInitialUi()
         {
-            gbPrompt.Visible = true;
-            gbPrompt.BackColor = Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
-            lStatus.Visible = true;
-            lStatus.Text = "...";
+            if (cbBarcodeMode.Checked) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
+                lStatus.Visible = true;
+                lStatus.Text = "...";
+            }
         }
 
         private void bWriteSnDateCode_Click(object sender, EventArgs e)
@@ -1636,40 +1662,72 @@ namespace IntegratedGuiV2
 
         private void bCfgFileComparison_Click(object sender, EventArgs e)
         {
+            _CfgFileComparison();
+        }
+
+        private int _CfgFileComparison()
+        {
+            int ComparisonResults = 0;
+            int ChannelNumber = 1;
             string DirectoryPath = TempFolderPath;
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;
 
             loadingForm.Show(this);
-
             _DisableButtons();
             _InitialUi();
 
-            if (ProcessingChannel == 1) {
-                mainForm.SetToChannle2Api(false);
-                tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
-            }
-            else if (ProcessingChannel == 2) {
-                mainForm.SetToChannle2Api(true);
-                tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                if (ProcessingChannel == 1)
+                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+                else
+                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
+
+                I2cConnected = !(mainForm.ChannelSetApi(ChannelNumber) < 0);
+                Thread.Sleep(300);
+
+                ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
+                Thread.Sleep(100);
+
+                if (!DoubleSideMode)
+                    break;
             }
 
-            loadingForm.Close();
+            if (DoubleSideMode)
+                if (mainForm.ChannelSwitchApi(false) < 0)
+                    return -1;
+
             this.BringToFront();
             this.Activate();
-            mainForm.ComparisonRegisterApi(RegisterFilePath, true,"CfgFile" , cbEngineerMode.Checked);
-            
-            _EnableButtons();
+            loadingForm.Close();
+
+            if (!cbBarcodeMode.Checked)
+                _EnableButtons();
+
+            if (ComparisonResults < 0)
+                return -1;
+            else if (ComparisonResults == 1)
+                return 1;
+            else
+                return 0;
         }
 
         private void bLogFileComparison_Click(object sender, EventArgs e)
         {
-            _LogFileComparison();
+            int ComparisonResults = _LogFileComparison();
+
+            if (ComparisonResults < 0)
+                _PromptError();
+            else if (ComparisonResults == 1)
+                _PromptWrong();
+            else
+                _PromptCorrect();
         }
 
         private int _LogFileComparison()
         {
-            int ComparisonResults;
+            int ComparisonResults = 0;
+            int ChannelNumber = 1;
             string DirectoryPath = tbLogFilePath.Text;
             string ObjectFileName = tbVenderSn.Text + "A";
             string RegisterFilePath = Path.Combine(DirectoryPath, ObjectFileName + ".csv"); //Generate the CfgFilePath with config folder
@@ -1677,7 +1735,6 @@ namespace IntegratedGuiV2
             //string OriginalVenderSn = mainForm.GetVendorSnFromDdmiApi();
             //string OriginalDateCode = mainForm.GetDateCodeFromDdmiApi();
             FirstRound = true;
-
 
             if (!Directory.Exists(DirectoryPath)) {
                 MessageBox.Show("Please check if the log file path has been correctly specified?");
@@ -1695,30 +1752,39 @@ namespace IntegratedGuiV2
             _DisableButtons();
             _InitialUi();
 
-            if (ProcessingChannel == 1) {
-                mainForm.SetToChannle2Api(false);
-                tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                if (ProcessingChannel == 1) 
+                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+                else 
+                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
+
+                I2cConnected = !(mainForm.ChannelSetApi(ChannelNumber) < 0);
+                Thread.Sleep(300);
+
+                ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked);
+                Thread.Sleep(100);
+
+                if (!DoubleSideMode) 
+                    break;
             }
-            else if (ProcessingChannel == 2) {
-                mainForm.SetToChannle2Api(true);
-                tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
-            }
+
+            if (DoubleSideMode) 
+                if (mainForm.ChannelSwitchApi(false) < 0) return -1;
 
             this.BringToFront();
             this.Activate();
-            ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked);
+            loadingForm.Close();
+
+            if (!cbBarcodeMode.Checked) 
+                _EnableButtons();
 
             if (ComparisonResults < 0)
                 return -1;
             else if (ComparisonResults == 1)
                 return 1;
-            else {
-                if (!cbBarcodeMode.Checked)
-                    _EnableButtons();
-                loadingForm.Close();
-
+            else                
                 return 0;
-            }
+            
         }
 
         private void cbBarcodeMode_CheckedChanged(object sender, EventArgs e)
@@ -1779,6 +1845,26 @@ namespace IntegratedGuiV2
             tbVenderSn.Select();
         }
 
+        private void bRelinkTest_Click(object sender, EventArgs e)
+        {
+            loadingForm.Show(this);
+            int relinkCount, timeInterval;
+            _DisableButtons();
+            ForceConnectWithoutInvoke = true;
+
+            if (string.IsNullOrEmpty(tbRelinkCount.Text) || string.IsNullOrEmpty(tbTimeInterval.Text)) {
+                int.TryParse(tbRelinkCount.Text, out relinkCount);
+                int.TryParse(tbTimeInterval.Text, out timeInterval);
+                mainForm.ForceConnectApi(relinkCount, timeInterval);
+            }
+            else
+                mainForm.ForceConnectApi(0, 0);
+
+
+            ForceConnectWithoutInvoke = false;
+            _EnableButtons();
+            loadingForm.Close();
+        }
     }
 
     public class LastBinPaths
