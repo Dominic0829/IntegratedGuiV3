@@ -220,18 +220,23 @@ namespace IntegratedGuiV2
                 return _ExportLogfile(fileName, logFileMode, writeSnMode);
         }
 
-        public void ForceConnectApi(int relinkCount, int intervalTime) // Used for MpForm
+        public int ForceConnectApi(bool relinkTestMode, int relinkCount, int startTime, int intervalTime) // Used for MpForm
         {
             if (relinkCount != 0)
                 ucNuvotonIcpTool.RelinkCount = relinkCount;
 
             if (intervalTime != 0)
+                ucNuvotonIcpTool.RelinkStartTime = startTime;
+
+            if (intervalTime != 0)
                 ucNuvotonIcpTool.RelinkIntervalTime = intervalTime;
 
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucNuvotonIcpTool.ForceConnectApi()));
+                this.Invoke(new Action(() => ucNuvotonIcpTool.ForceConnectApi(relinkTestMode)));
             else
-                ucNuvotonIcpTool.ForceConnectApi();
+                ucNuvotonIcpTool.ForceConnectApi(relinkTestMode);
+
+            return ucNuvotonIcpTool.ReturnSleepTime;
         }
 
         public void StartFlashingApi() // Used for MpForm
@@ -498,10 +503,17 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _I2cMasterConnect()
+        private int _I2cMasterConnect(int ch)
         {
             if (i2cMaster.ConnectApi(400) < 0)
                 return -1;
+
+            if (ch == 1)
+                ProcessingChannel = 1;
+            else if (ch == 2)
+                ProcessingChannel = 2;
+            else
+                ProcessingChannel = 1;
 
             cbConnect.Checked = true;
             I2cConnected = true;
@@ -548,7 +560,7 @@ namespace IntegratedGuiV2
         {
             if (!I2cConnected)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(ch) < 0)
                     return -1;
 
                 I2cConnected = true;
@@ -608,7 +620,7 @@ namespace IntegratedGuiV2
         {
             int i, rv;
             if (i2cMaster.connected == false) {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
 
@@ -648,7 +660,7 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
 
@@ -684,7 +696,7 @@ namespace IntegratedGuiV2
             int i, rv;
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
 
@@ -725,7 +737,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
 
@@ -761,7 +773,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
 
@@ -794,7 +806,7 @@ namespace IntegratedGuiV2
 
             if (i2cMaster.connected == false)
             {
-                if (_I2cMasterConnect() < 0)
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
 
@@ -1176,7 +1188,7 @@ namespace IntegratedGuiV2
             switch (e.OperationType)
             {
                 case I2cOperationType.Connect:
-                    _I2cMasterConnect();
+                    _I2cMasterConnect(ProcessingChannel);
                     break;
                 case I2cOperationType.Disconnect:
                     _I2cMasterDisconnect();
@@ -3220,8 +3232,10 @@ namespace IntegratedGuiV2
         private void _ConnectI2c()
         {
             if (cbConnect.Checked == true) {
-                _I2cMasterConnect();
+                _I2cMasterConnect(ProcessingChannel);
                 _WriteModulePassword();
+
+                int ch = 
                 _ChannelSet(ProcessingChannel);
                 _UpdateButtonState();
                 gbChannelSwitcher.Enabled = true;
@@ -3234,7 +3248,7 @@ namespace IntegratedGuiV2
 
         private void bIcpConnect_Click(object sender, EventArgs e)
         {
-            bIcpConnect.Enabled = false;
+            //bIcpConnect.Enabled = false;
 
             ucNuvotonIcpTool.IcpConnectApi();
 

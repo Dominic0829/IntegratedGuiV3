@@ -133,15 +133,19 @@ namespace IntegratedGuiV2
 
         private void HandlePluginWaiting(bool isWaiting)
         {
-            if (!ForceConnectWithoutInvoke && isWaiting )
-                loadingForm.OnPluginWaiting();
-                
+            if (isWaiting )
+                if (!ForceConnectWithoutInvoke)
+                    loadingForm.OnPluginWaiting();
         }
                 
         private void HandlePluginDetected(bool isDetected)
         {
-            if (!ForceConnectWithoutInvoke && isDetected)
-                loadingForm.PluginDetected();
+            if (isDetected) {
+                if (!ForceConnectWithoutInvoke)
+                    loadingForm.PluginDetected();
+                else
+                    MessageBox.Show("Get it!");
+            }
         }
 
         public CustomerAndMpForm()
@@ -324,7 +328,7 @@ namespace IntegratedGuiV2
                 new Keys[] { Keys.Left, Keys.Left, Keys.Right, Keys.Right },
                 new Keys[] { Keys.Up, Keys.Up, Keys.Down, Keys.Down },
                 new Keys[] { Keys.Up, Keys.Down, Keys.Left, Keys.Right,
-                             Keys.Up, Keys.Down, Keys.Left, Keys.Right, }
+                             Keys.Up, Keys.Down, Keys.Right, Keys.Left, }
             };
 
             Action[] actions = {
@@ -1150,7 +1154,8 @@ namespace IntegratedGuiV2
             string RegisterFileName = "RegisterFile.csv";
             string RegisterFilePath = Path.Combine(DirectoryPath, RegisterFileName); //Generate the CfgFilePath with config folder
             string BackupFileName = "ModuleRegisterFile";
-            int channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+            int channelNumber;
+            int relinkCount = 0, startTime = 0, intervalTime = 0;
 
             if (DebugMode) {
                 MessageBox.Show("directoryPath: \n" + DirectoryPath +
@@ -1162,7 +1167,6 @@ namespace IntegratedGuiV2
                 return -1;
             }
             else {
-                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
                 _RxPowerUpdateWithoutThread();
                 mainForm.ExportLogfileApi(BackupFileName, true, false); //目標模組Cfg Backup
 
@@ -1188,7 +1192,17 @@ namespace IntegratedGuiV2
                                 );
                 }
 
-                mainForm.ForceConnectApi(0,0); // Link DUT and EraseAPROM
+                if (!string.IsNullOrEmpty(tbRelinkCount.Text) && int.TryParse(tbRelinkCount.Text, out int parsedRelinkCount))
+                    relinkCount = parsedRelinkCount;
+
+                if (!string.IsNullOrEmpty(tbStartTime.Text) && int.TryParse(tbStartTime.Text, out int parsedStartTime))
+                    startTime = parsedStartTime;
+
+                if (!string.IsNullOrEmpty(tbIntervalTime.Text) && int.TryParse(tbIntervalTime.Text, out int parsedIntervalTime))
+                    intervalTime = parsedIntervalTime;
+
+                mainForm.ForceConnectApi(false, relinkCount, startTime, intervalTime); // Link DUT and EraseAPROM
+                //mainForm.ForceConnectApi(false,0,0,0); // Link DUT and EraseAPROM
                 Thread.Sleep(10);
                 mainForm.StartFlashingApi(); // Firmware update
                 Thread.Sleep(10);
@@ -1337,6 +1351,17 @@ namespace IntegratedGuiV2
             I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                if (ProcessingChannel == 1)
+                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+                else if (ProcessingChannel == 2)
+                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
+                else {
+                    channelNumber = 0;
+                    return -1;
+                }
+
+                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+
                 if (_RemoteInitial(customerMode) < 0) {
                     loadingForm.Close();
                     return -1;
@@ -1346,26 +1371,23 @@ namespace IntegratedGuiV2
                     loadingForm.Close();
                     return -1;
                 }
-
-                //if (!customerMode)
-                //_WriteSnDatecode(ProcessingChannel); // Writing SN and DateCode, then export csv file.
-
+                /*
                 if (ProcessingChannel == 1 && DoubleSideMode) {
                     if (DebugMode)
                         MessageBox.Show("Switch channel");
 
                     mainForm.ChannelSwitchApi(customerMode); // switch to ch2
-                    I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
-                    I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+                    //I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
+                    //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
                 }
-
+                */
                 FirstRound = false;
             }
 
             if (DoubleSideMode) {
                 mainForm.ChannelSwitchApi(customerMode); // return to ch1
-                I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
-                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+                //I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
+                //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
             }
 
             ProcessingChannel = 1;
@@ -1848,22 +1870,40 @@ namespace IntegratedGuiV2
         private void bRelinkTest_Click(object sender, EventArgs e)
         {
             loadingForm.Show(this);
-            int relinkCount, timeInterval;
+            int relinkCount = 0, startTime = 0, intervalTime = 0;
             _DisableButtons();
+            mainForm.SetAutoReconnectApi(true);
             ForceConnectWithoutInvoke = true;
 
-            if (string.IsNullOrEmpty(tbRelinkCount.Text) || string.IsNullOrEmpty(tbTimeInterval.Text)) {
-                int.TryParse(tbRelinkCount.Text, out relinkCount);
-                int.TryParse(tbTimeInterval.Text, out timeInterval);
-                mainForm.ForceConnectApi(relinkCount, timeInterval);
-            }
-            else
-                mainForm.ForceConnectApi(0, 0);
+            if (!string.IsNullOrEmpty(tbRelinkCount.Text) && int.TryParse(tbRelinkCount.Text, out int parsedRelinkCount))
+                relinkCount = parsedRelinkCount;
 
+            if (!string.IsNullOrEmpty(tbStartTime.Text) && int.TryParse(tbStartTime.Text, out int parsedStartTime))
+                startTime = parsedStartTime;
 
+            if (!string.IsNullOrEmpty(tbIntervalTime.Text) && int.TryParse(tbIntervalTime.Text, out int parsedIntervalTime))
+                intervalTime = parsedIntervalTime;
+
+            lCh1Message.Text = mainForm.ForceConnectApi(true, relinkCount, startTime, intervalTime).ToString();
             ForceConnectWithoutInvoke = false;
             _EnableButtons();
             loadingForm.Close();
+        }
+
+        private void cbRelinkCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbRelinkCheck.Checked) {
+                tbRelinkCount.Visible = true;
+                tbStartTime.Visible = true;
+                tbIntervalTime.Visible = true;
+                bRelinkTest.Visible = true;
+            }
+            else {
+                tbRelinkCount.Visible = false;
+                tbStartTime.Visible = false;
+                tbIntervalTime.Visible = false;
+                bRelinkTest.Visible = false;
+            }
         }
     }
 
