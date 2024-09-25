@@ -53,12 +53,11 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
-            this.bRelinkTest = new System.Windows.Forms.Button();
-            this.tbRelinkCount = new System.Windows.Forms.TextBox();
+            this.tbRssiCriteria = new System.Windows.Forms.TextBox();
+            this.cbRelinkCheck = new System.Windows.Forms.CheckBox();
             this.rbLogFileMode = new System.Windows.Forms.RadioButton();
             this.bRenewRssi = new System.Windows.Forms.Button();
             this.rbOnlySN = new System.Windows.Forms.RadioButton();
-            this.tbIntervalTime = new System.Windows.Forms.TextBox();
             this.rbFullMode = new System.Windows.Forms.RadioButton();
             this.cbEngineerMode = new System.Windows.Forms.CheckBox();
             this.cbBarcodeMode = new System.Windows.Forms.CheckBox();
@@ -96,6 +95,9 @@
             this.lRssiCh1_0 = new System.Windows.Forms.Label();
             this.lDateCode = new System.Windows.Forms.Label();
             this.tbDateCode = new System.Windows.Forms.TextBox();
+            this.bRelinkTest = new System.Windows.Forms.Button();
+            this.tbRelinkCount = new System.Windows.Forms.TextBox();
+            this.tbIntervalTime = new System.Windows.Forms.TextBox();
             this.bLogFileComparison = new System.Windows.Forms.Button();
             this.bCfgFileComparison = new System.Windows.Forms.Button();
             this.lDataName = new System.Windows.Forms.Label();
@@ -117,7 +119,7 @@
             this.gbPrompt = new System.Windows.Forms.GroupBox();
             this.lStatus = new System.Windows.Forms.Label();
             this.tbStartTime = new System.Windows.Forms.TextBox();
-            this.cbRelinkCheck = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.gbOperatorMode.SuspendLayout();
             this.gbCodeEditor.SuspendLayout();
             this.gbPrompt.SuspendLayout();
@@ -429,6 +431,8 @@
             // 
             // gbOperatorMode
             // 
+            this.gbOperatorMode.Controls.Add(this.label6);
+            this.gbOperatorMode.Controls.Add(this.tbRssiCriteria);
             this.gbOperatorMode.Controls.Add(this.cbRelinkCheck);
             this.gbOperatorMode.Controls.Add(this.rbLogFileMode);
             this.gbOperatorMode.Controls.Add(this.bRenewRssi);
@@ -470,32 +474,30 @@
             this.gbOperatorMode.Text = "MP information";
             this.gbOperatorMode.Visible = false;
             // 
-            // bRelinkTest
+            // tbRssiCriteria
             // 
-            this.bRelinkTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
-            this.bRelinkTest.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bRelinkTest.FlatAppearance.BorderSize = 0;
-            this.bRelinkTest.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.bRelinkTest.ForeColor = System.Drawing.Color.White;
-            this.bRelinkTest.Location = new System.Drawing.Point(217, 205);
-            this.bRelinkTest.Name = "bRelinkTest";
-            this.bRelinkTest.Size = new System.Drawing.Size(38, 20);
-            this.bRelinkTest.TabIndex = 105;
-            this.bRelinkTest.Text = "Test";
-            this.bRelinkTest.UseVisualStyleBackColor = false;
-            this.bRelinkTest.Visible = false;
-            this.bRelinkTest.Click += new System.EventHandler(this.bRelinkTest_Click);
+            this.tbRssiCriteria.Font = new System.Drawing.Font("Nirmala UI", 6F);
+            this.tbRssiCriteria.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.tbRssiCriteria.Location = new System.Drawing.Point(199, 25);
+            this.tbRssiCriteria.Name = "tbRssiCriteria";
+            this.tbRssiCriteria.Size = new System.Drawing.Size(32, 18);
+            this.tbRssiCriteria.TabIndex = 107;
+            this.tbRssiCriteria.Text = "250";
+            this.tbRssiCriteria.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
             // 
-            // tbRelinkCount
+            // cbRelinkCheck
             // 
-            this.tbRelinkCount.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbRelinkCount.ForeColor = System.Drawing.Color.Black;
-            this.tbRelinkCount.Location = new System.Drawing.Point(235, 184);
-            this.tbRelinkCount.Name = "tbRelinkCount";
-            this.tbRelinkCount.Size = new System.Drawing.Size(20, 18);
-            this.tbRelinkCount.TabIndex = 102;
-            this.tbRelinkCount.Text = "3";
-            this.tbRelinkCount.Visible = false;
+            this.cbRelinkCheck.AutoSize = true;
+            this.cbRelinkCheck.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbRelinkCheck.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbRelinkCheck.Location = new System.Drawing.Point(240, 145);
+            this.cbRelinkCheck.Name = "cbRelinkCheck";
+            this.cbRelinkCheck.Size = new System.Drawing.Size(64, 15);
+            this.cbRelinkCheck.TabIndex = 106;
+            this.cbRelinkCheck.Text = "TimeCheck";
+            this.cbRelinkCheck.UseVisualStyleBackColor = true;
+            this.cbRelinkCheck.Visible = false;
+            this.cbRelinkCheck.CheckedChanged += new System.EventHandler(this.cbRelinkCheck_CheckedChanged);
             // 
             // rbLogFileMode
             // 
@@ -520,9 +522,9 @@
             this.bRenewRssi.ForeColor = System.Drawing.Color.White;
             this.bRenewRssi.Location = new System.Drawing.Point(107, 21);
             this.bRenewRssi.Name = "bRenewRssi";
-            this.bRenewRssi.Size = new System.Drawing.Size(113, 52);
+            this.bRenewRssi.Size = new System.Drawing.Size(89, 52);
             this.bRenewRssi.TabIndex = 89;
-            this.bRenewRssi.Text = "ReadRSSI";
+            this.bRenewRssi.Text = "ReRSSI";
             this.bRenewRssi.UseVisualStyleBackColor = false;
             this.bRenewRssi.Click += new System.EventHandler(this.ReRssi_Click);
             // 
@@ -539,17 +541,6 @@
             this.rbOnlySN.UseVisualStyleBackColor = true;
             this.rbOnlySN.Visible = false;
             this.rbOnlySN.CheckedChanged += new System.EventHandler(this.BarcodeMode_CheckedChanged);
-            // 
-            // tbIntervalTime
-            // 
-            this.tbIntervalTime.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tbIntervalTime.ForeColor = System.Drawing.Color.Black;
-            this.tbIntervalTime.Location = new System.Drawing.Point(204, 184);
-            this.tbIntervalTime.Name = "tbIntervalTime";
-            this.tbIntervalTime.Size = new System.Drawing.Size(28, 18);
-            this.tbIntervalTime.TabIndex = 90;
-            this.tbIntervalTime.Text = "30";
-            this.tbIntervalTime.Visible = false;
             // 
             // rbFullMode
             // 
@@ -954,6 +945,44 @@
             this.tbDateCode.TabIndex = 67;
             this.tbDateCode.Text = "YYMMDD";
             // 
+            // bRelinkTest
+            // 
+            this.bRelinkTest.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bRelinkTest.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bRelinkTest.FlatAppearance.BorderSize = 0;
+            this.bRelinkTest.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bRelinkTest.ForeColor = System.Drawing.Color.White;
+            this.bRelinkTest.Location = new System.Drawing.Point(217, 205);
+            this.bRelinkTest.Name = "bRelinkTest";
+            this.bRelinkTest.Size = new System.Drawing.Size(38, 20);
+            this.bRelinkTest.TabIndex = 105;
+            this.bRelinkTest.Text = "Test";
+            this.bRelinkTest.UseVisualStyleBackColor = false;
+            this.bRelinkTest.Visible = false;
+            this.bRelinkTest.Click += new System.EventHandler(this.bRelinkTest_Click);
+            // 
+            // tbRelinkCount
+            // 
+            this.tbRelinkCount.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbRelinkCount.ForeColor = System.Drawing.Color.Black;
+            this.tbRelinkCount.Location = new System.Drawing.Point(235, 184);
+            this.tbRelinkCount.Name = "tbRelinkCount";
+            this.tbRelinkCount.Size = new System.Drawing.Size(20, 18);
+            this.tbRelinkCount.TabIndex = 102;
+            this.tbRelinkCount.Text = "3";
+            this.tbRelinkCount.Visible = false;
+            // 
+            // tbIntervalTime
+            // 
+            this.tbIntervalTime.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbIntervalTime.ForeColor = System.Drawing.Color.Black;
+            this.tbIntervalTime.Location = new System.Drawing.Point(204, 184);
+            this.tbIntervalTime.Name = "tbIntervalTime";
+            this.tbIntervalTime.Size = new System.Drawing.Size(28, 18);
+            this.tbIntervalTime.TabIndex = 90;
+            this.tbIntervalTime.Text = "30";
+            this.tbIntervalTime.Visible = false;
+            // 
             // bLogFileComparison
             // 
             this.bLogFileComparison.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
@@ -1208,19 +1237,16 @@
             this.tbStartTime.Text = "10";
             this.tbStartTime.Visible = false;
             // 
-            // cbRelinkCheck
+            // label6
             // 
-            this.cbRelinkCheck.AutoSize = true;
-            this.cbRelinkCheck.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
-            this.cbRelinkCheck.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbRelinkCheck.Location = new System.Drawing.Point(240, 145);
-            this.cbRelinkCheck.Name = "cbRelinkCheck";
-            this.cbRelinkCheck.Size = new System.Drawing.Size(64, 15);
-            this.cbRelinkCheck.TabIndex = 106;
-            this.cbRelinkCheck.Text = "TimeCheck";
-            this.cbRelinkCheck.UseVisualStyleBackColor = true;
-            this.cbRelinkCheck.Visible = false;
-            this.cbRelinkCheck.CheckedChanged += new System.EventHandler(this.cbRelinkCheck_CheckedChanged);
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.ForeColor = System.Drawing.Color.White;
+            this.label6.Location = new System.Drawing.Point(199, 13);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(31, 11);
+            this.label6.TabIndex = 108;
+            this.label6.Text = "Criteria";
             // 
             // CustomerAndMpForm
             // 
@@ -1381,5 +1407,7 @@
         private System.Windows.Forms.Button bRelinkTest;
         private System.Windows.Forms.TextBox tbStartTime;
         private System.Windows.Forms.CheckBox cbRelinkCheck;
+        private System.Windows.Forms.TextBox tbRssiCriteria;
+        private System.Windows.Forms.Label label6;
     }
 }

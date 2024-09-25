@@ -661,7 +661,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _SaveLastBinPaths(string zipPath, string logFilePath)
+        private void _SaveLastPathsAndSetup(string zipPath, string logFilePath, string rssiCriteria)
         {
             string exeFolderPath = Application.StartupPath;
             string combinedPath = Path.Combine(exeFolderPath, "XmlFolder");
@@ -714,10 +714,25 @@ namespace IntegratedGuiV2
                 logFilePathElement.InnerText = logFilePath;
             }
 
+            if (!string.IsNullOrEmpty(rssiCriteria)) {
+                XmlElement rssiRriteriaElement = rootElement.SelectSingleNode("FormPaths/RssiCriteria") as XmlElement;
+                if (rssiRriteriaElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    rssiRriteriaElement = xmlDoc.CreateElement("RssiCriteria");
+                    formPaths.AppendChild(rssiRriteriaElement);
+                }
+                rssiRriteriaElement.InnerText = rssiCriteria;
+            }
+
             xmlDoc.Save(xmlFilePath);
         }
 
-        private LastBinPaths _LoadLastPaths()
+        private LastBinPaths _LoadLastPathsAndSetup()
         {
             string folderPath = Application.StartupPath;
             string combinedPath = Path.Combine(folderPath, "XmlFolder");
@@ -729,29 +744,34 @@ namespace IntegratedGuiV2
                 xmlDoc.Load(xmlFilePath);
                 XmlNode zipPathNode = xmlDoc.SelectSingleNode("//ZipPath");
                 XmlNode logFilePathNode = xmlDoc.SelectSingleNode("//LogFilePath");
+                XmlNode rssiCriteriaNode = xmlDoc.SelectSingleNode("//RssiCriteria");
 
                 string zipPath = zipPathNode?.InnerText;
                 string logFilePath = logFilePathNode?.InnerText;
+                string rssiCriteria = rssiCriteriaNode?.InnerText;
 
                 return new LastBinPaths {
                     ZipPath = zipPath,
-                    LogFilePath = logFilePath
+                    LogFilePath = logFilePath,
+                    RssiCriteria = rssiCriteria
                 };
             }
             catch (Exception) {
                 return new LastBinPaths {
                     ZipPath = null,
-                    LogFilePath = null
+                    LogFilePath = null,
+                    RssiCriteria = null
                 };
             }
         }
 
         private void _LoadXmlFile()
         {
-            LastBinPaths lastPath = _LoadLastPaths();
+            LastBinPaths lastPath = _LoadLastPathsAndSetup();
             string initialDirectory = lastPath.ZipPath;
             tbLogFilePath.Text = lastPath.LogFilePath;
             tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+            tbRssiCriteria.Text = lastPath.RssiCriteria;
 
             if (string.IsNullOrEmpty(initialDirectory))
                 initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -820,7 +840,7 @@ namespace IntegratedGuiV2
                     tbLogFilePath.Text = folderBrowserDialog.SelectedPath;
                     tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
                     LogFileFolderPath = folderBrowserDialog.SelectedPath;
-                    _SaveLastBinPaths(null, LogFileFolderPath);
+                    _SaveLastPathsAndSetup(null, LogFileFolderPath, null);
                 }
             }
 
@@ -1012,34 +1032,65 @@ namespace IntegratedGuiV2
 
             I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
         }
-                
+
         private int _RxPowerUpdateWithoutThread()
         {
+            int RssiCriteria;
+            int[] rxPowers = new int[4];
+            bool isParsed = int.TryParse(tbRssiCriteria.Text, out RssiCriteria);
+            if (!isParsed) {
+                MessageBox.Show("Please enter a valid integer value for the RSSI criteria.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return -1;
+            }
+            _SaveLastPathsAndSetup(null, null, tbRssiCriteria.Text);
+
+            if (ProcessingChannel == 1)
+                _InitialRssiTextBox();
+
             if (mainForm.RxPowerReadApiFromDdmApi() < 0) {
                 MessageBox.Show("Please check the module plugin status");
                 return -1;
             }
-
-            if (ProcessingChannel == 1) {
-                tbRssiCh1_0.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower1"));
-                tbRssiCh1_1.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower2"));
-                tbRssiCh1_2.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower3"));
-                tbRssiCh1_3.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower4"));
-            }
-            else if (ProcessingChannel == 2) {
-                tbRssiCh2_0.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower1"));
-                tbRssiCh2_1.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower2"));
-                tbRssiCh2_2.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower3"));
-                tbRssiCh2_3.Text = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower4"));
-            }
+            
+            rxPowers[0] = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower1"));
+            rxPowers[1] = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower2"));
+            rxPowers[2] = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower3"));
+            rxPowers[3] = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower4"));
+            UpdateRssiDisplay(ProcessingChannel, rxPowers, RssiCriteria);
 
             return 0;
         }
 
-        private string _decimalRemove(string text)
+        private void _InitialRssiTextBox()
+        {
+            System.Windows.Forms.TextBox[] textBoxes = new[]
+            {
+                tbRssiCh1_0, tbRssiCh1_1, tbRssiCh1_2, tbRssiCh1_3,
+                tbRssiCh2_0, tbRssiCh2_1, tbRssiCh2_2, tbRssiCh2_3
+            };
+
+            foreach (var textBox in textBoxes)
+                textBox.BackColor = SystemColors.Window; // Reset back color
+        }
+
+        private void UpdateRssiDisplay(int channel, int[] rxPowers, int rssiCriteria)
+        {
+            System.Windows.Forms.TextBox[] textBoxes = (channel == 1) ?
+                new[] { tbRssiCh1_0, tbRssiCh1_1, tbRssiCh1_2, tbRssiCh1_3 } :
+                new[] { tbRssiCh2_0, tbRssiCh2_1, tbRssiCh2_2, tbRssiCh2_3 };
+
+            for (int i = 0; i < rxPowers.Length; i++) {
+                if (rxPowers[i] < rssiCriteria)
+                    textBoxes[i].BackColor = Color.HotPink;
+
+                textBoxes[i].Text = rxPowers[i].ToString();
+            }
+        }
+
+        private int _decimalRemove(string text)
         {
             if (text == "4.4" || text == "4")
-                return "0";
+                return 0;
             
 
             int decimalIndex = text.IndexOf('.');
@@ -1047,7 +1098,7 @@ namespace IntegratedGuiV2
                 text = text.Substring(0, decimalIndex);
             }
 
-            return text;
+            return int.Parse(text);
         }
 
         private void tbFilePath_Leave(object sender, EventArgs e)
@@ -1088,6 +1139,7 @@ namespace IntegratedGuiV2
             gbCodeEditor.Enabled = false;
             tbLogFilePath.Enabled = false;
             tbVenderSn.Enabled = true;
+            tbRssiCriteria.Enabled = false;
         }
         private void _EnableButtonsForBarcodeMode()
         {
@@ -1105,6 +1157,7 @@ namespace IntegratedGuiV2
             cbSecurityLock.Enabled = true;
             cbI2cConnect.Enabled = true;
             cbEngineerMode.Enabled = true;
+            tbRssiCriteria.Enabled = true;
         }
 
         private void _DisableButtons()
@@ -1346,7 +1399,7 @@ namespace IntegratedGuiV2
 
             loadingForm.Show(this);
             _InitialUi();
-            _SaveLastBinPaths(tbFilePath.Text, null);
+            _SaveLastPathsAndSetup(tbFilePath.Text, null, null);
             I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
             I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
 
@@ -1911,6 +1964,7 @@ namespace IntegratedGuiV2
     {
         public string ZipPath { get; set; }
         public string LogFilePath { get; set; }
+        public string RssiCriteria { get; set; }
     }
 
 }

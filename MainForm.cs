@@ -56,6 +56,8 @@ namespace IntegratedGuiV2
         private bool FlagFwUpdated = false;
         private string userRole = "";
         private string lastUsedDirectory;
+        private bool SetQsfpMode = false;
+        private bool TwoByteMode = false;
 
         public bool InformationReadState { get; private set; }
         public bool DdmReadState { get; private set; }
@@ -615,7 +617,42 @@ namespace IntegratedGuiV2
             else
                 return _ChannelSet(ch);
         }
+        /*
+        private int _I2cReadForAll(byte devAddr, byte regAddr, byte length, byte[] data)
+        {
+            int i, rv;
+            if (i2cMaster.connected == false) {
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
+                    return -1;
+            }
 
+            if (SetQsfpMode && _SetQsfpMode(0x4D) < 0)
+                return -1;
+
+            if (writeToFile == false) {
+                rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
+
+                if (rv < 0) {
+                    MessageBox.Show("TRx module no response!!");
+                    _I2cMasterDisconnect();
+                }
+                else if (rv != length) {
+                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                    MessageBox.Show("Please confirm the module plug-in status");
+                }
+
+                return rv;
+            }
+            else {
+                for (i = 0; i < length; i++) {
+                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
+                        MessageBox.Show("_AppendWriteToFile() Error!!");
+                }
+
+                return 0;
+            }
+        }
+        */
         private int _I2cReadIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
@@ -628,7 +665,6 @@ namespace IntegratedGuiV2
                 return -1;
 
             if (writeToFile == false) {
-
                 rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
                 if (rv < 0) {
                     //MessageBox.Show("TRx module no response!!");
@@ -641,6 +677,36 @@ namespace IntegratedGuiV2
                     ErrorState = -1;
                 }
 
+                return rv;
+            }
+            else {
+                for (i = 0; i < length; i++) {
+                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
+                        MessageBox.Show("_AppendWriteToFile() Error!!");
+                }
+
+                return 0;
+            }
+        }
+        
+        private int _I2cRead(byte devAddr, byte regAddr, byte length, byte[] data)
+        {
+            int i, rv;
+            if (i2cMaster.connected == false) {
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
+                    return -1;
+            }
+
+            if (writeToFile == false) {
+                rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
+                if (rv < 0) {
+                    MessageBox.Show("TRx module no response!!");
+                    _I2cMasterDisconnect();
+                }
+                else if (rv != length) {
+                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
+                    MessageBox.Show("Please confirm the module plug-in status");
+                }
 
                 return rv;
             }
@@ -652,50 +718,12 @@ namespace IntegratedGuiV2
 
                 return 0;
             }
-
         }
-
-        private int _I2cRead(byte devAddr, byte regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-            if (i2cMaster.connected == false)
-            {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (writeToFile == false)
-            {
-                rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
-                if (rv < 0)
-                {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-                else if (rv != length) {
-                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
-                    MessageBox.Show("Please confirm the module plug-in status");
-                }
-
-                return rv;
-            }
-            else
-            {
-                for (i = 0; i < length; i++)
-                {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-
+        
         private int _I2cRead16(byte devAddr, byte[] regAddr, byte length, byte[] data)
         {
             int i, rv;
-            if (i2cMaster.connected == false)
-            {
+            if (i2cMaster.connected == false) {
                 if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
@@ -703,12 +731,9 @@ namespace IntegratedGuiV2
             if (_SetQsfpMode(0x4D) < 0)
                 return -1;
 
-            if (writeToFile == false)
-            {
-
+            if (writeToFile == false) {
                 rv = i2cMaster.Read16Api(devAddr, regAddr, length, data);
-                if (rv < 0)
-                {
+                if (rv < 0) {
                     MessageBox.Show("TRx module no response!!");
                     _I2cMasterDisconnect();
                 }
@@ -719,10 +744,8 @@ namespace IntegratedGuiV2
 
                 return rv;
             }
-            else
-            {
-                for (i = 0; i<length; i++)
-                {
+            else {
+                for (i = 0; i<length; i++) {
                     if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
                         MessageBox.Show("_AppendWriteToFile() Error!!");
                 }
@@ -730,7 +753,39 @@ namespace IntegratedGuiV2
                 return 0;
             }
         }
+        /*
+        private int _I2cWriteForAll(byte devAddr, byte regAddr, byte length, byte[] data)
+        {
+            int i, rv;
 
+            if (i2cMaster.connected == false) {
+                if (_I2cMasterConnect(ProcessingChannel) < 0)
+                    return -1;
+            }
+
+            if (SetQsfpMode && _SetQsfpMode(0x4D) < 0)
+                return -1;
+
+            if (writeToFile == false) {
+                rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
+                
+                if (rv < 0) {
+                    MessageBox.Show("TRx module no response!!");
+                    _I2cMasterDisconnect();
+                }
+
+                return rv;
+            }
+            else {
+                for (i = 0; i < length; i++) {
+                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
+                        MessageBox.Show("_AppendWriteToFile() Error!!");
+                }
+
+                return 0;
+            }
+        }
+        */
         private int _I2cWriteIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
@@ -799,7 +854,7 @@ namespace IntegratedGuiV2
                 return 0;
             }
         }
-
+        
         private int _I2cWrite16(byte devAddr, byte[] regAddr, byte length, byte[] data)
         {
             int i, rv;
@@ -835,7 +890,6 @@ namespace IntegratedGuiV2
                 return 0;
             }
         } 
-
         private int _WriteModulePassword()
         {
             byte[] data;
@@ -1318,6 +1372,7 @@ namespace IntegratedGuiV2
                 return;
             }
 
+
             if (ucMald37045cConfig.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucMald37045cConfig.SetI2cReadCBApi() faile Error!!");
@@ -1338,7 +1393,6 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucMata37044cConfig.SetI2cWriteCBApi() faile Error!!");
                 return;
             }
-
             if (ucRt145Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
                 MessageBox.Show("ucRt145Config.SetI2cReadCBApi() faile Error!!");
@@ -1370,6 +1424,16 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
                 return;
             }
+            if (ucGn2109Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0) {
+                MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
+                return;
+            }
+            if (ucGn2109Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0) {
+                MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
+                return;
+            }
+
+
             if (ucGn2108Config.SetI2cRead16CBApi(_I2cRead16) < 0)
             {
                 MessageBox.Show("ucGn1190Config.SetI2cRead16CBApi() faile Error!!");
@@ -1381,16 +1445,6 @@ namespace IntegratedGuiV2
                 return;
             }
 
-            if (ucGn2109Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucGn2109Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
-                return;
-            }
             if (ucGn2109Config.SetI2cRead16CBApi(_I2cRead16) < 0)
             {
                 MessageBox.Show("ucGn1190Config.SetI2cRead16CBApi() faile Error!!");
@@ -3234,8 +3288,6 @@ namespace IntegratedGuiV2
             if (cbConnect.Checked == true) {
                 _I2cMasterConnect(ProcessingChannel);
                 _WriteModulePassword();
-
-                int ch = 
                 _ChannelSet(ProcessingChannel);
                 _UpdateButtonState();
                 gbChannelSwitcher.Enabled = true;
