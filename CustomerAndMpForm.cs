@@ -48,6 +48,7 @@ namespace IntegratedGuiV2
         private bool RxPowerUpdate = false;
         private bool I2cConnected = false;
         private bool ForceConnectWithoutInvoke = false;
+        private bool Sas3Module = false;
         private string CurrentDate = DateTime.Now.ToString("yyMMdd");
         private int Revision = 1;
         private string TempFolderPath = string.Empty;
@@ -274,6 +275,8 @@ namespace IntegratedGuiV2
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            this.Activate();
+            this.BringToFront();
             tbRssiCh1_3.Select();
         }
 
@@ -292,6 +295,8 @@ namespace IntegratedGuiV2
             tbVersionCodeReNewCh1.Text = "";
             tbVersionCodeReNewCh2.Text = "";
             lStatus.TextAlign = ContentAlignment.MiddleCenter;
+            lCh1Message.ForeColor = Color.White;
+            lCh2Message.ForeColor = Color.White;
             bStart.Select();
 
             if (!FirstRound) {
@@ -381,8 +386,8 @@ namespace IntegratedGuiV2
 
                         if ((isCustomerMode || lMode.Text == "MP") && 
                             _Processor(isCustomerMode) < 0) {
-                            MessageBox.Show("There are some problems", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                            return;
+                            //MessageBox.Show("There are some problems", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                            goto exit;
                         }
 
                         if (cbBarcodeMode.Checked && WriteSnDateCode() < 0)
@@ -415,6 +420,7 @@ namespace IntegratedGuiV2
                     }
                 }
 
+            exit:
                 tbVenderSn.Text = "";
                 tbVenderSn.Enabled = true;
                 loadingForm.Close();
@@ -526,7 +532,7 @@ namespace IntegratedGuiV2
                 }
             }
         }
-        
+
         private int _RemoteInitial(bool cutomerMode) // True: Customer Mode, Flase: MP mode
         {
             string apromPath, dataromPath;
@@ -566,44 +572,45 @@ namespace IntegratedGuiV2
                 mainForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", false);
             }
 
-            if (!(string.IsNullOrEmpty(lApName.Text) || lApName.Text == "_")) {
-                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
-                directoryPath = TempFolderPath;
-                apromPath = Path.Combine(directoryPath, lApName.Text);
-                mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", apromPath);
-                if (DebugMode) {
-                    MessageBox.Show("TempFolderPath: \n" + TempFolderPath +
-                                "\n\nAPROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM"));
+            if (!Sas3Module) { 
+                if (!(string.IsNullOrEmpty(lApName.Text) || lApName.Text == "_")) {
+                    mainForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+                    directoryPath = TempFolderPath;
+                    apromPath = Path.Combine(directoryPath, lApName.Text);
+                    mainForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", apromPath);
+                    if (DebugMode) {
+                        MessageBox.Show("TempFolderPath: \n" + TempFolderPath +
+                                    "\n\nAPROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM"));
+                    }
                 }
-                
-            }
-            else {
-                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return -1;
-            }
+                else {
+                    MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return -1;
+                }
 
-            if (!(string.IsNullOrEmpty(lDataName.Text) || lDataName.Text == "_")) {
-                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", true);
-                directoryPath = TempFolderPath;
-                dataromPath = Path.Combine(directoryPath, lDataName.Text);
-                mainForm.SetTextBoxTextToNuvotonIcpApi("tbDataFlash", dataromPath);
-                //MessageBox.Show("DATAROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbDataFlash"));
-            }
-            else
-                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
+                if (!(string.IsNullOrEmpty(lDataName.Text) || lDataName.Text == "_")) {
+                    mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", true);
+                    directoryPath = TempFolderPath;
+                    dataromPath = Path.Combine(directoryPath, lDataName.Text);
+                    mainForm.SetTextBoxTextToNuvotonIcpApi("tbDataFlash", dataromPath);
+                    //MessageBox.Show("DATAROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbDataFlash"));
+                }
+                else
+                    mainForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
 
-            mainForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
+                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
 
-            if (cbSecurityLock.Checked) {
-                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true); // Dominic
-            }
-            else {
-                mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false);
-            }
+                if (cbSecurityLock.Checked) {
+                    mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true); // Dominic
+                }
+                else {
+                    mainForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false);
+                }
 
-            mainForm.SetVarIntStateToNuvotonIcpApi("LinkState", 0);
-            mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
-            Thread.Sleep(10);
+                mainForm.SetVarIntStateToNuvotonIcpApi("LinkState", 0);
+                mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
+                Thread.Sleep(10);
+            }
 
             return 0;
         }
@@ -771,7 +778,11 @@ namespace IntegratedGuiV2
             string initialDirectory = lastPath.ZipPath;
             tbLogFilePath.Text = lastPath.LogFilePath;
             tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
-            tbRssiCriteria.Text = lastPath.RssiCriteria;
+
+            if (!string.IsNullOrEmpty(lastPath.RssiCriteria))
+                tbRssiCriteria.Text = lastPath.RssiCriteria;
+            else
+                tbRssiCriteria.Text = "200";
 
             if (string.IsNullOrEmpty(initialDirectory))
                 initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -901,7 +912,7 @@ namespace IntegratedGuiV2
                 lDataName.Text = DARAROMName;
         }
 
-        private void _ParserXmlForProjectInformation(string filePath)
+        private void _ParserXmlForProjectInformation(string filePath )
         {
             lApName.Text = "_";
             lDataName.Text = "_";
@@ -912,24 +923,57 @@ namespace IntegratedGuiV2
             string role = permissionsNode.Attributes["role"].Value;
             XmlNode productNode = xmlDoc.SelectSingleNode("//Product");
             string productName = productNode.Attributes["name"].Value;
-            XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
-            string APROMName = APROMNode.Attributes["name"].Value;
-            XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
-            string DARAROMName = DATAROMNode.Attributes["name"].Value;
 
             lMode.Text = role;
             lProduct.Text = productName;
+            Sas3Module = (lProduct.Text == "SAS3.0");
 
-            if (!string.IsNullOrWhiteSpace(APROMName)) {
-                lApName.Text = APROMName;
+            if (Sas3Module)
+                mainForm._SetSas3Password();
+
+            if (!Sas3Module) {
+                XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
+                string APROMName = APROMNode.Attributes["name"].Value;
+                XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
+                string DARAROMName = DATAROMNode.Attributes["name"].Value;
+
+                if (!string.IsNullOrWhiteSpace(APROMName)) {
+                    lApName.Location = new Point(76, 212);
+                    lApName.Text = APROMName;
+                }
+                else {
+                    MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+                if (!string.IsNullOrWhiteSpace(DARAROMName)) {
+                    lDataName.Location = new Point(91, 227);
+                    lDataName.Text = DARAROMName;
+                }
             }
             else {
-                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                XmlNode ASideNode = xmlDoc.SelectSingleNode("//ASIDE");
+                string ASideFileName = ASideNode.Attributes["name"].Value;
+                XmlNode BSideNode = xmlDoc.SelectSingleNode("//BSIDE");
+                string BSideFileName = BSideNode.Attributes["name"].Value;
+                lPathAP.Text = "A side:";
+                lPathData.Text = "B side:";
+
+                if (!string.IsNullOrWhiteSpace(ASideFileName)) {
+                    
+                    lApName.Location = new Point(66, 212);
+                    lApName.Text = ASideFileName;
+                }
+                else {
+                    MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+                if (!string.IsNullOrWhiteSpace(BSideFileName)) {
+                    lDataName.Location = new Point(66, 227);
+                    lDataName.Text = BSideFileName;
+                }
             }
 
-            if (!string.IsNullOrWhiteSpace(DARAROMName)) {
-                lDataName.Text = DARAROMName;
-            }
+            
         }
 
         private bool _PathCheck(Label lable)
@@ -1056,7 +1100,11 @@ namespace IntegratedGuiV2
             rxPowers[1] = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower2"));
             rxPowers[2] = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower3"));
             rxPowers[3] = _decimalRemove(mainForm.GetTextBoxTextFromDdmApi("tbRxPower4"));
-            UpdateRssiDisplay(ProcessingChannel, rxPowers, RssiCriteria);
+
+            if (UpdateRssiDisplay(ProcessingChannel, rxPowers, RssiCriteria) > 0) {
+                MessageBox.Show("RSSI value exceeds the criteria ", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                return -2;
+            }
 
             return 0;
         }
@@ -1073,25 +1121,30 @@ namespace IntegratedGuiV2
                 textBox.BackColor = SystemColors.Window; // Reset back color
         }
 
-        private void UpdateRssiDisplay(int channel, int[] rxPowers, int rssiCriteria)
+        private int UpdateRssiDisplay(int channel, int[] rxPowers, int rssiCriteria)
         {
+            int ErrorCount = 0;
+
             System.Windows.Forms.TextBox[] textBoxes = (channel == 1) ?
                 new[] { tbRssiCh1_0, tbRssiCh1_1, tbRssiCh1_2, tbRssiCh1_3 } :
                 new[] { tbRssiCh2_0, tbRssiCh2_1, tbRssiCh2_2, tbRssiCh2_3 };
 
             for (int i = 0; i < rxPowers.Length; i++) {
-                if (rxPowers[i] < rssiCriteria)
+                if (rxPowers[i] < rssiCriteria) {
                     textBoxes[i].BackColor = Color.HotPink;
+                    if (cbNgInterrupt.Checked) ErrorCount++;
+                }
 
                 textBoxes[i].Text = rxPowers[i].ToString();
             }
+
+            return ErrorCount;
         }
 
         private int _decimalRemove(string text)
         {
             if (text == "4.4" || text == "4")
                 return 0;
-            
 
             int decimalIndex = text.IndexOf('.');
             if (decimalIndex != -1) {
@@ -1140,6 +1193,7 @@ namespace IntegratedGuiV2
             tbLogFilePath.Enabled = false;
             tbVenderSn.Enabled = true;
             tbRssiCriteria.Enabled = false;
+            cbNgInterrupt.Enabled = false;
         }
         private void _EnableButtonsForBarcodeMode()
         {
@@ -1158,6 +1212,7 @@ namespace IntegratedGuiV2
             cbI2cConnect.Enabled = true;
             cbEngineerMode.Enabled = true;
             tbRssiCriteria.Enabled = true;
+            cbNgInterrupt.Enabled = true;
         }
 
         private void _DisableButtons()
@@ -1173,7 +1228,7 @@ namespace IntegratedGuiV2
             //cbBypassW.Enabled = false;
             cbEngineerMode.Enabled = false;
             //gbOperatorMode.Enabled = false;
-            button2.Enabled = false;
+            bWriteFromFile.Enabled = false;
             bWriteSnDateCone.Enabled = false;
             bCfgFileComparison.Enabled = false;
             bLogFileComparison.Enabled = false;
@@ -1191,7 +1246,7 @@ namespace IntegratedGuiV2
             //cbBypassW.Enabled = true;
             cbEngineerMode.Enabled = true;
             //gbOperatorMode.Enabled = true;
-            button2.Enabled = true;
+            bWriteFromFile.Enabled = true;
             bWriteSnDateCone.Enabled = true;
             bCfgFileComparison.Enabled = true;
             bLogFileComparison.Enabled = true;
@@ -1207,7 +1262,6 @@ namespace IntegratedGuiV2
             string RegisterFileName = "RegisterFile.csv";
             string RegisterFilePath = Path.Combine(DirectoryPath, RegisterFileName); //Generate the CfgFilePath with config folder
             string BackupFileName = "ModuleRegisterFile";
-            int channelNumber;
             int relinkCount = 0, startTime = 0, intervalTime = 0;
 
             if (DebugMode) {
@@ -1220,7 +1274,9 @@ namespace IntegratedGuiV2
                 return -1;
             }
             else {
-                _RxPowerUpdateWithoutThread();
+                if (_RxPowerUpdateWithoutThread() < 0)
+                    return -1;
+
                 mainForm.ExportLogfileApi(BackupFileName, true, false); //目標模組Cfg Backup
 
                 if (ProcessingChannel == 1) {
@@ -1253,13 +1309,13 @@ namespace IntegratedGuiV2
 
                 if (!string.IsNullOrEmpty(tbIntervalTime.Text) && int.TryParse(tbIntervalTime.Text, out int parsedIntervalTime))
                     intervalTime = parsedIntervalTime;
-
+                
                 mainForm.ForceConnectApi(false, relinkCount, startTime, intervalTime); // Link DUT and EraseAPROM
                 //mainForm.ForceConnectApi(false,0,0,0); // Link DUT and EraseAPROM
                 Thread.Sleep(10);
                 mainForm.StartFlashingApi(); // Firmware update
                 Thread.Sleep(10);
-                mainForm._GlobalWriteFromRegisterMap(customerMode, RegisterFilePath);
+                mainForm._GlobalWriteFromRegisterFile(customerMode, RegisterFilePath, ProcessingChannel);
                 Thread.Sleep(10);
 
                 /*
@@ -1289,9 +1345,42 @@ namespace IntegratedGuiV2
             return 0;
         }
 
+        private int _RemoteControlForSas3(bool customerMode)
+        {
+            string DirectoryPath = TempFolderPath;
+            string RegisterFileName = "RegisterFile.csv";
+            string RegisterFilePath = Path.Combine(DirectoryPath, RegisterFileName); //Generate the CfgFilePath with config folder
+           
+            if (_RxPowerUpdateWithoutThread() < 0)
+                return -1;
+
+           
+            mainForm._WriteFromRegisterFileForSas3(customerMode, RegisterFilePath, ProcessingChannel);
+            Thread.Sleep(10);
+
+            if (ProcessingChannel == 1) {
+                lCh1Message.Text = "Update completed.";
+                cProgressBar1.Value = 100;
+                cProgressBar1.Text = "100%";
+                tbVersionCodeReNewCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+            else if (ProcessingChannel == 2) {
+                lCh2Message.Text = "Update completed.";
+                cProgressBar2.Value = 100;
+                cProgressBar2.Text = "100%";
+                tbVersionCodeReNewCh2.Text = mainForm.GetFirmwareVersionCodeApi();
+            }
+
+            Application.DoEvents();
+            Thread.Sleep(100);
+
+            return 0;
+        }
+
         private int _WriteSnDatecode(int ch)
         {
-            string venderSn;
+            string venderSn = tbVenderSn.Text;
+            string dataCode = tbDateCode.Text;
             string originalVenderSn, originalDateCode;
             string LogFileName = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
             int channelNumber;
@@ -1306,7 +1395,10 @@ namespace IntegratedGuiV2
             }
 
             I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
-            Thread.Sleep(100);
+            Thread.Sleep(200);
+
+            if (Sas3Module)
+                mainForm._SetSas3Password();
 
             _UpdateMessage(ch, "CheckVendorSN");
             if (mainForm.InformationReadApi() < 0) return -1;
@@ -1323,8 +1415,6 @@ namespace IntegratedGuiV2
                 tbOrignalSNCh2.BackColor = Color.DarkBlue;
                 tbOrignalSNCh2.ForeColor = Color.White;
             }
-
-            venderSn = tbVenderSn.Text;
 
             if (DebugMode) {
                 mainForm.SetVendorSnToDdmiApi(venderSn);
@@ -1343,13 +1433,22 @@ namespace IntegratedGuiV2
                 mainForm.SetDataCodeToDdmiApi(CurrentDate);
             }
 
-            _UpdateMessage(ch, "Write..Start");
+            if (!Sas3Module) {
+                _UpdateMessage(ch, "Writing information");
+                if (mainForm.InformationWriteApi() < 0)
+                    return -1;
+                Thread.Sleep(100);
+                _UpdateMessage(ch, "Store into flash");
+                if (mainForm.InformationStoreIntoFlashApi() < 0)
+                    return -1;
+                Thread.Sleep(100);
+            }
+            else {
+                _UpdateMessage(ch, "Writing SN, DateCode");
+                if (mainForm.WriteVendorSerialNumberApi(venderSn, dataCode) < 0)
+                    return -1;
+            }
             
-            if (mainForm.InformationWriteApi() < 0) return -1;
-            Thread.Sleep(100);
-            _UpdateMessage(ch, "Write..Done");
-            if (mainForm.InformationStoreIntoFlashApi() < 0) return -1;
-            Thread.Sleep(100);
             _UpdateMessage(ch, "StoreFlash..Done");
             if (mainForm.InformationReadApi() < 0) return -1;
             Thread.Sleep(10);
@@ -1359,7 +1458,7 @@ namespace IntegratedGuiV2
                 tbReNewSnCh1.BackColor = Color.DarkBlue;
                 tbReNewSnCh1.ForeColor = Color.White;
             }
-                
+            
             else if (ProcessingChannel == 2) {
                 tbReNewSnCh2.Text = mainForm.GetVendorSnFromDdmiApi();
                 tbReNewSnCh2.BackColor = Color.DarkBlue;
@@ -1367,7 +1466,16 @@ namespace IntegratedGuiV2
             }
             
             if (_RxPowerUpdateWithoutThread() < 0) return -1;
-            if (mainForm.ExportLogfileApi(LogFileName, true, true) < 0) return -1; //Must be implement
+
+            if (!Sas3Module) {
+                if (mainForm.ExportLogfileApi(LogFileName, true, true) < 0)
+                    return -1; //Must be implement
+            }
+            else {
+                if (mainForm.ExportLogfileForSas3Api(LogFileName, true, true, ProcessingChannel) < 0)
+                    return -1; //Must be implement
+            }
+            
             Thread.Sleep(10);
             _UpdateMessage(ch, "LogFile..exported");
 
@@ -1401,7 +1509,7 @@ namespace IntegratedGuiV2
             _InitialUi();
             _SaveLastPathsAndSetup(tbFilePath.Text, null, null);
             I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
-            I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+            //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 if (ProcessingChannel == 1)
@@ -1414,40 +1522,37 @@ namespace IntegratedGuiV2
                 }
 
                 I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+                Thread.Sleep(200);
 
-                if (_RemoteInitial(customerMode) < 0) {
-                    loadingForm.Close();
-                    return -1;
-                }
+                if (_RemoteInitial(customerMode) < 0)
+                    goto exit;
 
-                if (_RemoteControl(customerMode) < 0) {
-                    loadingForm.Close();
-                    return -1;
+                if (!Sas3Module) {
+                    if (_RemoteControl(customerMode) < 0)
+                        goto exit;
                 }
-                /*
-                if (ProcessingChannel == 1 && DoubleSideMode) {
-                    if (DebugMode)
-                        MessageBox.Show("Switch channel");
-
-                    mainForm.ChannelSwitchApi(customerMode); // switch to ch2
-                    //I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
-                    //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+                else {
+                    if (_RemoteControlForSas3(customerMode) < 0)
+                        goto exit;
                 }
-                */
+                
                 FirstRound = false;
             }
 
-            if (DoubleSideMode) {
-                mainForm.ChannelSwitchApi(customerMode); // return to ch1
-                //I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
-                //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
-            }
+            if (DoubleSideMode)
+                mainForm.ChannelSwitchApi(customerMode, channelNumber); // return to ch1
 
             ProcessingChannel = 1;
             if (!cbBarcodeMode.Checked)
                 _EnableButtons();
+
             loadingForm.Close();
             return 0;
+
+        exit:
+            _EnableButtons();
+            loadingForm.Close();
+            return -1;
         }
 
         private int ValidateVenderSn()
@@ -1524,7 +1629,7 @@ namespace IntegratedGuiV2
             _SetLogFilePath();
         }
                        
-        private void button2_Click(object sender, EventArgs e)
+        private void bWriteFromFile_Click(object sender, EventArgs e)
         {
             _DisableButtons();
 
@@ -1556,11 +1661,12 @@ namespace IntegratedGuiV2
 
         private int WriteSnDateCode()
         {
+            int ComparisonResults = 0;
             loadingForm.Show(this);
             string DirectoryPath = TempFolderPath;
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;  //??
-            
+
             _DisableButtons();
             _InitialUi();
             _InitialUiForWriteSn();
@@ -1581,8 +1687,16 @@ namespace IntegratedGuiV2
                     tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
                 }
 
-                if (mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked) < 0)
+                if (!Sas3Module)
+                    ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
+                else 
+                    ComparisonResults = mainForm.ComparisonRegisterForSas3Api(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked, ProcessingChannel);
+
+                if (ComparisonResults < 0)
                     return -1;
+
+                _lMessageColorManagement(ComparisonResults);
+                
                 Application.DoEvents();
 
                 Thread.Sleep(100);
@@ -1593,7 +1707,7 @@ namespace IntegratedGuiV2
             }
 
             if (DoubleSideMode) {
-               if (mainForm.ChannelSwitchApi(false) < 0) return -1; // return to ch1
+               if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) return -1; // return to ch1
             }
 
             SerialNumber++;
@@ -1748,9 +1862,11 @@ namespace IntegratedGuiV2
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;
 
+
             loadingForm.Show(this);
             _DisableButtons();
             _InitialUi();
+
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 if (ProcessingChannel == 1)
@@ -1759,18 +1875,26 @@ namespace IntegratedGuiV2
                     ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
 
                 I2cConnected = !(mainForm.ChannelSetApi(ChannelNumber) < 0);
-                Thread.Sleep(300);
+                Thread.Sleep(200);
 
-                ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
+                if (!Sas3Module)
+                    ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
+                else {
+                    mainForm._KeyForSas3();
+                    ComparisonResults = mainForm.ComparisonRegisterForSas3Api(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked, ProcessingChannel);
+                }
+                    
+                if (ComparisonResults < 0) return -1;
                 Thread.Sleep(100);
-
+                _lMessageColorManagement(ComparisonResults);
+                Application.DoEvents();
+                
                 if (!DoubleSideMode)
                     break;
             }
 
             if (DoubleSideMode)
-                if (mainForm.ChannelSwitchApi(false) < 0)
-                    return -1;
+                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) return -1;
 
             this.BringToFront();
             this.Activate();
@@ -1778,13 +1902,29 @@ namespace IntegratedGuiV2
 
             if (!cbBarcodeMode.Checked)
                 _EnableButtons();
+                        
+            return 0;
+        }
 
-            if (ComparisonResults < 0)
-                return -1;
-            else if (ComparisonResults == 1)
-                return 1;
-            else
-                return 0;
+        private void _lMessageColorManagement(int colorControl)
+        {
+            Label messageLabel = (ProcessingChannel == 1) ? lCh1Message : lCh2Message;
+            Color newColor;
+
+            switch (colorControl) {
+                case 0:
+                    newColor = Color.White;
+                    break;
+                case 1:
+                    newColor = Color.DeepPink;
+                    break;
+                default:
+                    newColor = Color.White;
+                    break;
+            }
+
+            messageLabel.ForeColor = newColor;
+
         }
 
         private void bLogFileComparison_Click(object sender, EventArgs e)
@@ -1804,30 +1944,34 @@ namespace IntegratedGuiV2
             int ComparisonResults = 0;
             int ChannelNumber = 1;
             string DirectoryPath = tbLogFilePath.Text;
-            string ObjectFileName = tbVenderSn.Text + "A";
-            string RegisterFilePath = Path.Combine(DirectoryPath, ObjectFileName + ".csv"); //Generate the CfgFilePath with config folder
+            string ObjectFileName;
+            string RegisterFilePath;
+
             //mainForm.InformationReadApi();
             //string OriginalVenderSn = mainForm.GetVendorSnFromDdmiApi();
             //string OriginalDateCode = mainForm.GetDateCodeFromDdmiApi();
             FirstRound = true;
-
-            if (!Directory.Exists(DirectoryPath)) {
-                MessageBox.Show("Please check if the log file path has been correctly specified?");
-                return-1;
-            }
-
-            if (!File.Exists(RegisterFilePath)) {
-                MessageBox.Show("Please check if the log file exists at the specified path?" +
-                                "\n\nTarget path: " + DirectoryPath + "\\..." +
-                                "\nModule SN: " + ObjectFileName + ".csv" + "   <<Missing file");
-                return-1;
-            }
 
             loadingForm.Show(this);
             _DisableButtons();
             _InitialUi();
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                ObjectFileName = tbVenderSn.Text + (ProcessingChannel == 1 ? "A" : "B");
+                RegisterFilePath = Path.Combine(DirectoryPath, ObjectFileName + ".csv"); //Generate the CfgFilePath with config folder
+
+                if (!Directory.Exists(DirectoryPath)) {
+                    MessageBox.Show("Please check if the log file path has been correctly specified?");
+                    goto exit;
+                }
+
+                if (!File.Exists(RegisterFilePath)) {
+                    MessageBox.Show("Please check if the log file exists at the specified path?" +
+                                    "\n\nTarget path: " + DirectoryPath + "\\..." +
+                                    "\nModule SN: " + ObjectFileName + ".csv" + "   <<Missing file");
+                    goto exit;
+                }
+
                 if (ProcessingChannel == 1) 
                     ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
                 else 
@@ -1836,15 +1980,26 @@ namespace IntegratedGuiV2
                 I2cConnected = !(mainForm.ChannelSetApi(ChannelNumber) < 0);
                 Thread.Sleep(300);
 
-                ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked);
+                if (!Sas3Module)
+                    ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked);
+                else {
+                    mainForm._KeyForSas3();
+                    ComparisonResults = mainForm.ComparisonRegisterForSas3Api(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked, ProcessingChannel);
+                }
+
+                if (ComparisonResults < 0) return -1;
                 Thread.Sleep(100);
+                _lMessageColorManagement(ComparisonResults);
+                Application.DoEvents();
 
                 if (!DoubleSideMode) 
                     break;
             }
 
+        exit:
+
             if (DoubleSideMode) 
-                if (mainForm.ChannelSwitchApi(false) < 0) return -1;
+                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) return -1;
 
             this.BringToFront();
             this.Activate();
@@ -1895,6 +2050,7 @@ namespace IntegratedGuiV2
             _DisableButtons();
             mainForm.ChannelSetApi(13);
             ProcessingChannel = 1;
+            Thread.Sleep(200);
             _RxPowerUpdateWithoutThread();
 
             if (rbBoth.Checked) {

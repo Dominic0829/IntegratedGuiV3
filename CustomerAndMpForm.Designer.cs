@@ -53,6 +53,8 @@
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
+            this.cbNgInterrupt = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.tbRssiCriteria = new System.Windows.Forms.TextBox();
             this.cbRelinkCheck = new System.Windows.Forms.CheckBox();
             this.rbLogFileMode = new System.Windows.Forms.RadioButton();
@@ -109,7 +111,7 @@
             this.tbVersionCodeReNewCh2 = new System.Windows.Forms.TextBox();
             this.tbVersionCodeCh2 = new System.Windows.Forms.TextBox();
             this.cbSecurityLock = new System.Windows.Forms.CheckBox();
-            this.button2 = new System.Windows.Forms.Button();
+            this.bWriteFromFile = new System.Windows.Forms.Button();
             this.tbOrignalSNCh1 = new System.Windows.Forms.TextBox();
             this.tbReNewSnCh1 = new System.Windows.Forms.TextBox();
             this.lOriginalSN = new System.Windows.Forms.Label();
@@ -119,7 +121,6 @@
             this.gbPrompt = new System.Windows.Forms.GroupBox();
             this.lStatus = new System.Windows.Forms.Label();
             this.tbStartTime = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
             this.gbOperatorMode.SuspendLayout();
             this.gbCodeEditor.SuspendLayout();
             this.gbPrompt.SuspendLayout();
@@ -406,7 +407,7 @@
             this.cbBypassW.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbBypassW.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbBypassW.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbBypassW.Location = new System.Drawing.Point(91, 117);
+            this.cbBypassW.Location = new System.Drawing.Point(110, 119);
             this.cbBypassW.Name = "cbBypassW";
             this.cbBypassW.Size = new System.Drawing.Size(102, 15);
             this.cbBypassW.TabIndex = 62;
@@ -431,6 +432,7 @@
             // 
             // gbOperatorMode
             // 
+            this.gbOperatorMode.Controls.Add(this.cbNgInterrupt);
             this.gbOperatorMode.Controls.Add(this.label6);
             this.gbOperatorMode.Controls.Add(this.tbRssiCriteria);
             this.gbOperatorMode.Controls.Add(this.cbRelinkCheck);
@@ -473,6 +475,29 @@
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "MP information";
             this.gbOperatorMode.Visible = false;
+            // 
+            // cbNgInterrupt
+            // 
+            this.cbNgInterrupt.AutoSize = true;
+            this.cbNgInterrupt.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbNgInterrupt.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbNgInterrupt.Location = new System.Drawing.Point(199, 49);
+            this.cbNgInterrupt.Name = "cbNgInterrupt";
+            this.cbNgInterrupt.Size = new System.Drawing.Size(72, 15);
+            this.cbNgInterrupt.TabIndex = 109;
+            this.cbNgInterrupt.Text = "NG Interrupt";
+            this.cbNgInterrupt.UseVisualStyleBackColor = true;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.ForeColor = System.Drawing.Color.White;
+            this.label6.Location = new System.Drawing.Point(199, 13);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(31, 11);
+            this.label6.TabIndex = 108;
+            this.label6.Text = "Criteria";
             // 
             // tbRssiCriteria
             // 
@@ -520,9 +545,9 @@
             this.bRenewRssi.FlatAppearance.BorderSize = 0;
             this.bRenewRssi.Font = new System.Drawing.Font("Nirmala UI", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bRenewRssi.ForeColor = System.Drawing.Color.White;
-            this.bRenewRssi.Location = new System.Drawing.Point(107, 21);
+            this.bRenewRssi.Location = new System.Drawing.Point(99, 21);
             this.bRenewRssi.Name = "bRenewRssi";
-            this.bRenewRssi.Size = new System.Drawing.Size(89, 52);
+            this.bRenewRssi.Size = new System.Drawing.Size(90, 52);
             this.bRenewRssi.TabIndex = 89;
             this.bRenewRssi.Text = "ReRSSI";
             this.bRenewRssi.UseVisualStyleBackColor = false;
@@ -823,7 +848,7 @@
             this.bWriteSnDateCone.ForeColor = System.Drawing.Color.White;
             this.bWriteSnDateCone.Location = new System.Drawing.Point(6, 21);
             this.bWriteSnDateCone.Name = "bWriteSnDateCone";
-            this.bWriteSnDateCone.Size = new System.Drawing.Size(100, 52);
+            this.bWriteSnDateCone.Size = new System.Drawing.Size(90, 52);
             this.bWriteSnDateCone.TabIndex = 82;
             this.bWriteSnDateCone.Text = "Write SN";
             this.bWriteSnDateCone.UseVisualStyleBackColor = false;
@@ -1116,21 +1141,21 @@
             this.cbSecurityLock.UseVisualStyleBackColor = true;
             this.cbSecurityLock.Visible = false;
             // 
-            // button2
+            // bWriteFromFile
             // 
-            this.button2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
-            this.button2.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.button2.FlatAppearance.BorderSize = 0;
-            this.button2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.button2.ForeColor = System.Drawing.Color.White;
-            this.button2.Location = new System.Drawing.Point(167, 153);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(89, 25);
-            this.button2.TabIndex = 82;
-            this.button2.Text = "WriteFromFile";
-            this.button2.UseVisualStyleBackColor = false;
-            this.button2.Visible = false;
-            this.button2.Click += new System.EventHandler(this.button2_Click);
+            this.bWriteFromFile.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bWriteFromFile.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bWriteFromFile.FlatAppearance.BorderSize = 0;
+            this.bWriteFromFile.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bWriteFromFile.ForeColor = System.Drawing.Color.White;
+            this.bWriteFromFile.Location = new System.Drawing.Point(144, 153);
+            this.bWriteFromFile.Name = "bWriteFromFile";
+            this.bWriteFromFile.Size = new System.Drawing.Size(122, 25);
+            this.bWriteFromFile.TabIndex = 82;
+            this.bWriteFromFile.Text = "WriteFromFile_SAS3";
+            this.bWriteFromFile.UseVisualStyleBackColor = false;
+            this.bWriteFromFile.Visible = false;
+            this.bWriteFromFile.Click += new System.EventHandler(this.bWriteFromFile_Click);
             // 
             // tbOrignalSNCh1
             // 
@@ -1237,17 +1262,6 @@
             this.tbStartTime.Text = "10";
             this.tbStartTime.Visible = false;
             // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.ForeColor = System.Drawing.Color.White;
-            this.label6.Location = new System.Drawing.Point(199, 13);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(31, 11);
-            this.label6.TabIndex = 108;
-            this.label6.Text = "Criteria";
-            // 
             // CustomerAndMpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
@@ -1267,7 +1281,7 @@
             this.Controls.Add(this.tbReNewSnCh1);
             this.Controls.Add(this.tbOrignalSNCh1);
             this.Controls.Add(this.tbIntervalTime);
-            this.Controls.Add(this.button2);
+            this.Controls.Add(this.bWriteFromFile);
             this.Controls.Add(this.cbSecurityLock);
             this.Controls.Add(this.tbVersionCodeReNewCh2);
             this.Controls.Add(this.tbVersionCodeCh2);
@@ -1365,7 +1379,7 @@
         private System.Windows.Forms.TextBox tbVersionCodeReNewCh2;
         private System.Windows.Forms.TextBox tbVersionCodeCh2;
         private System.Windows.Forms.CheckBox cbSecurityLock;
-        private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button bWriteFromFile;
         private System.Windows.Forms.Button bWriteSnDateCone;
         private System.Windows.Forms.TextBox tbOrignalSNCh1;
         private System.Windows.Forms.TextBox tbReNewSnCh1;
@@ -1409,5 +1423,6 @@
         private System.Windows.Forms.CheckBox cbRelinkCheck;
         private System.Windows.Forms.TextBox tbRssiCriteria;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.CheckBox cbNgInterrupt;
     }
 }

@@ -30,6 +30,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using System.Globalization;
 using System.Diagnostics;
 using System.Web.Configuration;
+using System.Diagnostics.Eventing.Reader;
 
 namespace IntegratedGuiV2
 {
@@ -47,6 +48,7 @@ namespace IntegratedGuiV2
         private int ErrorState = 0;
         private string sAcConfig;
         private string APROMPath, DATAROMPath;
+        private string ASidePath, BSidePath;
         private bool writeToFile = false;
         private string fileName = "3234.cfg";
         private bool DebugMode = false;
@@ -71,6 +73,7 @@ namespace IntegratedGuiV2
         public event EventHandler<TextBoxTextEventArgs> TextBoxTextChanged;
         public event Action<bool> OnPluginWaiting;
         public event Action<bool> OnPluginDetected;
+        private DataTable dtMemory = new DataTable();
 
 
         protected virtual void StateUpdated(string message, int? value)
@@ -213,13 +216,29 @@ namespace IntegratedGuiV2
             else
                 return _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode);
         }
-        
+
+        public int ComparisonRegisterForSas3Api(string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode, int ch)
+        {
+            if (this.InvokeRequired)
+                return (int)this.Invoke(new Action(() => _ComparisonRegisterForSas3(filePath, onlyVerifyMode, comparisonObject, engineerMode, ch)));
+            else
+                return _ComparisonRegisterForSas3(filePath, onlyVerifyMode, comparisonObject, engineerMode, ch);
+        }
+
         public int ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
         {
             if (this.InvokeRequired)
                 return (int)this.Invoke(new Action(() => _ExportLogfile(fileName, logFileMode, writeSnMode)));
             else
                 return _ExportLogfile(fileName, logFileMode, writeSnMode);
+        }
+
+        public int ExportLogfileForSas3Api(string fileName, bool logFileMode, bool writeSnMode, int processingChannel)
+        {
+            if (this.InvokeRequired)
+                return (int)this.Invoke(new Action(() => _ExportLogfileForSas3(fileName, logFileMode, writeSnMode, processingChannel)));
+            else
+                return _ExportLogfileForSas3(fileName, logFileMode, writeSnMode, processingChannel);
         }
 
         public int ForceConnectApi(bool relinkTestMode, int relinkCount, int startTime, int intervalTime) // Used for MpForm
@@ -264,15 +283,15 @@ namespace IntegratedGuiV2
             else
                 return ucInformation.WriteApi();
         }
-        /*
-        public void WriteUpPage0LiteApi(string vendorSn, string dataCode)
+        
+        public int WriteVendorSerialNumberApi(string vendorSn, string dataCode)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucInformation.WriteUpPage0LiteApi(vendorSn, dataCode)));
+                return (int)this.Invoke(new Action(() => ucInformation.WriteVendorSerialNumberApi(vendorSn, dataCode)));
             else
-                ucInformation.WriteUpPage0LiteApi(vendorSn, dataCode);
+                return ucInformation.WriteVendorSerialNumberApi(vendorSn, dataCode);
         }
-        */
+        
         public int InformationStoreIntoFlashApi() // Used for MpForm
         {
             if (this.InvokeRequired)
@@ -337,7 +356,22 @@ namespace IntegratedGuiV2
                 return _WriteRegisterPage(targetPage, delayTime, registerFilePath);
         }
 
-
+        public int WriteRegisterPageForSas3Api(string targetPage, int delayTime, string registerFilePath, int processingChannel)
+        {
+            if (this.InvokeRequired)
+                return (int)this.Invoke(new Action(() => _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel)));
+            else
+                return _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel);
+        }
+        /*
+        public int WriteRegisterPageForSas3Api(string targetPage, int delayTime, string registerFilePath, int processingChannel, byte starAddr, int numberOfBytes)
+        {
+            if (this.InvokeRequired)
+                return (int)this.Invoke(new Action(() => _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel, starAddr, numberOfBytes)));
+            else
+                return _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel, starAddr, numberOfBytes);
+        }
+        */
         public void SetVarBoolStateToNuvotonIcpApi(string varName, bool value)
         {
             ucNuvotonIcpTool.SetVarBoolState(varName, value);
@@ -537,25 +571,25 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _ChannelSwitch(bool customerMode)
+        private int _ChannelSwitch(bool customerMode, int processingChannel)
         {
             int newChannel;
            
             if (customerMode)
-                newChannel = (ProcessingChannel == 1) ? 2 : 1;
+                newChannel = (processingChannel == 1) ? 2 : 1;
             else {
-                if (ProcessingChannel == 1)
+                if (processingChannel == 1)
                     newChannel = 23;
-                else if (ProcessingChannel == 2)
+                else if (processingChannel == 2)
                     newChannel = 13;
                 else
-                    newChannel = (ProcessingChannel == 1) ? 2 : 1;
+                    newChannel = (processingChannel == 1) ? 2 : 1;
             }
             
             _ChannelSet(newChannel);
             _UpdateButtonState();
 
-            return ProcessingChannel;
+            return processingChannel;
         }
 
         private int _ChannelSet(int ch)
@@ -598,14 +632,14 @@ namespace IntegratedGuiV2
             return result;
         }
 
-        public int ChannelSwitchApi(bool customerMode)
+        public int ChannelSwitchApi(bool customerMode, int processingChannel)
         {
             int result = -1;
 
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => result = _ChannelSwitch(customerMode)));
+                this.Invoke(new Action(() => result = _ChannelSwitch(customerMode, processingChannel)));
             else
-                result = _ChannelSwitch(customerMode);
+                result = _ChannelSwitch(customerMode, processingChannel);
 
             return result;
         }
@@ -673,7 +707,7 @@ namespace IntegratedGuiV2
                 }
                 else if (rv != length) {
                     //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
-                    MessageBox.Show("Please confirm the module plug-in status");
+                    MessageBox.Show("Please confirm the module plug-in status\n_I2cReadIcConfig");
                     ErrorState = -1;
                 }
 
@@ -705,7 +739,7 @@ namespace IntegratedGuiV2
                 }
                 else if (rv != length) {
                     //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
-                    MessageBox.Show("Please confirm the module plug-in status");
+                    MessageBox.Show("Please confirm the module plug-in status\n_I2cRead");
                 }
 
                 return rv;
@@ -739,7 +773,7 @@ namespace IntegratedGuiV2
                 }
                 else if (rv != length) {
                     //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
-                    MessageBox.Show("Please confirm the module plug-in status");
+                    MessageBox.Show("Please confirm the module plug-in status\n_I2cRead16");
                 }
 
                 return rv;
@@ -904,7 +938,7 @@ namespace IntegratedGuiV2
 
             return 0;
         }
-
+        /*
         private int _WritePassword()
         {
             byte[] data = new byte[4];
@@ -937,12 +971,9 @@ namespace IntegratedGuiV2
             //MessageBox.Show("_WritePassword2 rv: " + i2cWriteCB(80, 123, 4, data));
             return 0;
         }
-
+        */
         private int _GetPassword(int length, byte[] data)
         {
-            byte[] tmp = new byte[4];
-            TextBox[] textBoxes = new TextBox[] { tbPasswordB0, tbPasswordB1, tbPasswordB2, tbPasswordB3 };
-
             string dataS;
 
             if (length < 4)
@@ -957,18 +988,11 @@ namespace IntegratedGuiV2
                 return -1;
             }
 
-            /*
-            for (int i = 0; i < textBoxes.Length; i++)
-            {
-                data[i] = Convert.ToByte(textBoxes[i].Text.ToString(), 16);
-            }
-            */
-            data[0] = Convert.ToByte(tbPasswordB0.Text, 16);
-            data[1] = Convert.ToByte(tbPasswordB1.Text, 16);
-            data[2] = Convert.ToByte(tbPasswordB2.Text, 16);
-            data[3] = Convert.ToByte(tbPasswordB3.Text, 16);
-            
-        dataS = Encoding.Default.GetString(data);
+            data[0] = (byte)tbPassword.Text[0];
+            data[1] = (byte)tbPassword.Text[1];
+            data[2] = (byte)tbPassword.Text[2];
+            data[3] = (byte)tbPassword.Text[3];
+            dataS = Encoding.Default.GetString(data);
             //MessageBox.Show("_GetPassword parse： " + dataS);
 
             return 4;
@@ -1012,7 +1036,6 @@ namespace IntegratedGuiV2
                 ErrorState = 0;
             }
             */
-                        
         }
 
         private void AppendTxRegisterContents(string exportFilePath)
@@ -1046,14 +1069,14 @@ namespace IntegratedGuiV2
 
         private int _WriteRegisterPage (string targetPage, int delayTime, string registerFilePath)
         {
-
             switch (targetPage) {
                 case "Up 00h":
                 case "Up 03h":
                 case "80h":
                 case "81h":
+               
                     if (ucMemoryDump.WriteRegisterPageApi(targetPage, delayTime, registerFilePath) < 0)
-                        return -1;
+                            return -1;
                     
                     break;
 
@@ -1070,6 +1093,34 @@ namespace IntegratedGuiV2
                     break;
 
                 default:
+                    break;
+            }
+            return 0;
+        }
+
+        private int _WriteRegisterPageForSas3(string targetPage, int delayTime, string registerFilePath, int processingChannel)
+        {
+            switch (targetPage) {
+                
+                case "Page 00":
+                case "Page 03":
+                case "Page 3A":
+                case "Page 5D":
+                case "Page 6C":
+                case "Page 70":
+                case "Page 73":
+                    if (processingChannel == 2)
+                        targetPage = "B_" + targetPage;
+                    else
+                        targetPage = "A_" + targetPage;
+
+                    if (ucMemoryDump.WriteRegisterPageForSas3Api(targetPage, delayTime, registerFilePath) < 0)
+                        return -1;
+
+                    break;
+
+                default:
+                    MessageBox.Show("Exceeds page range!!");
                     break;
             }
             return 0;
@@ -1103,6 +1154,36 @@ namespace IntegratedGuiV2
                 AppendRxRegisterContents(exportFilePath);
                 AppendTxRegisterContents(exportFilePath);
             }
+
+            if (File.Exists(tempUcMemoryFile))
+                File.Delete(tempUcMemoryFile);
+
+            return 0;
+        }
+
+        private int _ExportModuleCfgForSas3(string fileName, string comparisonObject, int ch)
+        {
+            string executableFileFolderPath = Application.StartupPath;
+            string exportFilePath;
+            string folderPath;
+            string tempUcMemoryFile;
+
+            fileName = fileName.Replace(" ", "") + ".csv";
+            folderPath = Path.Combine(executableFileFolderPath, "RegisterFiles");
+            exportFilePath = Path.Combine(folderPath, fileName);
+
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            if (File.Exists(exportFilePath))
+                File.Delete(exportFilePath);
+
+            tempUcMemoryFile = Path.Combine(folderPath, "temp_" + fileName);
+
+            if (ucMemoryDump.ExportAllPagesDataForSas3Api(tempUcMemoryFile, ch) < 0)
+                return -1;
+
+            AppendFileContentToAnother(tempUcMemoryFile, exportFilePath);
 
             if (File.Exists(tempUcMemoryFile))
                 File.Delete(tempUcMemoryFile);
@@ -1190,7 +1271,204 @@ namespace IntegratedGuiV2
 
             return 0;
         }
-        
+
+        private int _ExportLogfileForSas3(string fileName, bool logFileMode, bool writeSnMode, int processingChannel)
+        {
+            string folderPath;
+            string exportFilePath;
+            string tempExportFilePath;
+
+            if (!writeSnMode)
+                StateUpdated("Read State:\nPreparing resources...", 3);
+
+            if (logFileMode) {
+                LastBinPaths lastPath = _LoadLastPaths();
+                folderPath = lastPath.LogFilePath;
+
+                if (string.IsNullOrEmpty(folderPath))
+                    folderPath = Path.Combine(Application.StartupPath, "LogFolder");
+            }
+            else {
+                
+                folderPath = lastUsedDirectory;
+            }
+
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            fileName = fileName.Replace(" ", "") + ".csv";
+            exportFilePath = Path.Combine(folderPath, fileName);
+            tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
+
+            if (File.Exists(exportFilePath)) {
+                if (fileName == "ModuleRegisterFile.csv") {
+                    File.Delete(exportFilePath);
+                }
+                else {
+                    DialogResult result = MessageBox.Show($"File {fileName} already exists." +
+                                                      $"\nDo you want to overwrite it?",
+                                                      "File Exists", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (result == DialogResult.Yes) {
+                        File.Delete(exportFilePath);
+                    }
+                    else {
+                        MessageBox.Show("Operation cancelled.", "Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return -1;
+                    }
+                }
+            }
+
+            //MessageBox.Show("1: \n" + ucInformation.GetVendorInfo() +
+            //                "exportFilePath: \n" + exportFilePath);
+
+            AppendVendorInfo(exportFilePath);
+            AppendMoreInfo(exportFilePath);
+
+            if (!writeSnMode)
+                StateUpdated("Read State:\nInformation...Done", 5);
+
+            //輸出 DUT Register map from MCU all page
+            if (ucMemoryDump.ExportAllPagesDataForSas3Api(tempExportFilePath, processingChannel) < 0)
+                return -1;
+
+            AppendFileContentToAnother(tempExportFilePath, exportFilePath);
+
+            if (!writeSnMode)
+                StateUpdated("Read State:\nAllPage 00h,03h~7F...Done", 10);
+                        
+
+            if (File.Exists(tempExportFilePath))
+                File.Delete(tempExportFilePath);
+
+            //MessageBox.Show("9: \n" + ucInformation.GetVendorInfo() + 
+            //                "exportFilePath: \n" + exportFilePath);
+
+            return 0;
+        }
+
+        //_FormatChangeFromTextToCsv
+        private int _FormatChangeFromTextToCsv(string exportFilePath, string ASideFilePath, string BSideFilePath)
+        {
+            DataTable dtAllPages = new DataTable();
+            string[] pages = new string[]
+            {
+                "Lower", "Page 00", "Page 03", "Page 3A", "Page 5D", "Page 6C",
+                "Page 70", "Page 73", "Page 7B", "Page 7E", "Page 7F"
+            };
+
+            // 初始化 DataTable 欄位（Page, Row 和 16個byte對應的欄位）
+            dtAllPages.Columns.Add("Page", typeof(string));
+            dtAllPages.Columns.Add("Row", typeof(string));
+            for (int col = 0; col < 16; col++) {
+                dtAllPages.Columns.Add(col.ToString("X2"), typeof(string));
+            }
+
+            if (!string.IsNullOrEmpty(ASideFilePath) && _ReadAndProcessFile(ASideFilePath, pages, dtAllPages, "A") < 0)
+                return -1;
+
+            if (!string.IsNullOrEmpty(BSideFilePath) && _ReadAndProcessFile(BSideFilePath, pages, dtAllPages, "B") < 0)
+                return -1;
+
+            ExportDataTableToCsv(dtAllPages, exportFilePath);
+            return 0;
+        }
+
+        // Read and process the data, then add the data to dtAllPages.
+        private int _ReadAndProcessFile(string filePath, string[] pages, DataTable dtAllPages, string sideLabel)
+        {
+            foreach (string page in pages) {
+                if (_ReadFromTextFile(page, filePath) < 0)
+                    return -1;
+
+                DataTable dtCurrentPage = dtMemory.Copy(); 
+
+                for (int rowIdx = 0; rowIdx < 8; rowIdx++) // 8 rows by page
+                {
+                    DataRow newRow = dtAllPages.NewRow();
+                    newRow["Page"] = $"{sideLabel}_{page}"; // Marker A or B side
+                    newRow["Row"] = (rowIdx * 16).ToString("X2"); // Row number
+
+                    for (int colIdx = 0; colIdx < 16; colIdx++) {
+                        newRow[colIdx.ToString("X2")] = dtCurrentPage.Rows[rowIdx][colIdx].ToString(); // Fill in the corresponding byte data
+                    }
+                    dtAllPages.Rows.Add(newRow);
+                }
+            }
+            return 0;
+        }
+
+        // 假設 _ReadFromTextFile() 會讀取一個頁面的資料並將其儲存到 dtMemory
+        private int _ReadFromTextFile(string page, string filePath)
+        {
+            try {
+                using (StreamReader sr = new StreamReader(filePath)) {
+                    string line;
+                    bool isPageFound = false;
+                    dtMemory = new DataTable();
+
+                    // 初始化 dtMemory 的欄位
+                    for (int col = 0; col < 16; col++) {
+                        dtMemory.Columns.Add(col.ToString("X2"), typeof(string));
+                    }
+
+                    while ((line = sr.ReadLine()) != null) {
+                        // 偵測到頁面標籤
+                        if (line.StartsWith(page)) {
+                            isPageFound = true;
+                            continue;
+                        }
+
+                        // 當找到頁面後，開始讀取資料行
+                        if (isPageFound && !string.IsNullOrWhiteSpace(line)) {
+                            string[] data = line.Split(' ');
+
+                            // 檢查資料是否有16個byte
+                            if (data.Length != 16) {
+                                throw new Exception($"Expected 16 bytes, but found {data.Length} bytes in the line.");
+                            }
+
+                            // 新增資料行至 dtMemory
+                            DataRow newRow = dtMemory.NewRow();
+                            for (int i = 0; i < 16; i++) {
+                                newRow[i.ToString("X2")] = data[i];
+                            }
+                            dtMemory.Rows.Add(newRow);
+
+                            // 讀滿8行資料後結束
+                            if (dtMemory.Rows.Count == 8) {
+                                break;
+                            }
+                        }
+                    }
+                }
+                return 0;
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Error reading file: {ex.Message}");
+                return -1;
+            }
+        }
+
+        // 將 DataTable 導出到 CSV 檔案
+        private void ExportDataTableToCsv(DataTable dt, string filePath)
+        {
+            StringBuilder sb = new StringBuilder();
+            string directoryPath = Path.GetDirectoryName(filePath);
+
+            // 將欄位名稱加入CSV
+            IEnumerable<string> columnNames = dt.Columns.Cast<DataColumn>().Select(column => column.ColumnName);
+            sb.AppendLine(string.Join(",", columnNames.ToArray()));
+
+            // 將每一行資料加入CSV
+            foreach (DataRow row in dt.Rows) {
+                IEnumerable<string> fields = row.ItemArray.Select(field => "\"" + field.ToString().Replace("\"", "\"\"") + "\"");
+                sb.AppendLine(string.Join(",", fields.ToArray()));
+            }
+
+            // 寫入檔案
+            File.WriteAllText(filePath, sb.ToString());
+        }
+
 
         private void AppendVendorInfo(string exportFilePath)
         {
@@ -1304,7 +1582,6 @@ namespace IntegratedGuiV2
             dtWriteConfig.Columns.Add("RegAddr", typeof(String));
             dtWriteConfig.Columns.Add("Value", typeof(String));
 
-            dgvWriteConfig.DataSource = dtWriteConfig;
 
             /*
             bool tmp = ucNuvotonIcpTool.GetVarBoolState("PublicVariable");
@@ -1586,6 +1863,11 @@ namespace IntegratedGuiV2
             tbRxConfigReadState.BackColor = Color.White;
         }
 
+        private void _InitialForSas3()
+        {
+
+        }
+
         private void _DisableButtons()
         {
             cbConnect.Enabled = false;
@@ -1601,10 +1883,10 @@ namespace IntegratedGuiV2
             tcIcConfig.Enabled = false;
             ucGn1190Corrector.DisableButtonApi();
             */
-            bGlobalWrite2.Enabled = false;
+            bLoadAllFromCfgFile.Enabled = false;
             bGenerateCfg.Enabled = false;
             //bFunctionTest2.Enabled = false;
-            bDumpToString.Enabled = false;
+            bSaveAllToCfgFile.Enabled = false;
             cbInfomation.Enabled = false;
             cbDdm.Enabled = false;
             cbMemDump.Enabled = false;
@@ -1631,9 +1913,9 @@ namespace IntegratedGuiV2
             */
             bIcpConnect.Enabled = true;
             ucNuvotonIcpTool.SetButtonEnable("bLink", true);
-            bGlobalWrite2.Enabled = true;
+            bLoadAllFromCfgFile.Enabled = true;
             //bFunctionTest2.Enabled = true;
-            bDumpToString.Enabled = true;
+            bSaveAllToCfgFile.Enabled = true;
             cbInfomation.Enabled = true;
             cbDdm.Enabled = true;
             cbMemDump.Enabled = true;
@@ -1646,7 +1928,8 @@ namespace IntegratedGuiV2
             rbMpMode.Enabled = true;
             bBackToMainForm.Enabled = true;
 
-            _GenerateCfgButtonState();
+            //_GenerateCfgButtonState(1);
+            //_GenerateCfgButtonState(2);
 
             if (FirstRead)
             {
@@ -1784,7 +2067,6 @@ namespace IntegratedGuiV2
         private void _GenerateXmlFileForProject()
         {
             string LogFileName = "RegisterFile";
-            
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Project");
             xmlDoc.AppendChild(root);
@@ -1864,7 +2146,118 @@ namespace IntegratedGuiV2
             }
             loadingForm.Close();
         }
+        
+        private void _GenerateXmlFileForSas3()
+        {
+            string fileName = "RegisterFile.csv";
+            string folderPath = Path.Combine(Application.StartupPath, "LogFolder");
+            string exportFilePath = Path.Combine(folderPath, fileName);
+            string targetASidePath, targetBSidePath;
 
+            XmlDocument xmlDoc = new XmlDocument();
+            XmlElement root = xmlDoc.CreateElement("Project");
+            xmlDoc.AppendChild(root);
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "Zip Files|*.zip";
+            saveFileDialog.Title = "Save Zip File";
+
+            if (cbASidePath.Checked)
+                targetASidePath = ASidePath;
+            else {
+                MessageBox.Show("Please confirm the parameter file path");
+                return;
+            }
+
+            if (cbBSidePath.Checked)
+                targetBSidePath = BSidePath;
+            else
+                targetBSidePath = ASidePath;
+
+            XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
+
+            if (rbSas3CustomerMode.Checked) {
+                permissionsNode.SetAttribute("role", "Customer");
+            }
+            else if (rbSas3MpMode.Checked) {
+                permissionsNode.SetAttribute("role", "MP");
+            }
+
+            root.AppendChild(permissionsNode);
+            XmlElement productNode = xmlDoc.CreateElement("Product");
+            productNode.SetAttribute("name", "SAS3.0");
+            permissionsNode.AppendChild(productNode);
+
+            // Check and create filepath
+            if (!string.IsNullOrWhiteSpace(ASidePath) || !string.IsNullOrWhiteSpace(BSidePath)) {
+                XmlElement ASideFileNode = xmlDoc.CreateElement("ASIDE");
+                ASideFileNode.SetAttribute("name", Path.GetFileName(ASidePath));
+                permissionsNode.AppendChild(ASideFileNode);
+
+                if (cbBSidePath.Checked) {
+                    XmlElement BSideFileNode = xmlDoc.CreateElement("BSIDE");
+                    BSideFileNode.SetAttribute("name", Path.GetFileName(BSidePath));
+                    permissionsNode.AppendChild(BSideFileNode);
+                }
+                else {
+                    XmlElement BSideFileNode = xmlDoc.CreateElement("BSIDE");
+                    BSideFileNode.SetAttribute("name", Path.GetFileName(ASidePath));
+                    permissionsNode.AppendChild(BSideFileNode);
+                }
+            }
+            else {
+                MessageBox.Show("ASide or BSide file path is not set.");
+                return;
+            }
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK) {
+                loadingForm.Show(this);
+                Application.DoEvents();
+
+                string selectedFileName = saveFileDialog.FileName;
+                string folderName = Path.GetFileNameWithoutExtension(selectedFileName);
+                string tempFolderPath = Path.Combine(Path.GetDirectoryName(selectedFileName), folderName);
+
+                Directory.CreateDirectory(tempFolderPath);
+                // Save the XML file as Cfg.xml
+                xmlDoc.Save(Path.Combine(tempFolderPath, "Cfg.xml"));                
+                lastUsedDirectory = tempFolderPath;
+                _FormatChangeFromTextToCsv(exportFilePath, targetASidePath, targetBSidePath);
+
+                if (!string.IsNullOrWhiteSpace(exportFilePath)) {
+                    string destinationFilePath = Path.Combine(tempFolderPath, Path.GetFileName(exportFilePath));
+                    File.Copy(exportFilePath, destinationFilePath, true);
+                }
+
+                CompressAndDeleteFolder(tempFolderPath);
+            }
+
+            loadingForm.Close();
+        }
+        /*
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string fileName = "RegisterFile.csv";
+            string folderPath = Path.Combine(Application.StartupPath, "LogFolder");
+            string exportFilePath = Path.Combine(folderPath, fileName);
+            string targetASidePath, targetBSidePath;
+
+
+            if (cbASidePath.Checked)
+                targetASidePath = ASidePath;
+            else {
+                MessageBox.Show("Please confirm the parameter file path");
+                return;
+            }
+
+            if (cbBSidePath.Checked)
+                targetBSidePath = BSidePath;
+            else
+                targetBSidePath = null;
+
+            //MessageBox.Show("ASidePath: " + ASidePath + "\nBSidePath: " + BSidePath);
+            _FormatChangeFromTextToCsv(exportFilePath, targetASidePath, targetBSidePath);
+        }
+        */
         private void CompressAndDeleteFolder(string folderPath)
         {
             string zipFilePath = folderPath + ".zip";
@@ -2138,7 +2531,7 @@ namespace IntegratedGuiV2
                 bOutterSwitch.Enabled = false;
                 //_DisableButtons(); //為了避免切換期間，限制輸入其他狀態
 
-            _ChannelSwitch(true);
+            _ChannelSwitch(true, ProcessingChannel);
             bGlobalRead.Select();
 
             if (bOutterSwitch.Enabled == false)
@@ -2151,7 +2544,7 @@ namespace IntegratedGuiV2
             if (bInnerSwitch.Enabled == true)
                 bInnerSwitch.Enabled = false;
                
-            _ChannelSwitch(true);
+            _ChannelSwitch(true, ProcessingChannel);
 
             if (bInnerSwitch.Enabled == false)
                 bInnerSwitch.Enabled = true;
@@ -2477,33 +2870,32 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
-        private bool _LoadFilesPosition(string fileType)
+        private bool _LoadFilesPathForBin(string fileType)
         {
             //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
-                openFileDialog.Title = "Files position";
+                openFileDialog.Title = "Files path";
                 openFileDialog.Filter = "Binary Files (*.bin)|*.bin";
                 //openFileDialog.InitialDirectory = initialDirectory;
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    string sourceFilePath = Path.GetFileName(openFileDialog.FileName);
+                    string sourceFileName = Path.GetFileName(openFileDialog.FileName);
                     lastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-
                     //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory );
 
                     if (fileType == "APROM")
                     {
-                        APROMPath = lastUsedDirectory + "\\" + sourceFilePath;
+                        APROMPath = lastUsedDirectory + "\\" + sourceFileName;
                         cbAPPath.Checked = true;
                         //MessageBox.Show("APROMPath: \n" + APROMPath);
                     }
 
                     if (fileType == "DATAROM")
                     {
-                        DATAROMPath = lastUsedDirectory + "\\" + sourceFilePath;
+                        DATAROMPath = lastUsedDirectory + "\\" + sourceFileName;
                         cbDAPath.Checked = true;
                     }
 
@@ -2522,15 +2914,72 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _GenerateCfgButtonState()
+        private bool _LoadFilesPathForText(string fileType)
         {
-            if ((cbAPPath.Checked) && (rbCustomerMode.Checked || rbMpMode.Checked))
-                bGenerateCfg.Enabled = true;
-            else
-                bGenerateCfg.Enabled = false;
+            //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+                openFileDialog.Title = "Files path";
+                openFileDialog.Filter = "Text Files (*.txt)|*.txt";
+                //openFileDialog.InitialDirectory = initialDirectory;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                    string sourceFileName = Path.GetFileName(openFileDialog.FileName);
+                    lastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                    //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory );
+
+                    if (fileType == "ASide") {
+                        ASidePath = lastUsedDirectory + "\\" + sourceFileName;
+                        cbASidePath.Checked = true;
+                    }
+
+                    if (fileType == "BSide") {
+                        BSidePath = lastUsedDirectory + "\\" + sourceFileName;
+                        cbBSidePath.Checked = true;
+                    }
+
+                    return true;
+                }
+                else {
+                    if (fileType == "ASide")
+                        cbAPPath.Checked = false;
+
+                    if (fileType == "BSide")
+                        cbDAPath.Checked = false;
+
+                    return false;
+                }
+            }
         }
 
-        internal int _GlobalWriteFromRegisterMap(bool CustomerMode, string CfgFilePath)
+        private void _GenerateCfgButtonState(int mcuType, bool bSide)
+        {
+            if (mcuType == 1) {
+                if (cbAPPath.Checked)
+                    bGenerateCfg.Enabled = true;
+                else
+                    bGenerateCfg.Enabled = false;
+            }
+            else if (mcuType == 2 && bSide == false) {
+                if ((cbASidePath.Checked) ) {
+                    cbBSidePath.Enabled = true;
+                    bSas3GenerateCfg.Enabled = true;
+                }
+                else {
+                    cbBSidePath.Enabled = false;
+                    bSas3GenerateCfg.Enabled = false;
+                }
+            }
+            else if (mcuType == 2 && bSide == true) {
+                if (cbBSidePath.Checked && (rbSas3CustomerMode.Checked || rbSas3MpMode.Checked)) {
+                    bSas3GenerateCfg.Enabled = true;
+                }
+                else {
+                    bSas3GenerateCfg.Enabled = false;
+                }
+            }
+        }
+
+        internal int _GlobalWriteFromRegisterFile(bool CustomerMode, string CfgFilePath, int processingChannel)
         {
             LastBinPaths lastPath = _LoadLastPaths();
             string DirectoryPath = Application.StartupPath;
@@ -2569,6 +3018,56 @@ namespace IntegratedGuiV2
 
             StoreIntoFlashApi();
             StateUpdated("Write State:\nStore into flash...Done", 95);
+
+            return 0;
+        }
+
+        internal int _WriteFromRegisterFileForSas3(bool CustomerMode, string CfgFilePath, int processingChannel)
+        {
+            StateUpdated("Write State:\nPreparing resources...", 10);
+
+            if (CustomerMode) {
+                //StateUpdated("Write State:\nUpPage 03h...Done", 65);
+            }
+            else {
+                if (WriteRegisterPageForSas3Api("Page 00", 1000, CfgFilePath, processingChannel) < 0)
+                    return -1; //Write from Cfg.RegisterFile
+                StateUpdated("Write State:\nPage 00...Done", 30);
+                
+                if (WriteRegisterPageForSas3Api("Page 70", 1000, CfgFilePath, processingChannel) < 0)
+                    return -1; //Write from Cfg.RegisterFile
+                StateUpdated("Write State:\nPage 70...Done", 50);
+
+                if (WriteRegisterPageForSas3Api("Page 73", 1000, CfgFilePath, processingChannel) < 0)
+                    return -1; //Write from Cfg.RegisterFile
+                StateUpdated("Write State:\nPage 73...Done", 70);
+
+                if (WriteRegisterPageForSas3Api("Page 3A", 1000, CfgFilePath, processingChannel) < 0)
+                    return -1; //Write from Cfg.RegisterFile
+                StateUpdated("Write State:\nPage 3A...Done", 90);
+
+                /*
+                if (WriteRegisterPageForSas3Api("Page 00", 1000, CfgFilePath, processingChannel, 0x90, 80) < 0)
+                    return -1; //Write from Cfg.RegisterFile
+                StateUpdated("Write State:\nPage 00...Done", 30);
+
+                
+                if (WriteRegisterPageForSas3Api("Page 00", 100, CfgFilePath, processingChannel, 0xED , 5) < 0)
+                    return -1; //Write from Cfg.RegisterFile
+                StateUpdated("Write State:\nPage 70...Done", 40);
+                */
+            }
+
+            StoreIntoFlashApi();
+            StateUpdated("Write State:\nStore into flash...Done", 95);
+
+            return 0;
+        }
+
+        internal int _KeyForSas3()
+        {
+            if (_WriteModulePassword() < 0)
+                return -1;
 
             return 0;
         }
@@ -2789,7 +3288,6 @@ namespace IntegratedGuiV2
                     Application.DoEvents();
                 }
             }
-
             return errorCount;
         }
 
@@ -2847,8 +3345,8 @@ namespace IntegratedGuiV2
             DataTable dt1 = _ReadCsvToDataTable(filePath1);
             DataTable dt2 = _ReadCsvToDataTable(filePath2);
 
-            RemoveDoubleQuotes(dt1);
-            RemoveDoubleQuotes(dt2);
+            RemoveDoubleQuotes(dt1);//Module
+            RemoveDoubleQuotes(dt2);//Cfg
             ApplyMask(dt1, dt2, masks);
             
             if (engineerMode) 
@@ -2863,6 +3361,99 @@ namespace IntegratedGuiV2
             }
 
             // Delete the temp file, if there are no errors
+            if (File.Exists(filePath1))
+                File.Delete(filePath1);
+
+            if (File.Exists(filePath2))
+                File.Delete(filePath2);
+
+            if (!onlyVerifyMode) {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile are matching", 97);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle are matching", 97);
+            }
+            else {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile are matching", null);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle are matching", null);
+            }
+
+            return 0;
+        }
+
+        internal int _ComparisonRegisterForSas3(string RegisterFilePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode, int ch)
+        {
+            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
+            string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
+            string filePath1;
+            string filePath2 = RegisterFilePath; // Reference cfg file
+            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
+            List<(string page, int row, int[] columns)> masks;
+
+            if (comparisonObject == "CfgFile") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Page 00", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Page 00", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
+                };
+            }
+            /*
+            else if (comparisonObject == "LogFile") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("81h", 70, new[] {15}),
+                };
+            }
+            */
+            else {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Page 00", 70, new[] {15}),
+                };
+            }
+
+            if (!onlyVerifyMode) {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile check...", 93);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle check...", 93);
+            }
+            else {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile check...", null);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle check...", null);
+            }
+
+            // Export current module register file
+            if (_ExportModuleCfgForSas3(fileName1, comparisonObject, ch) < 0)
+                return -1;
+
+            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
+            _ReformatedCsvFileForSas3(filePath1, 1, executableFileFolderPath, comparisonObject, ch); //Get part of data from the module for comparison
+            _ReformatedCsvFileForSas3(filePath2, 2, executableFileFolderPath, comparisonObject, ch); //Get part of data from CfgFile for comparison
+            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
+            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
+            DataTable dt1 = _ReadCsvToDataTable(filePath1);
+            DataTable dt2 = _ReadCsvToDataTable(filePath2);
+
+            RemoveDoubleQuotes(dt1);
+            RemoveDoubleQuotes(dt2);
+            ApplyMask(dt1, dt2, masks);
+
+            if (engineerMode)
+                DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+
+            // Error alarm, if there are differences
+            if (!CompareDataTables(dt1, dt2)) {
+                //MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
+                  //              "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                StateUpdated("Verify State:\nVerify failed", null);
+                return 1;
+            }
+
             if (File.Exists(filePath1))
                 File.Delete(filePath1);
 
@@ -2901,6 +3492,9 @@ namespace IntegratedGuiV2
             else
                 return;
 
+            if (File.Exists(tempFilePath))
+                File.Delete(tempFilePath);
+
             using (StreamReader reader = new StreamReader(FilePath))
             using (StreamWriter writer = new StreamWriter(tempFilePath)) {
                 string line;
@@ -2934,6 +3528,85 @@ namespace IntegratedGuiV2
                     if (rowCount >= NumberOfSearchRows) {
                         break;
                     }
+                }
+            }
+        }
+
+        private void _ReformatedCsvFileForSas3(string FilePath, int fineNumber, string tempFilePath, string comparisonObject, int ch)
+        {
+            int NumberOfSearchRows;
+
+            if (comparisonObject == "LogFile")
+                NumberOfSearchRows = 64; // Page 00, 03, 3A, 5D, 6C, 70, 73, 7B, -7E, -7F 8x10=80 rows.
+            else
+                NumberOfSearchRows = 48; // Page 00, 03, 3A, 6C, 70, 73 8x6 rows
+
+            if (fineNumber == 1) // for module file
+                tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
+            else if (fineNumber == 2) // for Cfg file
+                tempFilePath = Path.Combine(tempFilePath, "temp2_" + Path.GetFileName(FilePath));
+            else
+                return;
+
+            if (File.Exists(tempFilePath))
+                File.Delete(tempFilePath);
+
+            using (StreamReader reader = new StreamReader(FilePath))
+            using (StreamWriter writer = new StreamWriter(tempFilePath)) {
+                string line;
+                bool isHeaderFound = false;
+                int rowCount = 0;
+
+                while ((line = reader.ReadLine()) != null) {
+                    if (!isHeaderFound && line.StartsWith("Page,Row")) {
+                        isHeaderFound = true;
+                        writer.WriteLine(line);
+                        break;
+                    }
+                }
+
+                while ((line = reader.ReadLine()) != null) {
+                    string[] columns = line.Split(',');
+
+                    if (ch == 1) {
+                        if (columns.Length > 0) {
+                            columns[0] = columns[0].Replace("A_", "");
+                            line = string.Join(",", columns);
+                        }
+                    }
+                    if (ch == 2) {
+                        if (columns.Length > 0) {
+                            columns[0] = columns[0].Replace("B_", "");
+                            line = string.Join(",", columns);
+                        }
+                    }
+
+                    if (comparisonObject == "CfgFile") {
+                        if (line.Contains("\"Page 00\"") || line.Contains("\"Page 03\"") ||
+                            line.Contains("\"Page 3A\"") || line.Contains("\"Page 6C\"") ||
+                            line.Contains("\"Page 70\"") || line.Contains("\"Page 73\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else {
+                        if (line.Contains("\"Page 00\"") || line.Contains("\"Page 03\"") ||
+                            line.Contains("\"Page 3A\"") || line.Contains("\"Page 5D\"") ||
+                            line.Contains("\"Page 6C\"") || line.Contains("\"Page 70\"") ||
+                            line.Contains("\"Page 73\"") || line.Contains("\"Page 7B\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+
+                    if (rowCount >= NumberOfSearchRows) {
+                        break;
+                    }
+                }
+                if (DebugMode) {
+                    MessageBox.Show("Get data from: \n" + tempFilePath +
+                                "\n\n Task type: " + comparisonObject + 
+                                "\n Getdata rowCount: " + rowCount);
                 }
             }
         }
@@ -3075,7 +3748,6 @@ namespace IntegratedGuiV2
                 }
                 sb.AppendLine();
             }
-
             return sb.ToString();
         }
 
@@ -3149,7 +3821,7 @@ namespace IntegratedGuiV2
             loadingForm.Close();
         }
 
-        private void bLoadCfgFile_Click(object sender, EventArgs e)
+        private void bLoadAllFromCfgFile_Click(object sender, EventArgs e)
         {
             loadingForm.Show(this);
             string DirectoryPath = Path.Combine(Application.StartupPath, "RegisterFiles");
@@ -3200,8 +3872,6 @@ namespace IntegratedGuiV2
 
             dtWriteConfig.Clear();
             
-            dgvWriteConfig.DataSource = dtWriteConfig;
-
             _EnableButtons();
         }
 
@@ -3238,12 +3908,12 @@ namespace IntegratedGuiV2
 
         private void rbCustomerMode_CheckedChanged(object sender, EventArgs e)
         {
-            _GenerateCfgButtonState();
+            _GenerateCfgButtonState(1, false);
         }
 
         private void rbMpMode_CheckedChanged(object sender, EventArgs e)
         {
-            _GenerateCfgButtonState();
+            _GenerateCfgButtonState(1, false);
         }
 
         private void bBackToMainForm_Click(object sender, EventArgs e)
@@ -3266,6 +3936,13 @@ namespace IntegratedGuiV2
         {
             _DisableButtons();
             _GenerateXmlFileForProject();
+            _EnableButtons();
+        }
+
+        private void bSas3GenerateCfg_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            _GenerateXmlFileForSas3();
             _EnableButtons();
         }
 
@@ -3336,28 +4013,74 @@ namespace IntegratedGuiV2
 
         private void cbAPPath_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbAPPath.Checked)
-            {
-                _LoadFilesPosition("APROM");
-                _GenerateCfgButtonState();
+            if (cbAPPath.Checked) {
+                _LoadFilesPathForBin("APROM");
+                _GenerateCfgButtonState(1, false);
             }
-            else if (!cbAPPath.Checked)
-            {
+            else if (!cbAPPath.Checked) {
                 APROMPath = "";
+                _GenerateCfgButtonState(1, false);
             }
         }
 
         private void cbDAPath_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbDAPath.Checked)
-            {
-                _LoadFilesPosition("DATAROM");
-                _GenerateCfgButtonState();
+            if (cbDAPath.Checked) {
+                _LoadFilesPathForBin("DATAROM");
+                _GenerateCfgButtonState(1, false);
             }
-            else if (!cbDAPath.Checked)
-            {
+            else if (!cbDAPath.Checked) {
                 DATAROMPath = "";
+                _GenerateCfgButtonState(1, false);
             }
+        }
+
+        private void cbASidePath_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbASidePath.Checked) {
+                _LoadFilesPathForText("ASide");
+                _GenerateCfgButtonState(2, false);
+            }
+            else if (!cbASidePath.Checked) {
+                ASidePath = "";
+                _GenerateCfgButtonState(2, false);
+            }
+        }
+
+        private void cbBSidePath_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbBSidePath.Checked) {
+                _LoadFilesPathForText("BSide");
+                _GenerateCfgButtonState(2, true);
+            }
+            else if (!cbBSidePath.Checked) {
+                BSidePath = "";
+                _GenerateCfgButtonState(2, false);
+            }
+        }
+
+        private void bSas3Password_Click(object sender, EventArgs e)
+        {
+            _SetSas3Password();
+        }
+
+        public void _SetSas3Password()
+        {
+            string hexString = "1A, 58, 1A, 58";
+            string[] hexValues = hexString.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            byte[] bytes = new byte[hexValues.Length];
+
+            for (int i = 0; i < hexValues.Length; i++) {
+                bytes[i] = Convert.ToByte(hexValues[i], 16);
+            }
+
+            string result = Encoding.Default.GetString(bytes);
+            tbPassword.Text = result;
+        }
+
+        private void bMini58Password_Click(object sender, EventArgs e)
+        {
+            tbPassword.Text = "3234";
         }
 
         private void cbCh1_CheckedChanged(object sender, EventArgs e)

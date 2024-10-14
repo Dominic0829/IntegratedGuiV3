@@ -78,8 +78,25 @@ namespace IntegratedGuiV2
             this.tbInnerStateCh1 = new System.Windows.Forms.TextBox();
             this.bInnerSwitch = new System.Windows.Forms.Button();
             this.tabPage5 = new System.Windows.Forms.TabPage();
-            this.gbWriteConfig = new System.Windows.Forms.GroupBox();
-            this.dgvWriteConfig = new System.Windows.Forms.DataGridView();
+            this.gbEngineerFunction = new System.Windows.Forms.GroupBox();
+            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.bSaveAllToCfgFile = new System.Windows.Forms.Button();
+            this.progressBar1 = new System.Windows.Forms.ProgressBar();
+            this.bLoadAllFromCfgFile = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.gbSas3Module = new System.Windows.Forms.GroupBox();
+            this.cbBSidePath = new System.Windows.Forms.CheckBox();
+            this.bSas3GenerateCfg = new System.Windows.Forms.Button();
+            this.rbSas3MpMode = new System.Windows.Forms.RadioButton();
+            this.rbSas3CustomerMode = new System.Windows.Forms.RadioButton();
+            this.cbASidePath = new System.Windows.Forms.CheckBox();
+            this.gbMini58GenerateCfg = new System.Windows.Forms.GroupBox();
+            this.cbDAPath = new System.Windows.Forms.CheckBox();
+            this.bGenerateCfg = new System.Windows.Forms.Button();
+            this.rbMpMode = new System.Windows.Forms.RadioButton();
+            this.rbCustomerMode = new System.Windows.Forms.RadioButton();
+            this.cbAPPath = new System.Windows.Forms.CheckBox();
             this.kryptonPalette1 = new ComponentFactory.Krypton.Toolkit.KryptonPalette(this.components);
             this.cbConnect = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
             this.lPassword = new System.Windows.Forms.Label();
@@ -103,31 +120,20 @@ namespace IntegratedGuiV2
             this.cbMemDump = new System.Windows.Forms.CheckBox();
             this.cbDdm = new System.Windows.Forms.CheckBox();
             this.bGlobalWrite = new System.Windows.Forms.Button();
-            this.bGlobalWrite2 = new System.Windows.Forms.Button();
-            this.tbPasswordB3 = new System.Windows.Forms.TextBox();
-            this.tbPasswordB2 = new System.Windows.Forms.TextBox();
-            this.tbPasswordB1 = new System.Windows.Forms.TextBox();
-            this.tbPasswordB0 = new System.Windows.Forms.TextBox();
             this.bScanComponents = new System.Windows.Forms.Button();
             this.bStoreIntoFlash = new System.Windows.Forms.Button();
             this.bFunctionTest2 = new System.Windows.Forms.Button();
-            this.progressBar1 = new System.Windows.Forms.ProgressBar();
-            this.bDumpToString = new System.Windows.Forms.Button();
             this.gbPermissions = new System.Windows.Forms.GroupBox();
             this.cbPermission = new System.Windows.Forms.ComboBox();
             this.gbProduct = new System.Windows.Forms.GroupBox();
             this.cbProductSelect = new System.Windows.Forms.ComboBox();
-            this.gbGenerateCfg = new System.Windows.Forms.GroupBox();
-            this.cbDAPath = new System.Windows.Forms.CheckBox();
-            this.bGenerateCfg = new System.Windows.Forms.Button();
-            this.rbMpMode = new System.Windows.Forms.RadioButton();
-            this.rbCustomerMode = new System.Windows.Forms.RadioButton();
-            this.cbAPPath = new System.Windows.Forms.CheckBox();
             this.bBackToMainForm = new System.Windows.Forms.Button();
             this.lMessage = new System.Windows.Forms.Label();
             this.cbAllCh = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
             this.cbCh2 = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
             this.cbCh1 = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
+            this.bSas3Passwrod = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.tcMain.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tcDdmi.SuspendLayout();
@@ -151,13 +157,14 @@ namespace IntegratedGuiV2
             this.tabPage332.SuspendLayout();
             this.tabPage4.SuspendLayout();
             this.tabPage5.SuspendLayout();
-            this.gbWriteConfig.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvWriteConfig)).BeginInit();
+            this.gbEngineerFunction.SuspendLayout();
+            this.groupBox1.SuspendLayout();
+            this.gbSas3Module.SuspendLayout();
+            this.gbMini58GenerateCfg.SuspendLayout();
             this.gbChannelSwitcher.SuspendLayout();
             this.gbGlobalControl.SuspendLayout();
             this.gbPermissions.SuspendLayout();
             this.gbProduct.SuspendLayout();
-            this.gbGenerateCfg.SuspendLayout();
             this.SuspendLayout();
             // 
             // tcMain
@@ -665,38 +672,263 @@ namespace IntegratedGuiV2
             // 
             // tabPage5
             // 
-            this.tabPage5.Controls.Add(this.gbWriteConfig);
+            this.tabPage5.Controls.Add(this.gbEngineerFunction);
+            this.tabPage5.Controls.Add(this.groupBox1);
             this.tabPage5.Location = new System.Drawing.Point(4, 22);
             this.tabPage5.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPage5.Name = "tabPage5";
             this.tabPage5.Padding = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.tabPage5.Size = new System.Drawing.Size(992, 774);
             this.tabPage5.TabIndex = 4;
-            this.tabPage5.Text = "...";
+            this.tabPage5.Text = "CfgFile Tool";
             this.tabPage5.UseVisualStyleBackColor = true;
             // 
-            // gbWriteConfig
+            // gbEngineerFunction
             // 
-            this.gbWriteConfig.Controls.Add(this.dgvWriteConfig);
-            this.gbWriteConfig.Location = new System.Drawing.Point(24, 23);
-            this.gbWriteConfig.Name = "gbWriteConfig";
-            this.gbWriteConfig.Size = new System.Drawing.Size(349, 600);
-            this.gbWriteConfig.TabIndex = 88;
-            this.gbWriteConfig.TabStop = false;
-            this.gbWriteConfig.Text = "Write Config";
+            this.gbEngineerFunction.Controls.Add(this.textBox2);
+            this.gbEngineerFunction.Controls.Add(this.textBox1);
+            this.gbEngineerFunction.Controls.Add(this.bSaveAllToCfgFile);
+            this.gbEngineerFunction.Controls.Add(this.progressBar1);
+            this.gbEngineerFunction.Controls.Add(this.bLoadAllFromCfgFile);
+            this.gbEngineerFunction.Font = new System.Drawing.Font("Times New Roman", 14F);
+            this.gbEngineerFunction.Location = new System.Drawing.Point(529, 18);
+            this.gbEngineerFunction.Name = "gbEngineerFunction";
+            this.gbEngineerFunction.Size = new System.Drawing.Size(404, 196);
+            this.gbEngineerFunction.TabIndex = 1035;
+            this.gbEngineerFunction.TabStop = false;
+            this.gbEngineerFunction.Text = "Engineer function";
             // 
-            // dgvWriteConfig
+            // textBox2
             // 
-            this.dgvWriteConfig.AllowUserToResizeColumns = false;
-            this.dgvWriteConfig.AllowUserToResizeRows = false;
-            this.dgvWriteConfig.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dgvWriteConfig.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvWriteConfig.Location = new System.Drawing.Point(6, 21);
-            this.dgvWriteConfig.Name = "dgvWriteConfig";
-            this.dgvWriteConfig.RowHeadersWidth = 51;
-            this.dgvWriteConfig.RowTemplate.Height = 24;
-            this.dgvWriteConfig.Size = new System.Drawing.Size(337, 573);
-            this.dgvWriteConfig.TabIndex = 0;
+            this.textBox2.Font = new System.Drawing.Font("Times New Roman", 10F);
+            this.textBox2.Location = new System.Drawing.Point(119, 110);
+            this.textBox2.Multiline = true;
+            this.textBox2.Name = "textBox2";
+            this.textBox2.ReadOnly = true;
+            this.textBox2.Size = new System.Drawing.Size(275, 55);
+            this.textBox2.TabIndex = 1031;
+            this.textBox2.Text = "Operation to write data from the CfgFile, including Page 00, 03, 80, 81, and Rx/T" +
+    "x IC configuration.";
+            // 
+            // textBox1
+            // 
+            this.textBox1.Font = new System.Drawing.Font("Times New Roman", 10F);
+            this.textBox1.Location = new System.Drawing.Point(119, 38);
+            this.textBox1.Multiline = true;
+            this.textBox1.Name = "textBox1";
+            this.textBox1.ReadOnly = true;
+            this.textBox1.Size = new System.Drawing.Size(275, 44);
+            this.textBox1.TabIndex = 1030;
+            this.textBox1.Text = "Generate a CfgFile by exporting the register data of the all page and IC config p" +
+    "age.";
+            // 
+            // bSaveAllToCfgFile
+            // 
+            this.bSaveAllToCfgFile.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.bSaveAllToCfgFile.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bSaveAllToCfgFile.Location = new System.Drawing.Point(14, 37);
+            this.bSaveAllToCfgFile.Margin = new System.Windows.Forms.Padding(2);
+            this.bSaveAllToCfgFile.Name = "bSaveAllToCfgFile";
+            this.bSaveAllToCfgFile.Size = new System.Drawing.Size(100, 28);
+            this.bSaveAllToCfgFile.TabIndex = 1029;
+            this.bSaveAllToCfgFile.Text = "Save CfgFile";
+            this.bSaveAllToCfgFile.UseVisualStyleBackColor = false;
+            this.bSaveAllToCfgFile.Click += new System.EventHandler(this.bSaveCfgFile_Click);
+            // 
+            // progressBar1
+            // 
+            this.progressBar1.Location = new System.Drawing.Point(15, 139);
+            this.progressBar1.Name = "progressBar1";
+            this.progressBar1.Size = new System.Drawing.Size(100, 4);
+            this.progressBar1.TabIndex = 1028;
+            // 
+            // bLoadAllFromCfgFile
+            // 
+            this.bLoadAllFromCfgFile.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.bLoadAllFromCfgFile.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bLoadAllFromCfgFile.Location = new System.Drawing.Point(14, 110);
+            this.bLoadAllFromCfgFile.Margin = new System.Windows.Forms.Padding(2);
+            this.bLoadAllFromCfgFile.Name = "bLoadAllFromCfgFile";
+            this.bLoadAllFromCfgFile.Size = new System.Drawing.Size(100, 28);
+            this.bLoadAllFromCfgFile.TabIndex = 1017;
+            this.bLoadAllFromCfgFile.Text = "Load CfgFile";
+            this.bLoadAllFromCfgFile.UseVisualStyleBackColor = false;
+            this.bLoadAllFromCfgFile.Click += new System.EventHandler(this.bLoadAllFromCfgFile_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.gbSas3Module);
+            this.groupBox1.Controls.Add(this.gbMini58GenerateCfg);
+            this.groupBox1.Font = new System.Drawing.Font("Times New Roman", 14F);
+            this.groupBox1.Location = new System.Drawing.Point(16, 18);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(487, 196);
+            this.groupBox1.TabIndex = 1034;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Generate CfgFile";
+            // 
+            // gbSas3Module
+            // 
+            this.gbSas3Module.Controls.Add(this.cbBSidePath);
+            this.gbSas3Module.Controls.Add(this.bSas3GenerateCfg);
+            this.gbSas3Module.Controls.Add(this.rbSas3MpMode);
+            this.gbSas3Module.Controls.Add(this.rbSas3CustomerMode);
+            this.gbSas3Module.Controls.Add(this.cbASidePath);
+            this.gbSas3Module.Font = new System.Drawing.Font("Times New Roman", 10F);
+            this.gbSas3Module.Location = new System.Drawing.Point(203, 27);
+            this.gbSas3Module.Margin = new System.Windows.Forms.Padding(2);
+            this.gbSas3Module.Name = "gbSas3Module";
+            this.gbSas3Module.Padding = new System.Windows.Forms.Padding(2);
+            this.gbSas3Module.Size = new System.Drawing.Size(166, 150);
+            this.gbSas3Module.TabIndex = 1034;
+            this.gbSas3Module.TabStop = false;
+            this.gbSas3Module.Text = "SAS3.0 module";
+            // 
+            // cbBSidePath
+            // 
+            this.cbBSidePath.AutoSize = true;
+            this.cbBSidePath.BackColor = System.Drawing.Color.Transparent;
+            this.cbBSidePath.Enabled = false;
+            this.cbBSidePath.Location = new System.Drawing.Point(6, 35);
+            this.cbBSidePath.Margin = new System.Windows.Forms.Padding(2);
+            this.cbBSidePath.Name = "cbBSidePath";
+            this.cbBSidePath.Size = new System.Drawing.Size(142, 20);
+            this.cbBSidePath.TabIndex = 1037;
+            this.cbBSidePath.Text = "B-side parameter file";
+            this.cbBSidePath.UseVisualStyleBackColor = false;
+            this.cbBSidePath.CheckedChanged += new System.EventHandler(this.cbBSidePath_CheckedChanged);
+            // 
+            // bSas3GenerateCfg
+            // 
+            this.bSas3GenerateCfg.Enabled = false;
+            this.bSas3GenerateCfg.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bSas3GenerateCfg.Location = new System.Drawing.Point(7, 100);
+            this.bSas3GenerateCfg.Margin = new System.Windows.Forms.Padding(2);
+            this.bSas3GenerateCfg.Name = "bSas3GenerateCfg";
+            this.bSas3GenerateCfg.Size = new System.Drawing.Size(103, 28);
+            this.bSas3GenerateCfg.TabIndex = 1034;
+            this.bSas3GenerateCfg.Text = "Generate Cfg";
+            this.bSas3GenerateCfg.UseVisualStyleBackColor = true;
+            this.bSas3GenerateCfg.Click += new System.EventHandler(this.bSas3GenerateCfg_Click);
+            // 
+            // rbSas3MpMode
+            // 
+            this.rbSas3MpMode.AutoSize = true;
+            this.rbSas3MpMode.Checked = true;
+            this.rbSas3MpMode.Location = new System.Drawing.Point(6, 75);
+            this.rbSas3MpMode.Margin = new System.Windows.Forms.Padding(2);
+            this.rbSas3MpMode.Name = "rbSas3MpMode";
+            this.rbSas3MpMode.Size = new System.Drawing.Size(79, 20);
+            this.rbSas3MpMode.TabIndex = 1036;
+            this.rbSas3MpMode.TabStop = true;
+            this.rbSas3MpMode.Text = "MP mode";
+            this.rbSas3MpMode.UseVisualStyleBackColor = true;
+            // 
+            // rbSas3CustomerMode
+            // 
+            this.rbSas3CustomerMode.AutoSize = true;
+            this.rbSas3CustomerMode.Location = new System.Drawing.Point(6, 57);
+            this.rbSas3CustomerMode.Margin = new System.Windows.Forms.Padding(2);
+            this.rbSas3CustomerMode.Name = "rbSas3CustomerMode";
+            this.rbSas3CustomerMode.Size = new System.Drawing.Size(115, 20);
+            this.rbSas3CustomerMode.TabIndex = 1035;
+            this.rbSas3CustomerMode.Text = "Customer mode";
+            this.rbSas3CustomerMode.UseVisualStyleBackColor = true;
+            // 
+            // cbASidePath
+            // 
+            this.cbASidePath.AutoSize = true;
+            this.cbASidePath.BackColor = System.Drawing.Color.Transparent;
+            this.cbASidePath.Location = new System.Drawing.Point(6, 18);
+            this.cbASidePath.Margin = new System.Windows.Forms.Padding(2);
+            this.cbASidePath.Name = "cbASidePath";
+            this.cbASidePath.Size = new System.Drawing.Size(143, 20);
+            this.cbASidePath.TabIndex = 1034;
+            this.cbASidePath.Text = "A-side parameter file";
+            this.cbASidePath.UseVisualStyleBackColor = false;
+            this.cbASidePath.CheckedChanged += new System.EventHandler(this.cbASidePath_CheckedChanged);
+            // 
+            // gbMini58GenerateCfg
+            // 
+            this.gbMini58GenerateCfg.Controls.Add(this.cbDAPath);
+            this.gbMini58GenerateCfg.Controls.Add(this.bGenerateCfg);
+            this.gbMini58GenerateCfg.Controls.Add(this.rbMpMode);
+            this.gbMini58GenerateCfg.Controls.Add(this.rbCustomerMode);
+            this.gbMini58GenerateCfg.Controls.Add(this.cbAPPath);
+            this.gbMini58GenerateCfg.Font = new System.Drawing.Font("Times New Roman", 10F);
+            this.gbMini58GenerateCfg.Location = new System.Drawing.Point(18, 27);
+            this.gbMini58GenerateCfg.Margin = new System.Windows.Forms.Padding(2);
+            this.gbMini58GenerateCfg.Name = "gbMini58GenerateCfg";
+            this.gbMini58GenerateCfg.Padding = new System.Windows.Forms.Padding(2);
+            this.gbMini58GenerateCfg.Size = new System.Drawing.Size(166, 150);
+            this.gbMini58GenerateCfg.TabIndex = 1033;
+            this.gbMini58GenerateCfg.TabStop = false;
+            this.gbMini58GenerateCfg.Text = "Nuvoton Mini58 series";
+            // 
+            // cbDAPath
+            // 
+            this.cbDAPath.AutoSize = true;
+            this.cbDAPath.BackColor = System.Drawing.Color.Transparent;
+            this.cbDAPath.Location = new System.Drawing.Point(6, 35);
+            this.cbDAPath.Margin = new System.Windows.Forms.Padding(2);
+            this.cbDAPath.Name = "cbDAPath";
+            this.cbDAPath.Size = new System.Drawing.Size(120, 20);
+            this.cbDAPath.TabIndex = 1037;
+            this.cbDAPath.Text = "DATAROM Path";
+            this.cbDAPath.UseVisualStyleBackColor = false;
+            this.cbDAPath.CheckedChanged += new System.EventHandler(this.cbDAPath_CheckedChanged);
+            // 
+            // bGenerateCfg
+            // 
+            this.bGenerateCfg.Enabled = false;
+            this.bGenerateCfg.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bGenerateCfg.Location = new System.Drawing.Point(7, 100);
+            this.bGenerateCfg.Margin = new System.Windows.Forms.Padding(2);
+            this.bGenerateCfg.Name = "bGenerateCfg";
+            this.bGenerateCfg.Size = new System.Drawing.Size(103, 28);
+            this.bGenerateCfg.TabIndex = 1034;
+            this.bGenerateCfg.Text = "Generate Cfg";
+            this.bGenerateCfg.UseVisualStyleBackColor = true;
+            this.bGenerateCfg.Click += new System.EventHandler(this.bGenerateCfg_Click);
+            // 
+            // rbMpMode
+            // 
+            this.rbMpMode.AutoSize = true;
+            this.rbMpMode.Location = new System.Drawing.Point(6, 75);
+            this.rbMpMode.Margin = new System.Windows.Forms.Padding(2);
+            this.rbMpMode.Name = "rbMpMode";
+            this.rbMpMode.Size = new System.Drawing.Size(79, 20);
+            this.rbMpMode.TabIndex = 1036;
+            this.rbMpMode.Text = "MP mode";
+            this.rbMpMode.UseVisualStyleBackColor = true;
+            this.rbMpMode.CheckedChanged += new System.EventHandler(this.rbMpMode_CheckedChanged);
+            // 
+            // rbCustomerMode
+            // 
+            this.rbCustomerMode.AutoSize = true;
+            this.rbCustomerMode.Checked = true;
+            this.rbCustomerMode.Location = new System.Drawing.Point(6, 57);
+            this.rbCustomerMode.Margin = new System.Windows.Forms.Padding(2);
+            this.rbCustomerMode.Name = "rbCustomerMode";
+            this.rbCustomerMode.Size = new System.Drawing.Size(115, 20);
+            this.rbCustomerMode.TabIndex = 1035;
+            this.rbCustomerMode.TabStop = true;
+            this.rbCustomerMode.Text = "Customer mode";
+            this.rbCustomerMode.UseVisualStyleBackColor = true;
+            this.rbCustomerMode.CheckedChanged += new System.EventHandler(this.rbCustomerMode_CheckedChanged);
+            // 
+            // cbAPPath
+            // 
+            this.cbAPPath.AutoSize = true;
+            this.cbAPPath.BackColor = System.Drawing.Color.Transparent;
+            this.cbAPPath.Location = new System.Drawing.Point(6, 18);
+            this.cbAPPath.Margin = new System.Windows.Forms.Padding(2);
+            this.cbAPPath.Name = "cbAPPath";
+            this.cbAPPath.Size = new System.Drawing.Size(103, 20);
+            this.cbAPPath.TabIndex = 1034;
+            this.cbAPPath.Text = "APROM Path";
+            this.cbAPPath.UseVisualStyleBackColor = false;
+            this.cbAPPath.CheckedChanged += new System.EventHandler(this.cbAPPath_CheckedChanged);
             // 
             // kryptonPalette1
             // 
@@ -1009,65 +1241,12 @@ namespace IntegratedGuiV2
             this.bGlobalWrite.UseVisualStyleBackColor = true;
             this.bGlobalWrite.Click += new System.EventHandler(this.bGlobalWrite_Click);
             // 
-            // bGlobalWrite2
-            // 
-            this.bGlobalWrite2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.bGlobalWrite2.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bGlobalWrite2.Location = new System.Drawing.Point(1013, 516);
-            this.bGlobalWrite2.Margin = new System.Windows.Forms.Padding(2);
-            this.bGlobalWrite2.Name = "bGlobalWrite2";
-            this.bGlobalWrite2.Size = new System.Drawing.Size(100, 28);
-            this.bGlobalWrite2.TabIndex = 1017;
-            this.bGlobalWrite2.Text = "Load CfgFile";
-            this.bGlobalWrite2.UseVisualStyleBackColor = false;
-            this.bGlobalWrite2.Click += new System.EventHandler(this.bLoadCfgFile_Click);
-            // 
-            // tbPasswordB3
-            // 
-            this.tbPasswordB3.Location = new System.Drawing.Point(113, 30);
-            this.tbPasswordB3.Name = "tbPasswordB3";
-            this.tbPasswordB3.Size = new System.Drawing.Size(30, 22);
-            this.tbPasswordB3.TabIndex = 1023;
-            this.tbPasswordB3.Text = "34";
-            this.tbPasswordB3.UseSystemPasswordChar = true;
-            this.tbPasswordB3.Visible = false;
-            // 
-            // tbPasswordB2
-            // 
-            this.tbPasswordB2.Location = new System.Drawing.Point(77, 30);
-            this.tbPasswordB2.Name = "tbPasswordB2";
-            this.tbPasswordB2.Size = new System.Drawing.Size(30, 22);
-            this.tbPasswordB2.TabIndex = 1022;
-            this.tbPasswordB2.Text = "33";
-            this.tbPasswordB2.UseSystemPasswordChar = true;
-            this.tbPasswordB2.Visible = false;
-            // 
-            // tbPasswordB1
-            // 
-            this.tbPasswordB1.Location = new System.Drawing.Point(41, 30);
-            this.tbPasswordB1.Name = "tbPasswordB1";
-            this.tbPasswordB1.Size = new System.Drawing.Size(30, 22);
-            this.tbPasswordB1.TabIndex = 1021;
-            this.tbPasswordB1.Text = "32";
-            this.tbPasswordB1.UseSystemPasswordChar = true;
-            this.tbPasswordB1.Visible = false;
-            // 
-            // tbPasswordB0
-            // 
-            this.tbPasswordB0.Location = new System.Drawing.Point(5, 30);
-            this.tbPasswordB0.Name = "tbPasswordB0";
-            this.tbPasswordB0.Size = new System.Drawing.Size(30, 22);
-            this.tbPasswordB0.TabIndex = 1020;
-            this.tbPasswordB0.Text = "33";
-            this.tbPasswordB0.UseSystemPasswordChar = true;
-            this.tbPasswordB0.Visible = false;
-            // 
             // bScanComponents
             // 
             this.bScanComponents.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.bScanComponents.Enabled = false;
             this.bScanComponents.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bScanComponents.Location = new System.Drawing.Point(1016, 826);
+            this.bScanComponents.Location = new System.Drawing.Point(1016, 524);
             this.bScanComponents.Margin = new System.Windows.Forms.Padding(2);
             this.bScanComponents.Name = "bScanComponents";
             this.bScanComponents.Size = new System.Drawing.Size(119, 28);
@@ -1096,7 +1275,7 @@ namespace IntegratedGuiV2
             this.bFunctionTest2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
             this.bFunctionTest2.Enabled = false;
             this.bFunctionTest2.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bFunctionTest2.Location = new System.Drawing.Point(1017, 794);
+            this.bFunctionTest2.Location = new System.Drawing.Point(1017, 492);
             this.bFunctionTest2.Margin = new System.Windows.Forms.Padding(2);
             this.bFunctionTest2.Name = "bFunctionTest2";
             this.bFunctionTest2.Size = new System.Drawing.Size(119, 28);
@@ -1105,26 +1284,6 @@ namespace IntegratedGuiV2
             this.bFunctionTest2.UseVisualStyleBackColor = false;
             this.bFunctionTest2.Visible = false;
             this.bFunctionTest2.Click += new System.EventHandler(this.bReNew_Click);
-            // 
-            // progressBar1
-            // 
-            this.progressBar1.Location = new System.Drawing.Point(1014, 545);
-            this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(100, 4);
-            this.progressBar1.TabIndex = 1028;
-            // 
-            // bDumpToString
-            // 
-            this.bDumpToString.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
-            this.bDumpToString.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bDumpToString.Location = new System.Drawing.Point(1013, 486);
-            this.bDumpToString.Margin = new System.Windows.Forms.Padding(2);
-            this.bDumpToString.Name = "bDumpToString";
-            this.bDumpToString.Size = new System.Drawing.Size(100, 28);
-            this.bDumpToString.TabIndex = 1029;
-            this.bDumpToString.Text = "Save CfgFile";
-            this.bDumpToString.UseVisualStyleBackColor = false;
-            this.bDumpToString.Click += new System.EventHandler(this.bSaveCfgFile_Click);
             // 
             // gbPermissions
             // 
@@ -1177,95 +1336,14 @@ namespace IntegratedGuiV2
             "Products",
             "SAS4.0",
             "PCIe4.0",
-            "QSFP28"});
+            "QSFP28",
+            "SAS3.0"});
             this.cbProductSelect.Location = new System.Drawing.Point(5, 15);
             this.cbProductSelect.Name = "cbProductSelect";
             this.cbProductSelect.Size = new System.Drawing.Size(90, 22);
             this.cbProductSelect.TabIndex = 5;
             this.cbProductSelect.Text = "Product Sel...";
             this.cbProductSelect.SelectedIndexChanged += new System.EventHandler(this.cbProductSelect_SelectedIndexChanged);
-            // 
-            // gbGenerateCfg
-            // 
-            this.gbGenerateCfg.Controls.Add(this.cbDAPath);
-            this.gbGenerateCfg.Controls.Add(this.bGenerateCfg);
-            this.gbGenerateCfg.Controls.Add(this.rbMpMode);
-            this.gbGenerateCfg.Controls.Add(this.rbCustomerMode);
-            this.gbGenerateCfg.Controls.Add(this.cbAPPath);
-            this.gbGenerateCfg.Font = new System.Drawing.Font("Times New Roman", 9F);
-            this.gbGenerateCfg.Location = new System.Drawing.Point(1014, 562);
-            this.gbGenerateCfg.Margin = new System.Windows.Forms.Padding(2);
-            this.gbGenerateCfg.Name = "gbGenerateCfg";
-            this.gbGenerateCfg.Padding = new System.Windows.Forms.Padding(2);
-            this.gbGenerateCfg.Size = new System.Drawing.Size(118, 125);
-            this.gbGenerateCfg.TabIndex = 1033;
-            this.gbGenerateCfg.TabStop = false;
-            this.gbGenerateCfg.Text = "Generate Cfg file";
-            // 
-            // cbDAPath
-            // 
-            this.cbDAPath.AutoSize = true;
-            this.cbDAPath.BackColor = System.Drawing.Color.Transparent;
-            this.cbDAPath.Location = new System.Drawing.Point(6, 35);
-            this.cbDAPath.Margin = new System.Windows.Forms.Padding(2);
-            this.cbDAPath.Name = "cbDAPath";
-            this.cbDAPath.Size = new System.Drawing.Size(113, 19);
-            this.cbDAPath.TabIndex = 1037;
-            this.cbDAPath.Text = "DATAROM Path";
-            this.cbDAPath.UseVisualStyleBackColor = false;
-            this.cbDAPath.CheckedChanged += new System.EventHandler(this.cbDAPath_CheckedChanged);
-            // 
-            // bGenerateCfg
-            // 
-            this.bGenerateCfg.Enabled = false;
-            this.bGenerateCfg.Font = new System.Drawing.Font("Times New Roman", 12F);
-            this.bGenerateCfg.Location = new System.Drawing.Point(7, 90);
-            this.bGenerateCfg.Margin = new System.Windows.Forms.Padding(2);
-            this.bGenerateCfg.Name = "bGenerateCfg";
-            this.bGenerateCfg.Size = new System.Drawing.Size(103, 28);
-            this.bGenerateCfg.TabIndex = 1034;
-            this.bGenerateCfg.Text = "Generate Cfg";
-            this.bGenerateCfg.UseVisualStyleBackColor = true;
-            this.bGenerateCfg.Click += new System.EventHandler(this.bGenerateCfg_Click);
-            // 
-            // rbMpMode
-            // 
-            this.rbMpMode.AutoSize = true;
-            this.rbMpMode.Location = new System.Drawing.Point(6, 70);
-            this.rbMpMode.Margin = new System.Windows.Forms.Padding(2);
-            this.rbMpMode.Name = "rbMpMode";
-            this.rbMpMode.Size = new System.Drawing.Size(73, 19);
-            this.rbMpMode.TabIndex = 1036;
-            this.rbMpMode.Text = "MP mode";
-            this.rbMpMode.UseVisualStyleBackColor = true;
-            this.rbMpMode.CheckedChanged += new System.EventHandler(this.rbMpMode_CheckedChanged);
-            // 
-            // rbCustomerMode
-            // 
-            this.rbCustomerMode.AutoSize = true;
-            this.rbCustomerMode.Checked = true;
-            this.rbCustomerMode.Location = new System.Drawing.Point(6, 52);
-            this.rbCustomerMode.Margin = new System.Windows.Forms.Padding(2);
-            this.rbCustomerMode.Name = "rbCustomerMode";
-            this.rbCustomerMode.Size = new System.Drawing.Size(101, 19);
-            this.rbCustomerMode.TabIndex = 1035;
-            this.rbCustomerMode.TabStop = true;
-            this.rbCustomerMode.Text = "Customer mode";
-            this.rbCustomerMode.UseVisualStyleBackColor = true;
-            this.rbCustomerMode.CheckedChanged += new System.EventHandler(this.rbCustomerMode_CheckedChanged);
-            // 
-            // cbAPPath
-            // 
-            this.cbAPPath.AutoSize = true;
-            this.cbAPPath.BackColor = System.Drawing.Color.Transparent;
-            this.cbAPPath.Location = new System.Drawing.Point(6, 18);
-            this.cbAPPath.Margin = new System.Windows.Forms.Padding(2);
-            this.cbAPPath.Name = "cbAPPath";
-            this.cbAPPath.Size = new System.Drawing.Size(96, 19);
-            this.cbAPPath.TabIndex = 1034;
-            this.cbAPPath.Text = "APROM Path";
-            this.cbAPPath.UseVisualStyleBackColor = false;
-            this.cbAPPath.CheckedChanged += new System.EventHandler(this.cbAPPath_CheckedChanged);
             // 
             // bBackToMainForm
             // 
@@ -1328,26 +1406,52 @@ namespace IntegratedGuiV2
             this.cbCh1.Visible = false;
             this.cbCh1.CheckedChanged += new System.EventHandler(this.cbCh1_CheckedChanged);
             // 
+            // bSas3Passwrod
+            // 
+            this.bSas3Passwrod.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.bSas3Passwrod.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.bSas3Passwrod.Location = new System.Drawing.Point(1016, 593);
+            this.bSas3Passwrod.Margin = new System.Windows.Forms.Padding(2);
+            this.bSas3Passwrod.Name = "bSas3Passwrod";
+            this.bSas3Passwrod.Size = new System.Drawing.Size(119, 28);
+            this.bSas3Passwrod.TabIndex = 1040;
+            this.bSas3Passwrod.Text = "SAS3 PW.";
+            this.bSas3Passwrod.UseVisualStyleBackColor = false;
+            this.bSas3Passwrod.Visible = false;
+            this.bSas3Passwrod.Click += new System.EventHandler(this.bSas3Password_Click);
+            // 
+            // button1
+            // 
+            this.button1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(255)))));
+            this.button1.Font = new System.Drawing.Font("Times New Roman", 12F);
+            this.button1.Location = new System.Drawing.Point(1017, 625);
+            this.button1.Margin = new System.Windows.Forms.Padding(2);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(119, 28);
+            this.button1.TabIndex = 1041;
+            this.button1.Text = "Mini58 PW.";
+            this.button1.UseVisualStyleBackColor = false;
+            this.button1.Visible = false;
+            this.button1.Click += new System.EventHandler(this.bMini58Password_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
             this.ClientSize = new System.Drawing.Size(1184, 849);
+            this.Controls.Add(this.button1);
+            this.Controls.Add(this.bSas3Passwrod);
             this.Controls.Add(this.cbCh2);
             this.Controls.Add(this.cbCh1);
             this.Controls.Add(this.cbAllCh);
             this.Controls.Add(this.lMessage);
             this.Controls.Add(this.bBackToMainForm);
-            this.Controls.Add(this.gbGenerateCfg);
             this.Controls.Add(this.gbProduct);
             this.Controls.Add(this.gbPermissions);
-            this.Controls.Add(this.bDumpToString);
-            this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.bFunctionTest2);
             this.Controls.Add(this.bStoreIntoFlash);
             this.Controls.Add(this.bScanComponents);
-            this.Controls.Add(this.bGlobalWrite2);
             this.Controls.Add(this.bGlobalWrite);
             this.Controls.Add(this.gbGlobalControl);
             this.Controls.Add(this.gbChannelSwitcher);
@@ -1356,10 +1460,6 @@ namespace IntegratedGuiV2
             this.Controls.Add(this.lPassword);
             this.Controls.Add(this.cbConnect);
             this.Controls.Add(this.tcMain);
-            this.Controls.Add(this.tbPasswordB3);
-            this.Controls.Add(this.tbPasswordB2);
-            this.Controls.Add(this.tbPasswordB1);
-            this.Controls.Add(this.tbPasswordB0);
             this.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Name = "MainForm";
             this.Palette = this.kryptonPalette1;
@@ -1391,16 +1491,19 @@ namespace IntegratedGuiV2
             this.tabPage4.ResumeLayout(false);
             this.tabPage4.PerformLayout();
             this.tabPage5.ResumeLayout(false);
-            this.gbWriteConfig.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.dgvWriteConfig)).EndInit();
+            this.gbEngineerFunction.ResumeLayout(false);
+            this.gbEngineerFunction.PerformLayout();
+            this.groupBox1.ResumeLayout(false);
+            this.gbSas3Module.ResumeLayout(false);
+            this.gbSas3Module.PerformLayout();
+            this.gbMini58GenerateCfg.ResumeLayout(false);
+            this.gbMini58GenerateCfg.PerformLayout();
             this.gbChannelSwitcher.ResumeLayout(false);
             this.gbChannelSwitcher.PerformLayout();
             this.gbGlobalControl.ResumeLayout(false);
             this.gbGlobalControl.PerformLayout();
             this.gbPermissions.ResumeLayout(false);
             this.gbProduct.ResumeLayout(false);
-            this.gbGenerateCfg.ResumeLayout(false);
-            this.gbGenerateCfg.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -1456,7 +1559,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Button bOutterSwitch;
         private System.Windows.Forms.Button bInnerSwitch;
         private System.Windows.Forms.Button bGlobalWrite;
-        private System.Windows.Forms.Button bGlobalWrite2;
+        private System.Windows.Forms.Button bLoadAllFromCfgFile;
         private System.Windows.Forms.RadioButton rbCh1;
         private System.Windows.Forms.RadioButton rbCh2;
         private System.Windows.Forms.Label lCh2;
@@ -1464,20 +1567,14 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.Label lContinuousMode;
         private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbConnect;
         private ComponentFactory.Krypton.Toolkit.KryptonPalette kryptonPalette1;
-        private System.Windows.Forms.TextBox tbPasswordB3;
-        private System.Windows.Forms.TextBox tbPasswordB2;
-        private System.Windows.Forms.TextBox tbPasswordB1;
-        private System.Windows.Forms.TextBox tbPasswordB0;
         private System.Windows.Forms.Button bScanComponents;
         private System.Windows.Forms.Button bStoreIntoFlash;
-        private System.Windows.Forms.GroupBox gbWriteConfig;
-        private System.Windows.Forms.DataGridView dgvWriteConfig;
         private System.Windows.Forms.Button bFunctionTest2;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.Button bDumpToString;
+        private System.Windows.Forms.Button bSaveAllToCfgFile;
         private System.Windows.Forms.GroupBox gbPermissions;
         private System.Windows.Forms.GroupBox gbProduct;
-        private System.Windows.Forms.GroupBox gbGenerateCfg;
+        private System.Windows.Forms.GroupBox gbMini58GenerateCfg;
         private System.Windows.Forms.RadioButton rbMpMode;
         private System.Windows.Forms.RadioButton rbCustomerMode;
         public System.Windows.Forms.CheckBox cbAPPath;
@@ -1504,6 +1601,18 @@ namespace IntegratedGuiV2
         private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbAllCh;
         private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbCh2;
         private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbCh1;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.GroupBox gbSas3Module;
+        public System.Windows.Forms.CheckBox cbBSidePath;
+        private System.Windows.Forms.Button bSas3GenerateCfg;
+        private System.Windows.Forms.RadioButton rbSas3MpMode;
+        private System.Windows.Forms.RadioButton rbSas3CustomerMode;
+        public System.Windows.Forms.CheckBox cbASidePath;
+        private System.Windows.Forms.GroupBox gbEngineerFunction;
+        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Button bSas3Passwrod;
+        private System.Windows.Forms.Button button1;
     }
 }
 

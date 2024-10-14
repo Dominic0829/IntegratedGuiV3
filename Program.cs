@@ -27,9 +27,6 @@ namespace IntegratedGuiV2
                 File.WriteAllText("error_log.txt", ex.ToString());
                 MessageBox.Show("An error occurred: " + ex.Message);
             }
-
-            
         }
-
     }
 }
