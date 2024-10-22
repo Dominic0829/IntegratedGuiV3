@@ -32,11 +32,10 @@ namespace IntegratedGuiV2
     {
         private MainForm mainForm; // Assist processing for i2c communication
         private System.Windows.Forms.Timer timer;
-        private int SequenceIndexA = 0;
-        private int SequenceIndexB = 0;
-        private int SequenceIndexDirectionA = 0;
-        private int SequenceIndexDirectionB = 0;
-        private int ForceOpenSAS4 = 0;
+        private int SequenceIndexA = 0, SequenceIndexB = 0;
+        private int SequenceIndexDirectionA = 0, SequenceIndexDirectionB = 0;
+        private int ForceOpenSas4 = 0, ForceOpenPcie4 = 0, ForceOpenQsfp28 = 0;
+        private int ForceControl1 = 0, ForceControl2 = 0;
         private bool DoubleSideMode = false;
         private int ProcessingChannel = 1;
         private int SerialNumber = 1;
@@ -589,40 +588,55 @@ namespace IntegratedGuiV2
                 new Keys[] { Keys.NumPad8, Keys.NumPad8, Keys.NumPad2, Keys.NumPad2 },
                 new Keys[] { Keys.Left, Keys.Left, Keys.Right, Keys.Right },
                 new Keys[] { Keys.Up, Keys.Up, Keys.Down, Keys.Down },
-                new Keys[] { Keys.Up, Keys.Down, Keys.Left, Keys.Right,
-                             Keys.Up, Keys.Down, Keys.Right, Keys.Left, }
-            };
+                new Keys[] { Keys.NumPad1, Keys.NumPad1, Keys.NumPad1, Keys.Down},
+                new Keys[] { Keys.NumPad2, Keys.NumPad2, Keys.NumPad2, Keys.Down},
+                new Keys[] { Keys.NumPad3, Keys.NumPad3, Keys.NumPad3, Keys.Down},
+                new Keys[] { Keys.T, Keys.T, Keys.T, Keys.Down},
+                new Keys[] { Keys.NumPad0, Keys.NumPad0, Keys.NumPad0, Keys.Down}
+                    };
 
             Action[] actions = {
                 () => _OpenLoginForm(),
                 () => _OpenAdminAuthenticationForm(),
                 () => _OpenLoginForm(),
                 () => _OpenAdminAuthenticationForm(),
-                () => _OpenEngineerForm()
+                () => _OpenEngineerForm(0), // SAS4
+                () => _OpenEngineerForm(1), // PCIe4
+                () => _OpenEngineerForm(2), // QSFP28
+                () => _DisplayRelinkControlUi(),
+                () => _DisplayMpMode()
             };
 
             int[] sequenceIndices = {   SequenceIndexA, SequenceIndexB, 
                                         SequenceIndexDirectionA, SequenceIndexDirectionB,
-                                        ForceOpenSAS4 };
+                                        ForceOpenSas4, ForceOpenPcie4, ForceOpenQsfp28,
+                                        ForceControl1, ForceControl2 };
 
             for (int i = 0; i < expectedKeys.Length; i++) {
-                if (e.KeyCode == expectedKeys[i][sequenceIndices[i]]) {
+                if (sequenceIndices[i] < expectedKeys[i].Length &&
+                    e.KeyCode == expectedKeys[i][sequenceIndices[i]]) {
                     sequenceIndices[i]++;
+
                     if (CheckSequenceComplete(sequenceIndices[i], expectedKeys[i])) {
                         I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
                         actions[i]();
-                        ResetSequence();
+                        _ResetSequence();
                     }
                 }
-                else 
-                    ResetSequence();
+                else {
+                    _ResetSequence();
+                }
             }
 
             SequenceIndexA = sequenceIndices[0];
             SequenceIndexB = sequenceIndices[1];
             SequenceIndexDirectionA = sequenceIndices[2];
             SequenceIndexDirectionB = sequenceIndices[3];
-            ForceOpenSAS4 = sequenceIndices[4];
+            ForceOpenSas4 = sequenceIndices[4];
+            ForceOpenPcie4 = sequenceIndices[5];
+            ForceOpenQsfp28 = sequenceIndices[6];
+            ForceControl1 = sequenceIndices[7];
+            ForceControl2 = sequenceIndices[8];
         }
 
         private void TbVenderSnCh1_KeyDown(object sender, KeyEventArgs e)
@@ -697,17 +711,90 @@ namespace IntegratedGuiV2
                 cbI2cConnect.Checked = false;
         }
 
+        private void _DisplayMpMode()
+        {
+            if (tbFilePath.Text == "Please click here, to import the Config file...") {
+                tbFilePath.Text = "";
+                tbFilePath.ForeColor = Color.MidnightBlue;
+            }
+
+            _CleanTempFolder(); // Before change zip file, Clean the tempFolder
+            _LoadXmlFileLite("MSP4M_1M25_r01_20240731.zip");
+
+            if (lMode.Text == "Customer") {
+                this.Size = new Size(550, 280);
+                // rbSingle.Enabled = true;
+                //rbBoth.Enabled = true;
+                cbSecurityLock.Visible = false;
+                gbOperatorMode.Visible = false;
+                bWriteSnDateCone.Visible = false;
+                tbOrignalSNCh1.Visible = false;
+                tbOrignalSNCh2.Visible = false;
+                tbReNewSnCh1.Visible = false;
+                tbReNewSnCh2.Visible = false;
+                lOriginalSN.Visible = false;
+                lReNewSn.Visible = false;
+                bCfgFileComparison.Visible = false;
+                bLogFileComparison.Visible = false;
+                bRenewRssi.Visible = false;
+            }
+
+            else if (lMode.Text == "MP") {
+                this.Size = new Size(550, 485);
+                rbSingle.Select();
+                _GenerateDateCode();
+                //rbSingle.Enabled = false;
+                //rbBoth.Enabled = false;
+                cbSecurityLock.Visible = true;
+                gbOperatorMode.Visible = true;
+                bWriteSnDateCone.Visible = true;
+                tbOrignalSNCh1.Visible = true;
+                tbOrignalSNCh2.Visible = true;
+                tbReNewSnCh1.Visible = true;
+                tbReNewSnCh2.Visible = true;
+                lOriginalSN.Visible = true;
+                lReNewSn.Visible = true;
+                bCfgFileComparison.Visible = true;
+                bLogFileComparison.Visible = true;
+                bRenewRssi.Visible = true;
+
+                if (rbBoth.Checked) {
+                    tbOrignalSNCh2.Visible = true;
+                    tbReNewSnCh2.Visible = true;
+                }
+                else {
+                    tbOrignalSNCh2.Visible = false;
+                    tbReNewSnCh2.Visible = false;
+                }
+            }
+
+            I2cConnected = !(mainForm.ChannelSetApi(13) < 0);
+            _ResetSequence();
+        }
+
         private bool CheckSequenceComplete(int currentIndex, Keys[] expectedKeys)
         {
             return currentIndex == expectedKeys.Length;
         }
 
-        private void _OpenEngineerForm()
+        private void _OpenEngineerForm(int productType) // 0_SAS4, 1_PCIe4,
         {
             MainForm mainForm = new MainForm(true);
             loadingForm.Show(this);
             mainForm.SetPermissions("Administrator");
-            mainForm.SetProduct("SAS4.0");
+            
+            switch (productType) {
+                case 0:
+                    mainForm.SetProduct("SAS4.0");
+                    break;
+                case 1:
+                    mainForm.SetProduct("PCIe4.0");
+                    break;
+                case 2:
+                    mainForm.SetProduct("QSFP28");
+                    break;
+            }
+            
             mainForm.Show();
             loadingForm.Close();
             this.Hide();
@@ -727,13 +814,30 @@ namespace IntegratedGuiV2
             this.Hide();
         }
 
-        private void ResetSequence()
+        private void _DisplayRelinkControlUi()
+        {
+            lBaseTime.Visible = true;
+            lIntervalTime.Visible = true;
+            lCount.Visible = true;
+            tbStartTime.Visible = true;
+            tbIntervalTime.Visible = true;
+            tbRelinkCount.Visible = true;
+            bRelinkTest.Visible = true;
+
+            _ResetSequence();
+        }
+
+        private void _ResetSequence()
         {
             SequenceIndexA = 0;
             SequenceIndexB = 0;
             SequenceIndexDirectionA = 0;
             SequenceIndexDirectionB = 0;
-            ForceOpenSAS4 = 0;
+            ForceOpenSas4 = 0;
+            ForceOpenPcie4 = 0;
+            ForceOpenQsfp28 = 0;
+            ForceControl1 = 0;
+            ForceControl2 = 0;
         }
 
         private void MainForm_ReadStateUpdated(object sender, string e)
@@ -1064,7 +1168,6 @@ namespace IntegratedGuiV2
                             if (File.Exists(xmlFilePath)) {
                                 _ParserXmlForProjectInformation(xmlFilePath);
                                 tbFilePath.Text = selectedFilePath;
-
                             }
                             else {
                                 MessageBox.Show("Cfg.xml not found in the zip file.");
@@ -1078,6 +1181,44 @@ namespace IntegratedGuiV2
                     tbFilePath.SelectionStart = tbFilePath.Text.Length;
                 }
             }
+        }
+
+        private void _LoadXmlFileLite(string fileName)
+        {
+            LastBinPaths lastPath = _LoadLastPathsAndSetup();
+            tbLogFilePath.Text = lastPath.LogFilePath;
+            tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+
+            if (!string.IsNullOrEmpty(lastPath.RssiCriteria))
+                tbRssiCriteria.Text = lastPath.RssiCriteria;
+            else
+                tbRssiCriteria.Text = "200";
+
+
+            string xmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            string extension = Path.GetExtension(xmlPath).ToLower();
+
+            if (extension == ".zip") {
+                try {
+                    TempFolderPath = ExtractZipToTemporaryFolder(xmlPath);
+                    SetHiddenAttribute(TempFolderPath);
+                    string xmlFilePath = Path.Combine(TempFolderPath, "Cfg.xml");
+
+                    if (File.Exists(xmlFilePath)) {
+                        _ParserXmlForProjectInformation(xmlFilePath);
+                        tbFilePath.Text = xmlPath;
+                    }
+                    else {
+                        MessageBox.Show("Cfg.xml not found in the zip file.");
+                    }
+                }
+                catch (Exception ex) {
+                    MessageBox.Show("Failed to extract zip file: " + ex.Message);
+                }
+            }
+
+            tbFilePath.SelectionStart = tbFilePath.Text.Length;
+            _ResetSequence();
         }
 
         private string ExtractZipToTemporaryFolder(string zipFilePath)
@@ -2357,7 +2498,7 @@ namespace IntegratedGuiV2
 
         private void PerformLongRunningOperation()
         {
-            System.Threading.Thread.Sleep(5000); // 模擬一個5秒的操作
+            System.Threading.Thread.Sleep(5000); // 模擬5秒
         }
 
         private void BarcodeMode_CheckedChanged(object sender, EventArgs e)

@@ -66,6 +66,10 @@ namespace IntegratedGuiV2
             this.cbEngineerMode = new System.Windows.Forms.CheckBox();
             this.cbBarcodeMode = new System.Windows.Forms.CheckBox();
             this.gbCodeEditor = new System.Windows.Forms.GroupBox();
+            this.dudDd2 = new System.Windows.Forms.DomainUpDown();
+            this.dudMm2 = new System.Windows.Forms.DomainUpDown();
+            this.lDd2 = new System.Windows.Forms.Label();
+            this.lMm2 = new System.Windows.Forms.Label();
             this.cbSnNamingRule = new System.Windows.Forms.ComboBox();
             this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.dudYy = new System.Windows.Forms.DomainUpDown();
@@ -77,6 +81,7 @@ namespace IntegratedGuiV2
             this.dudD = new System.Windows.Forms.DomainUpDown();
             this.dudL = new System.Windows.Forms.DomainUpDown();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.lYy = new System.Windows.Forms.Label();
             this.lMm = new System.Windows.Forms.Label();
             this.lDd = new System.Windows.Forms.Label();
             this.lRr = new System.Windows.Forms.Label();
@@ -131,11 +136,9 @@ namespace IntegratedGuiV2
             this.gbPrompt = new System.Windows.Forms.GroupBox();
             this.lStatus = new System.Windows.Forms.Label();
             this.tbStartTime = new System.Windows.Forms.TextBox();
-            this.lMm2 = new System.Windows.Forms.Label();
-            this.lDd2 = new System.Windows.Forms.Label();
-            this.dudMm2 = new System.Windows.Forms.DomainUpDown();
-            this.dudDd2 = new System.Windows.Forms.DomainUpDown();
-            this.lYy = new System.Windows.Forms.Label();
+            this.lBaseTime = new System.Windows.Forms.Label();
+            this.lIntervalTime = new System.Windows.Forms.Label();
+            this.lCount = new System.Windows.Forms.Label();
             this.gbOperatorMode.SuspendLayout();
             this.gbCodeEditor.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -644,6 +647,46 @@ namespace IntegratedGuiV2
             this.gbCodeEditor.TabStop = false;
             this.gbCodeEditor.Text = "Code Editor";
             // 
+            // dudDd2
+            // 
+            this.dudDd2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudDd2.Location = new System.Drawing.Point(211, 21);
+            this.dudDd2.Name = "dudDd2";
+            this.dudDd2.Size = new System.Drawing.Size(40, 22);
+            this.dudDd2.TabIndex = 113;
+            this.dudDd2.Visible = false;
+            // 
+            // dudMm2
+            // 
+            this.dudMm2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudMm2.Location = new System.Drawing.Point(167, 21);
+            this.dudMm2.Name = "dudMm2";
+            this.dudMm2.Size = new System.Drawing.Size(40, 22);
+            this.dudMm2.TabIndex = 112;
+            this.dudMm2.Visible = false;
+            // 
+            // lDd2
+            // 
+            this.lDd2.AutoSize = true;
+            this.lDd2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lDd2.Location = new System.Drawing.Point(211, 8);
+            this.lDd2.Name = "lDd2";
+            this.lDd2.Size = new System.Drawing.Size(23, 13);
+            this.lDd2.TabIndex = 111;
+            this.lDd2.Text = "DD";
+            this.lDd2.Visible = false;
+            // 
+            // lMm2
+            // 
+            this.lMm2.AutoSize = true;
+            this.lMm2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lMm2.Location = new System.Drawing.Point(166, 8);
+            this.lMm2.Name = "lMm2";
+            this.lMm2.Size = new System.Drawing.Size(29, 13);
+            this.lMm2.TabIndex = 110;
+            this.lMm2.Text = "MM";
+            this.lMm2.Visible = false;
+            // 
             // cbSnNamingRule
             // 
             this.cbSnNamingRule.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -753,6 +796,16 @@ namespace IntegratedGuiV2
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(247, 18);
             this.flowLayoutPanel1.TabIndex = 109;
+            // 
+            // lYy
+            // 
+            this.lYy.AutoSize = true;
+            this.lYy.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lYy.Location = new System.Drawing.Point(3, 0);
+            this.lYy.Name = "lYy";
+            this.lYy.Size = new System.Drawing.Size(21, 13);
+            this.lYy.TabIndex = 104;
+            this.lYy.Text = "YY";
             // 
             // lMm
             // 
@@ -1081,7 +1134,7 @@ namespace IntegratedGuiV2
             this.bRelinkTest.FlatAppearance.BorderSize = 0;
             this.bRelinkTest.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bRelinkTest.ForeColor = System.Drawing.Color.White;
-            this.bRelinkTest.Location = new System.Drawing.Point(217, 205);
+            this.bRelinkTest.Location = new System.Drawing.Point(220, 207);
             this.bRelinkTest.Name = "bRelinkTest";
             this.bRelinkTest.Size = new System.Drawing.Size(38, 20);
             this.bRelinkTest.TabIndex = 105;
@@ -1094,7 +1147,7 @@ namespace IntegratedGuiV2
             // 
             this.tbRelinkCount.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbRelinkCount.ForeColor = System.Drawing.Color.Black;
-            this.tbRelinkCount.Location = new System.Drawing.Point(235, 184);
+            this.tbRelinkCount.Location = new System.Drawing.Point(238, 186);
             this.tbRelinkCount.Name = "tbRelinkCount";
             this.tbRelinkCount.Size = new System.Drawing.Size(20, 18);
             this.tbRelinkCount.TabIndex = 102;
@@ -1105,7 +1158,7 @@ namespace IntegratedGuiV2
             // 
             this.tbIntervalTime.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbIntervalTime.ForeColor = System.Drawing.Color.Black;
-            this.tbIntervalTime.Location = new System.Drawing.Point(204, 184);
+            this.tbIntervalTime.Location = new System.Drawing.Point(207, 186);
             this.tbIntervalTime.Name = "tbIntervalTime";
             this.tbIntervalTime.Size = new System.Drawing.Size(28, 18);
             this.tbIntervalTime.TabIndex = 90;
@@ -1252,7 +1305,7 @@ namespace IntegratedGuiV2
             this.bWriteFromFile.FlatAppearance.BorderSize = 0;
             this.bWriteFromFile.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bWriteFromFile.ForeColor = System.Drawing.Color.White;
-            this.bWriteFromFile.Location = new System.Drawing.Point(144, 153);
+            this.bWriteFromFile.Location = new System.Drawing.Point(144, 149);
             this.bWriteFromFile.Name = "bWriteFromFile";
             this.bWriteFromFile.Size = new System.Drawing.Size(122, 25);
             this.bWriteFromFile.TabIndex = 82;
@@ -1359,62 +1412,48 @@ namespace IntegratedGuiV2
             // 
             this.tbStartTime.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.tbStartTime.ForeColor = System.Drawing.Color.Black;
-            this.tbStartTime.Location = new System.Drawing.Point(172, 184);
+            this.tbStartTime.Location = new System.Drawing.Point(175, 186);
             this.tbStartTime.Name = "tbStartTime";
             this.tbStartTime.Size = new System.Drawing.Size(28, 18);
             this.tbStartTime.TabIndex = 105;
             this.tbStartTime.Text = "10";
             this.tbStartTime.Visible = false;
             // 
-            // lMm2
+            // lBaseTime
             // 
-            this.lMm2.AutoSize = true;
-            this.lMm2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.lMm2.Location = new System.Drawing.Point(166, 8);
-            this.lMm2.Name = "lMm2";
-            this.lMm2.Size = new System.Drawing.Size(29, 13);
-            this.lMm2.TabIndex = 110;
-            this.lMm2.Text = "MM";
-            this.lMm2.Visible = false;
+            this.lBaseTime.AutoSize = true;
+            this.lBaseTime.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.lBaseTime.ForeColor = System.Drawing.Color.White;
+            this.lBaseTime.Location = new System.Drawing.Point(177, 173);
+            this.lBaseTime.Name = "lBaseTime";
+            this.lBaseTime.Size = new System.Drawing.Size(22, 11);
+            this.lBaseTime.TabIndex = 106;
+            this.lBaseTime.Text = "Base";
+            this.lBaseTime.Visible = false;
             // 
-            // lDd2
+            // lIntervalTime
             // 
-            this.lDd2.AutoSize = true;
-            this.lDd2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.lDd2.Location = new System.Drawing.Point(211, 8);
-            this.lDd2.Name = "lDd2";
-            this.lDd2.Size = new System.Drawing.Size(23, 13);
-            this.lDd2.TabIndex = 111;
-            this.lDd2.Text = "DD";
-            this.lDd2.Visible = false;
+            this.lIntervalTime.AutoSize = true;
+            this.lIntervalTime.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.lIntervalTime.ForeColor = System.Drawing.Color.White;
+            this.lIntervalTime.Location = new System.Drawing.Point(203, 173);
+            this.lIntervalTime.Name = "lIntervalTime";
+            this.lIntervalTime.Size = new System.Drawing.Size(33, 11);
+            this.lIntervalTime.TabIndex = 107;
+            this.lIntervalTime.Text = "Interval";
+            this.lIntervalTime.Visible = false;
             // 
-            // dudMm2
+            // lCount
             // 
-            this.dudMm2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.dudMm2.Location = new System.Drawing.Point(167, 21);
-            this.dudMm2.Name = "dudMm2";
-            this.dudMm2.Size = new System.Drawing.Size(40, 22);
-            this.dudMm2.TabIndex = 112;
-            this.dudMm2.Visible = false;
-            // 
-            // dudDd2
-            // 
-            this.dudDd2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.dudDd2.Location = new System.Drawing.Point(211, 21);
-            this.dudDd2.Name = "dudDd2";
-            this.dudDd2.Size = new System.Drawing.Size(40, 22);
-            this.dudDd2.TabIndex = 113;
-            this.dudDd2.Visible = false;
-            // 
-            // lYy
-            // 
-            this.lYy.AutoSize = true;
-            this.lYy.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.lYy.Location = new System.Drawing.Point(3, 0);
-            this.lYy.Name = "lYy";
-            this.lYy.Size = new System.Drawing.Size(21, 13);
-            this.lYy.TabIndex = 104;
-            this.lYy.Text = "YY";
+            this.lCount.AutoSize = true;
+            this.lCount.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.lCount.ForeColor = System.Drawing.Color.White;
+            this.lCount.Location = new System.Drawing.Point(236, 173);
+            this.lCount.Name = "lCount";
+            this.lCount.Size = new System.Drawing.Size(28, 11);
+            this.lCount.TabIndex = 108;
+            this.lCount.Text = "Count";
+            this.lCount.Visible = false;
             // 
             // CustomerAndMpForm
             // 
@@ -1422,6 +1461,9 @@ namespace IntegratedGuiV2
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
             this.ClientSize = new System.Drawing.Size(534, 446);
+            this.Controls.Add(this.lCount);
+            this.Controls.Add(this.lIntervalTime);
+            this.Controls.Add(this.lBaseTime);
             this.Controls.Add(this.bRelinkTest);
             this.Controls.Add(this.gbPrompt);
             this.Controls.Add(this.tbStartTime);
@@ -1594,5 +1636,8 @@ namespace IntegratedGuiV2
         private Label lDd2;
         private Label lMm2;
         private Label lYy;
+        private Label lBaseTime;
+        private Label lIntervalTime;
+        private Label lCount;
     }
 }
