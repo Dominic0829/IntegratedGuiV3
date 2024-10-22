@@ -575,17 +575,19 @@ namespace IntegratedGuiV2
         {
             int newChannel;
            
-            if (customerMode)
-                newChannel = (processingChannel == 1) ? 2 : 1;
+            if (customerMode) {
+                newChannel = processingChannel == 1 ? 2 : 1;
+            }
             else {
                 if (processingChannel == 1)
                     newChannel = 23;
                 else if (processingChannel == 2)
                     newChannel = 13;
                 else
-                    newChannel = (processingChannel == 1) ? 2 : 1;
+                    newChannel = processingChannel == 1 ? 2 : 1;
             }
-            
+
+            ProcessingChannel = ProcessingChannel == 1 ? 2 : 1;
             _ChannelSet(newChannel);
             _UpdateButtonState();
 
@@ -603,13 +605,10 @@ namespace IntegratedGuiV2
             }
 
             Thread.Sleep(10);
-            int result = i2cMaster.ChannelSetApi(ch);
-
-            if (result < 0)
+            if (i2cMaster.ChannelSetApi(ch) < 0)
                 return -1; 
 
-            if (ch == 0)
-            {
+            if (ch == 0){
                 if (i2cMaster.DisconnectApi() < 0)
                     return -1;
 
@@ -2529,14 +2528,14 @@ namespace IntegratedGuiV2
         {
             if (bOutterSwitch.Enabled == true)
                 bOutterSwitch.Enabled = false;
-                //_DisableButtons(); //為了避免切換期間，限制輸入其他狀態
+                //_DisableButtons(); //為了避免切換期間，限制其他可能狀態
 
             _ChannelSwitch(true, ProcessingChannel);
             bGlobalRead.Select();
 
             if (bOutterSwitch.Enabled == false)
                 bOutterSwitch.Enabled = true;
-                //_EnableButtons(); //為了避免切換期間，限制輸入其他狀態
+                //_EnableButtons(); //為了避免切換期間，限制其他可能狀態
         }
 
         private void bInnerSwitch_Click(object sender, EventArgs e)

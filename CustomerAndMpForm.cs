@@ -58,6 +58,213 @@ namespace IntegratedGuiV2
         private Thread RxPowerUpdateThread;
         private bool ContinueRxPowerUpdate = true;
         private WaitFormFunc loadingForm = new WaitFormFunc();
+        private List<NamingRuleModel> namingRules;
+        private Dictionary<string, DomainUpDown> fieldControls;
+        private Dictionary<string, Label> lables;
+
+        public class NamingRuleModel
+        {
+            public string RuleName { get; set; }
+            public List<string> Fields { get; set; }
+        }
+
+        private void InitializeNamingRules()
+        {
+            namingRules = new List<NamingRuleModel>
+            {
+                new NamingRuleModel
+                {
+                    RuleName = "Rule 1: YYMMDDRRSSSS",
+                    Fields = new List<string> { "YY", "MM", "DD", "RR", "SSSS" }
+                },
+                new NamingRuleModel
+                {
+                    RuleName = "Rule 2: YYWWDLSSSS",
+                    Fields = new List<string> { "YY", "WW", "D", "L", "SSSS" }
+                },
+                new NamingRuleModel
+                {
+                    RuleName = "Rule 3: YYMMDDSSSS",
+                    Fields = new List<string> { "YY", "MM", "DD", "SSSS" }
+                }
+            };
+        }
+
+        private int GetCurrentWeekOfYear()
+        {
+            DateTime currentDate = DateTime.Now;
+
+            System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.CurrentCulture;
+
+            int weekOfYear = culture.Calendar.GetWeekOfYear(
+                currentDate,
+                System.Globalization.CalendarWeekRule.FirstFourDayWeek,
+                DayOfWeek.Monday);
+
+            return weekOfYear;
+        }
+
+        private int GetCurrentWorkDay()
+        {
+            DayOfWeek dayOfWeek = DateTime.Now.DayOfWeek;
+
+            if (dayOfWeek >= DayOfWeek.Monday && dayOfWeek <= DayOfWeek.Friday)
+                return (int)dayOfWeek;
+            else
+                return 1;
+        }
+
+        private void BindNamingRulesToComboBox()
+        {
+            foreach (var rule in namingRules) {
+                cbSnNamingRule.Items.Add(rule.RuleName);
+            }
+            cbSnNamingRule.SelectedIndex = 0;
+        }
+
+        private void GenerateDynamicComponents(NamingRuleModel rule)
+        {
+            flowLayoutPanel1.Controls.Clear();
+            flowLayoutPanel2.Controls.Clear();
+
+            foreach (var field in rule.Fields) {
+                var label = new Label {
+                    Name = $"l{field}",
+                    Text = field,
+                };
+
+                var domainUpDown = new DomainUpDown {
+                    Name = $"dud{field}",
+                    Tag = field,
+                };
+
+                domainUpDown.TextChanged += domainUpDown_TextChanged;
+                InitializeDynamicItems(label, domainUpDown, field);
+                flowLayoutPanel1.Controls.Add(label);
+                flowLayoutPanel2.Controls.Add(domainUpDown);
+            }
+        }
+
+        
+        private void InitializeDynamicItems(Label label, DomainUpDown domainUpDown, string field)
+        {
+            switch (field) {
+                case "YY":
+                    label.Text = "YY";
+                    label.Width = 40;
+                    for (int i = 30; i >= 15; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = DateTime.Now.ToString("yy");
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "MM":
+                    label.Text = "MM";
+                    label.Width = 40;
+                    for (int i = 12; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = DateTime.Now.ToString("MM");
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "DD":
+                    label.Text = "DD";
+                    label.Width = 40;
+                    for (int i = 31; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = DateTime.Now.ToString("dd");
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "RR":
+                    label.Text = "RR";
+                    label.Width = 40;
+                    for (int i = 99; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = "01";
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "SSSS":
+                    label.Text = "SSSS";
+                    label.Width = 55;
+                    for (int i = 9999; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D4"));
+                    domainUpDown.SelectedItem = "0001";
+                    domainUpDown.Width = 55;
+                    break;
+
+                case "WW":
+                    label.Text = "WW";
+                    label.Width = 40;
+                    for (int i = 52; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    int currentWeek = GetCurrentWeekOfYear();
+                    if (domainUpDown.Items.Contains(currentWeek.ToString("D2")))
+                        domainUpDown.SelectedItem = currentWeek.ToString("D2");
+                    else
+                        MessageBox.Show($"Current week {currentWeek} not found in DomainUpDown.");
+
+                    domainUpDown.Width = 40;
+
+                    for (int i = 12; i >= 1; i--)
+                        dudMm2.Items.Add(i.ToString("D2"));
+                    dudMm2.SelectedItem = DateTime.Now.ToString("MM");
+
+                    for (int i = 31; i >= 1; i--)
+                        dudDd2.Items.Add(i.ToString("D2"));
+                    dudDd2.SelectedItem = DateTime.Now.ToString("dd");
+
+                    break;
+
+                case "D":
+                    label.Text = "D";
+                    label.Width = 30;
+                    for (int i = 5; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString());
+                    int currentDay = GetCurrentWorkDay();
+                    domainUpDown.SelectedItem = currentDay.ToString();
+                    domainUpDown.Width = 30;
+                    break;
+
+                case "L":
+                    label.Text = "L";
+                    label.Width = 30;
+                    for (int i = 4; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString());
+                    domainUpDown.SelectedItem = "1";
+                    domainUpDown.Width = 30;
+                    break;
+            }
+        }
+
+        private void cbSnNamingRule_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            gbCodeEditor.Select();
+
+            if (cbSnNamingRule.SelectedIndex >= 0 && namingRules != null) {
+                var selectedRule = namingRules[cbSnNamingRule.SelectedIndex];
+                GenerateDynamicComponents(selectedRule);
+            }
+            else {
+                MessageBox.Show("Please select a valid naming convention.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            UpdateSerialNumberTextBox();
+        }
+
+        private string GenerateSerialNumber()
+        {
+            StringBuilder serialNumber = new StringBuilder();
+
+            var domainUpDowns = flowLayoutPanel2.Controls.OfType<DomainUpDown>();
+
+            foreach (var dud in domainUpDowns) {
+                serialNumber.Append(dud.Text);
+            }
+
+            return serialNumber.ToString();
+        }
 
         private void MainForm_MainMessageUpdated(object sender, MessageEventArgs e)
         {
@@ -79,59 +286,108 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void InitializeDomainUpDowns()
-        {
-            for (int i = 30; i >= 15; i--) {
-                dudYy.Items.Add(i.ToString("D2"));
-            }
-            dudYy.SelectedItem = DateTime.Now.ToString("yy");
-
-            for (int i = 12; i >= 1; i--) {
-                dudMm.Items.Add(i.ToString("D2"));
-            }
-            dudMm.SelectedItem = DateTime.Now.ToString("MM");
-
-            for (int i = 31; i >= 1; i--) {
-                dudDd.Items.Add(i.ToString("D2"));
-            }
-            dudDd.SelectedItem = DateTime.Now.ToString("dd");
-
-            for (int i = 99; i >= 1; i--) {
-                dudRr.Items.Add(i.ToString("D2"));
-            }
-            dudRr.SelectedItem = Revision.ToString("D2");
-
-            for (int i = 9999; i >= 1; i--) {
-                dudSsss.Items.Add(i.ToString("D4"));
-            }
-            dudSsss.SelectedItem = SerialNumber.ToString("D4");
-        }
-
         private void domainUpDown_TextChanged(object sender, EventArgs e)
         {
-            UpdateTextBoxAA();
+            _SerialNumberRule2Control();
+            UpdateSerialNumberTextBox();
         }
 
-        private void UpdateTextBoxAA()
+        private void UpdateSerialNumberTextBox()
+        {
+            string yy = GetDomainUpDownValue("dudYy");
+            string mm = GetDomainUpDownValue("dudMm");
+            string mm2 = !string.IsNullOrEmpty(dudMm2.Text) ? dudMm2.Text : DateTime.Now.ToString("MM");
+            string dd = GetDomainUpDownValue("dudDd");
+            string dd2 = !string.IsNullOrEmpty(dudDd2.Text) ? dudDd2.Text : DateTime.Now.ToString("dd");
+            string rr = GetDomainUpDownValue("dudRr");
+            string ssss = GetDomainUpDownValue("dudSsss");
+            string ww = GetDomainUpDownValue("dudWw");
+            string d = GetDomainUpDownValue("dudD");
+            string l = GetDomainUpDownValue("dudL");
+
+            int selectedRuleIndex = cbSnNamingRule.SelectedIndex;
+
+            if (selectedRuleIndex == 0) {
+                tbVenderSn.Text = yy + mm + dd + rr + ssss;
+                tbDateCode.Text = yy + mm + dd;
+            }
+            else if (selectedRuleIndex == 1) {
+                tbVenderSn.Text = yy + ww + d + l + ssss;
+                tbDateCode.Text = yy + mm2 + dd2;
+            }
+            else if (selectedRuleIndex == 2) {
+                tbVenderSn.Text = yy + mm + dd + ssss;
+                tbDateCode.Text = yy + mm + dd;
+            }
+
+        }
+
+        private void _SerialNumberRule2Control()
+        {
+            if (cbSnNamingRule.SelectedIndex == 1) {
+                lMm2.Visible = true;
+                lDd2.Visible = true;
+                dudMm2.Visible = true;
+                dudDd2.Visible = true;
+            }
+            else {
+                lMm2.Visible = false;
+                lDd2.Visible = false;
+                dudMm2.Visible = false;
+                dudDd2.Visible = false;
+            }
+        }
+
+        private string GetDomainUpDownValue(string name)
+        {
+            var control = flowLayoutPanel2.Controls.Find(name, true).FirstOrDefault()
+                 ?? this.Controls.Find(name, true).FirstOrDefault(); // 如果找不到則從主表單尋找
+
+            return control?.Text ?? string.Empty;
+        }
+
+        /*
+        private void UpdateSerialNumberTextBox()
         {
             string yy = !string.IsNullOrEmpty(dudYy.Text) ? dudYy.Text : DateTime.Now.ToString("yy");
             string mm = !string.IsNullOrEmpty(dudMm.Text) ? dudMm.Text : DateTime.Now.ToString("MM");
             string dd = !string.IsNullOrEmpty(dudDd.Text) ? dudDd.Text : DateTime.Now.ToString("dd");
             string rr = !string.IsNullOrEmpty(dudRr.Text) ? dudRr.Text : Revision.ToString("D2");
             string ssss = !string.IsNullOrEmpty(dudSsss.Text) ? dudSsss.Text : SerialNumber.ToString("D4");
-            tbVenderSn.Text = yy + mm + dd + rr + ssss;
+
+            string ww = dudWw != null && !string.IsNullOrEmpty(dudWw.Text)
+                        ? dudWw.Text : GetCurrentWeekOfYear().ToString("D2");
+            string d = dudD != null && !string.IsNullOrEmpty(dudD.Text)
+                       ? dudD.Text : "1";
+            string l = dudL != null && !string.IsNullOrEmpty(dudL.Text)
+                       ? dudL.Text : "1";
+
+            int selectedRule = cbSnNamingRule.SelectedIndex;
+
+            if (selectedRule == 0)
+                tbVenderSn.Text = yy + mm + dd + rr + ssss;
+            else if (selectedRule == 1)
+                tbVenderSn.Text = yy + ww + d + l + ssss;
+            else if (selectedRule == 2)
+                tbVenderSn.Text = yy + mm + dd + ssss;
+
             tbDateCode.Text = yy + mm + dd;
         }
-
+        */
         private void BindEvents()
         {
-            dudYy.TextChanged += new EventHandler(domainUpDown_TextChanged);
-            dudMm.TextChanged += new EventHandler(domainUpDown_TextChanged);
-            dudDd.TextChanged += new EventHandler(domainUpDown_TextChanged);
-            dudRr.TextChanged += new EventHandler(domainUpDown_TextChanged);
-            dudSsss.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudYy.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudMm.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudMm2.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudDd.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudDd2.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudRr.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudSsss.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudWw.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudD.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudL.TextChanged += new EventHandler(domainUpDown_TextChanged);
         }
-
+        
         private void HandlePluginWaiting(bool isWaiting)
         {
             if (isWaiting )
@@ -152,9 +408,10 @@ namespace IntegratedGuiV2
         public CustomerAndMpForm()
         {
             InitializeComponent();
-            InitializeDomainUpDowns();
+            InitializeNamingRules();
+            BindNamingRulesToComboBox();
             BindEvents();
-            UpdateTextBoxAA();
+            UpdateSerialNumberTextBox();
             mainForm = new MainForm(true);
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
             this.Size = new Size(550, 280);
@@ -387,10 +644,13 @@ namespace IntegratedGuiV2
                         if ((isCustomerMode || lMode.Text == "MP") && 
                             _Processor(isCustomerMode) < 0) {
                             //MessageBox.Show("There are some problems", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
-                            goto exit;
+                            tbVenderSn.Text = "";
+                            tbVenderSn.Enabled = true;
+                            tbVenderSn.Select();
+                            _CloseLoadingFormAndReturn(-1);
                         }
 
-                        if (cbBarcodeMode.Checked && WriteSnDateCode() < 0)
+                        if (cbBarcodeMode.Checked && WriteSnDateCodeFlow() < 0)
                             _PromptError();
                         else
                             _PromptCompleted();
@@ -398,7 +658,7 @@ namespace IntegratedGuiV2
 
                     else if (rbOnlySN.Checked) {
                         
-                        if (cbBarcodeMode.Checked && WriteSnDateCode() < 0)
+                        if (cbBarcodeMode.Checked && WriteSnDateCodeFlow() < 0)
                             _PromptError();
                         else
                             _PromptCompleted();
@@ -420,7 +680,6 @@ namespace IntegratedGuiV2
                     }
                 }
 
-            exit:
                 tbVenderSn.Text = "";
                 tbVenderSn.Enabled = true;
                 loadingForm.Close();
@@ -1046,7 +1305,7 @@ namespace IntegratedGuiV2
             }
 
             else if (lMode.Text == "MP") {
-                this.Size = new Size(550, 445);
+                this.Size = new Size(550, 485);
                 rbSingle.Select();
                 _GenerateDateCode();
                 //rbSingle.Enabled = false;
@@ -1382,17 +1641,18 @@ namespace IntegratedGuiV2
             string venderSn = tbVenderSn.Text;
             string dataCode = tbDateCode.Text;
             string originalVenderSn, originalDateCode;
-            string LogFileName = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
+            string LogFileName;
             int channelNumber;
 
-            if (ch == 1) {
-                LogFileName = LogFileName + "A";
-                channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
-            }
-            else {
-                LogFileName = LogFileName + "B";
-                channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
-            }
+            LogFileName = CurrentDate + (cbSnNamingRule.SelectedIndex == 0
+                ? Revision.ToString("D2") + SerialNumber.ToString("D4")
+                : SerialNumber.ToString("D4"));
+            
+            LogFileName = LogFileName + (ch == 1 ? "A" : "B");
+
+            channelNumber = (ch == 1
+                ? (lMode.Text == "Customer" || string.IsNullOrEmpty(lMode.Text)) ? 1 : 13
+                : (lMode.Text == "Customer" || string.IsNullOrEmpty(lMode.Text)) ? 2 : 23);
 
             I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
             Thread.Sleep(200);
@@ -1416,21 +1676,11 @@ namespace IntegratedGuiV2
                 tbOrignalSNCh2.ForeColor = Color.White;
             }
 
-            if (DebugMode) {
-                mainForm.SetVendorSnToDdmiApi(venderSn);
-                mainForm.SetDataCodeToDdmiApi(CurrentDate);
-                MessageBox.Show("Information check"
-                            + "\nBefore:\n"
-                            + "VenderSn: " + originalVenderSn
-                            + "\nDateCode: " + originalDateCode
-                            + "\n\nAfter:\n"
-                            + "VerderSn: " + mainForm.GetVendorSnFromDdmiApi()
-                            + "\nDateCode:" + mainForm.GetDateCodeFromDdmiApi()
-                            );
-            }
+            if (DebugMode)
+                ShowDebugInfo(venderSn, originalVenderSn, originalDateCode);
             else {
                 mainForm.SetVendorSnToDdmiApi(venderSn);
-                mainForm.SetDataCodeToDdmiApi(CurrentDate);
+                mainForm.SetDataCodeToDdmiApi(dataCode);
             }
 
             if (!Sas3Module) {
@@ -1482,6 +1732,20 @@ namespace IntegratedGuiV2
             return 0;
         }
 
+        private void ShowDebugInfo(string venderSn, string originalVenderSn, string originalDateCode)
+        {
+            mainForm.SetVendorSnToDdmiApi(venderSn);
+            mainForm.SetDataCodeToDdmiApi(CurrentDate);
+            MessageBox.Show("Information check"
+                        + "\nBefore:\n"
+                        + "VenderSn: " + originalVenderSn
+                        + "\nDateCode: " + originalDateCode
+                        + "\n\nAfter:\n"
+                        + "VerderSn: " + mainForm.GetVendorSnFromDdmiApi()
+                        + "\nDateCode:" + mainForm.GetDateCodeFromDdmiApi()
+                        );
+        }
+
         private void _UpdateMessage(int channel, string message)
         {
             string msgLabel = channel == 1 ? "lCh1Message" : "lCh2Message";
@@ -1525,15 +1789,15 @@ namespace IntegratedGuiV2
                 Thread.Sleep(200);
 
                 if (_RemoteInitial(customerMode) < 0)
-                    goto exit;
+                    return _CloseLoadingFormAndReturn(-1);
 
                 if (!Sas3Module) {
                     if (_RemoteControl(customerMode) < 0)
-                        goto exit;
+                        return _CloseLoadingFormAndReturn(-1);
                 }
                 else {
                     if (_RemoteControlForSas3(customerMode) < 0)
-                        goto exit;
+                        return _CloseLoadingFormAndReturn(-1);
                 }
                 
                 FirstRound = false;
@@ -1548,11 +1812,6 @@ namespace IntegratedGuiV2
 
             loadingForm.Close();
             return 0;
-
-        exit:
-            _EnableButtons();
-            loadingForm.Close();
-            return -1;
         }
 
         private int ValidateVenderSn()
@@ -1659,7 +1918,7 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
-        private int WriteSnDateCode()
+        private int WriteSnDateCodeFlow()
         {
             int ComparisonResults = 0;
             loadingForm.Show(this);
@@ -1672,7 +1931,7 @@ namespace IntegratedGuiV2
             _InitialUiForWriteSn();
 
             if (_VenderSnInputFormatCheck() < 0)
-                return -1;
+                return _CloseLoadingFormAndReturn(-1);
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 if (_WriteSnDatecode(ProcessingChannel) < 0) return -1; // Writing SN and DateCode, then export csv file.
@@ -1680,7 +1939,11 @@ namespace IntegratedGuiV2
                 _UpdateMessage(ProcessingChannel, "VenderSN writed");
 
                 if (ProcessingChannel == 1) {
-                    tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
+                    if (cbSnNamingRule.SelectedIndex == 0)
+                        tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
+                    else
+                        tbVenderSn.Text = CurrentDate + SerialNumber.ToString("D4");
+
                     tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
                 }
                 else if (ProcessingChannel == 2) {
@@ -1703,16 +1966,15 @@ namespace IntegratedGuiV2
                 if (!DoubleSideMode) {
                     break;
                 }
-                
             }
 
             if (DoubleSideMode) {
-               if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) return -1; // return to ch1
+               if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0)// return to ch1
+                    return _CloseLoadingFormAndReturn(-1);
             }
 
             SerialNumber++;
             tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
-
             this.BringToFront();
             this.Activate();
             
@@ -1723,40 +1985,62 @@ namespace IntegratedGuiV2
             return 0;
         }
 
+        private int _CloseLoadingFormAndReturn(int returnValue)
+        {
+            this.BringToFront();
+            this.Activate();
+
+            if (!cbBarcodeMode.Checked) {
+                _EnableButtons();
+            }
+
+            loadingForm.Close();
+            return returnValue;
+        }
+
         private void _GenerateDateCode()
         {
             int initilaSN1 = 1;
-            //int initilaSN2 = 2;
-
             tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + initilaSN1.ToString("D4");
-            //tbVenderSnCh2.Text = CurrentDate + Revision.ToString("D2") + initilaSN2.ToString("D4");
             tbDateCode.Text = CurrentDate;
         }
 
         private int _VenderSnInputFormatCheck()
         {
-            int serialNumber1, serialNumber2;
-            string newSerialNumber1, newSerialNumber2;
+            int serialNumber1;
+            string newSerialNumber1;
+            string venderSerialNumber = tbVenderSn.Text;
 
             try {
-
-                string inputdata = tbVenderSn.Text;
-
-                if (inputdata.Length != 12) {
-                    MessageBox.Show("The SN must be exactly 12 characters long." +
-                                    "\nPlease enter a valid Vender SN (YYMMDDRRSSSS).");
-                    tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
-                    return -1;
+                if (cbSnNamingRule.SelectedIndex == 0 ) {
+                    if (venderSerialNumber.Length != 12) {
+                        MessageBox.Show("The SN must be exactly 12 characters long." +
+                                        "\nPlease enter a valid Vender SN (YYMMDDRRSSSS).");
+                        return -1;
+                    }
+                    CurrentDate = venderSerialNumber.Substring(0, 6).ToString(); // Get YYMMDD
+                    Revision = Convert.ToInt16(venderSerialNumber.Substring(6, 2)); // Get RR
+                    SerialNumber = Convert.ToInt16(venderSerialNumber.Substring(8, 4)); // Get SSSS
                 }
+                else if (cbSnNamingRule.SelectedIndex == 1) {
+                    if (venderSerialNumber.Length != 10) {
+                        MessageBox.Show("The SN must be exactly 10 characters long." +
+                                        "\nPlease enter a valid Vender SN (YYWWDLSSSS).");
+                        
+                        return -1;
+                    }
+                    CurrentDate = venderSerialNumber.Substring(0, 6).ToString(); // Get YYWWDL
+                    SerialNumber = Convert.ToInt16(venderSerialNumber.Substring(6, 4)); // Get SSSS
+                }
+                else {
+                    if (venderSerialNumber.Length != 10) {
+                        MessageBox.Show("The SN must be exactly 10 characters long." +
+                                        "\nPlease enter a valid Vender SN (YYMMDDSSSS).");
 
-                CurrentDate = inputdata.Substring(0, 6).ToString(); // Get YYMMDD
-                Revision = Convert.ToInt16(inputdata.Substring(6, 2)); // Get RR
-                SerialNumber = Convert.ToInt16(inputdata.Substring(8, 4)); // Get SSSS
-
-                if (DebugMode) {
-                    MessageBox.Show("YYMMDD: " + CurrentDate +
-                                    "\nRR: " + Revision +
-                                    "\nssssPart: " + SerialNumber);
+                        return -1;
+                    }
+                    CurrentDate = venderSerialNumber.Substring(0, 6).ToString(); // Get YYMMDD
+                    SerialNumber = Convert.ToInt16(venderSerialNumber.Substring(6, 4)); // Get SSSS
                 }
 
                 serialNumber1 = SerialNumber;
@@ -1766,10 +2050,13 @@ namespace IntegratedGuiV2
                                     $"Serial number must be between {MinSerialNumber:D4} and {MaxSerialNumber:D4}.");
                     return -1;
                 }
-
               
                 newSerialNumber1 = serialNumber1.ToString("0000");
-                tbVenderSn.Text = $"{CurrentDate}{Revision.ToString("D2")}{newSerialNumber1}";
+
+                if (cbSnNamingRule.SelectedIndex == 0)
+                    tbVenderSn.Text = $"{CurrentDate}{Revision.ToString("D2")}{newSerialNumber1}";
+                else
+                    tbVenderSn.Text = $"{CurrentDate}{newSerialNumber1}";
             }
             catch (Exception ex) {
                 MessageBox.Show($"Error: {ex.Message}");
@@ -1842,7 +2129,7 @@ namespace IntegratedGuiV2
         {
             try {
                 this.Enabled = false;
-                WriteSnDateCode();
+                WriteSnDateCodeFlow();
             }
             finally {
                 this.Enabled = true;
@@ -1867,7 +2154,6 @@ namespace IntegratedGuiV2
             _DisableButtons();
             _InitialUi();
 
-
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 if (ProcessingChannel == 1)
                     ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
@@ -1884,7 +2170,9 @@ namespace IntegratedGuiV2
                     ComparisonResults = mainForm.ComparisonRegisterForSas3Api(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked, ProcessingChannel);
                 }
                     
-                if (ComparisonResults < 0) return -1;
+                if (ComparisonResults < 0) 
+                    return _CloseLoadingFormAndReturn(-1);
+
                 Thread.Sleep(100);
                 _lMessageColorManagement(ComparisonResults);
                 Application.DoEvents();
@@ -1894,7 +2182,8 @@ namespace IntegratedGuiV2
             }
 
             if (DoubleSideMode)
-                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) return -1;
+                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) 
+                    return _CloseLoadingFormAndReturn(-1);
 
             this.BringToFront();
             this.Activate();
@@ -1997,9 +2286,9 @@ namespace IntegratedGuiV2
             }
 
         exit:
-
             if (DoubleSideMode) 
-                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) return -1;
+                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) 
+                    return _CloseLoadingFormAndReturn(-1);
 
             this.BringToFront();
             this.Activate();
@@ -2039,7 +2328,7 @@ namespace IntegratedGuiV2
                 rbOnlySN.Visible = false;
                 rbLogFileMode.Visible = false;
                 gbPrompt.Visible = false;
-                UpdateTextBoxAA();
+                UpdateSerialNumberTextBox();
                 _EnableButtonsForBarcodeMode();
             }
         }
@@ -2114,6 +2403,7 @@ namespace IntegratedGuiV2
                 bRelinkTest.Visible = false;
             }
         }
+
     }
 
     public class LastBinPaths

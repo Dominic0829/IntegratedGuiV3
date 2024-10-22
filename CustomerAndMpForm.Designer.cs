@@ -1,4 +1,6 @@
-﻿namespace IntegratedGuiV2
+﻿using System.Windows.Forms;
+
+namespace IntegratedGuiV2
 {
     partial class CustomerAndMpForm
     {
@@ -64,16 +66,24 @@
             this.cbEngineerMode = new System.Windows.Forms.CheckBox();
             this.cbBarcodeMode = new System.Windows.Forms.CheckBox();
             this.gbCodeEditor = new System.Windows.Forms.GroupBox();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.lMm = new System.Windows.Forms.Label();
-            this.dudSsss = new System.Windows.Forms.DomainUpDown();
-            this.dudRr = new System.Windows.Forms.DomainUpDown();
-            this.dudDd = new System.Windows.Forms.DomainUpDown();
-            this.dudMm = new System.Windows.Forms.DomainUpDown();
+            this.cbSnNamingRule = new System.Windows.Forms.ComboBox();
+            this.flowLayoutPanel2 = new System.Windows.Forms.FlowLayoutPanel();
             this.dudYy = new System.Windows.Forms.DomainUpDown();
-            this.lYy = new System.Windows.Forms.Label();
+            this.dudMm = new System.Windows.Forms.DomainUpDown();
+            this.dudDd = new System.Windows.Forms.DomainUpDown();
+            this.dudRr = new System.Windows.Forms.DomainUpDown();
+            this.dudSsss = new System.Windows.Forms.DomainUpDown();
+            this.dudWw = new System.Windows.Forms.DomainUpDown();
+            this.dudD = new System.Windows.Forms.DomainUpDown();
+            this.dudL = new System.Windows.Forms.DomainUpDown();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.lMm = new System.Windows.Forms.Label();
+            this.lDd = new System.Windows.Forms.Label();
+            this.lRr = new System.Windows.Forms.Label();
+            this.lSsss = new System.Windows.Forms.Label();
+            this.lWw = new System.Windows.Forms.Label();
+            this.lD = new System.Windows.Forms.Label();
+            this.lL = new System.Windows.Forms.Label();
             this.lRssiCh2_3 = new System.Windows.Forms.Label();
             this.lRssiCh2_2 = new System.Windows.Forms.Label();
             this.lRssiCh2_1 = new System.Windows.Forms.Label();
@@ -121,8 +131,15 @@
             this.gbPrompt = new System.Windows.Forms.GroupBox();
             this.lStatus = new System.Windows.Forms.Label();
             this.tbStartTime = new System.Windows.Forms.TextBox();
+            this.lMm2 = new System.Windows.Forms.Label();
+            this.lDd2 = new System.Windows.Forms.Label();
+            this.dudMm2 = new System.Windows.Forms.DomainUpDown();
+            this.dudDd2 = new System.Windows.Forms.DomainUpDown();
+            this.lYy = new System.Windows.Forms.Label();
             this.gbOperatorMode.SuspendLayout();
             this.gbCodeEditor.SuspendLayout();
+            this.flowLayoutPanel2.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
             this.gbPrompt.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -407,7 +424,7 @@
             this.cbBypassW.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbBypassW.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbBypassW.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbBypassW.Location = new System.Drawing.Point(110, 119);
+            this.cbBypassW.Location = new System.Drawing.Point(110, 151);
             this.cbBypassW.Name = "cbBypassW";
             this.cbBypassW.Size = new System.Drawing.Size(102, 15);
             this.cbBypassW.TabIndex = 62;
@@ -470,7 +487,7 @@
             this.gbOperatorMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
             this.gbOperatorMode.Location = new System.Drawing.Point(23, 240);
             this.gbOperatorMode.Name = "gbOperatorMode";
-            this.gbOperatorMode.Size = new System.Drawing.Size(506, 167);
+            this.gbOperatorMode.Size = new System.Drawing.Size(506, 203);
             this.gbOperatorMode.TabIndex = 70;
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "MP information";
@@ -515,7 +532,7 @@
             this.cbRelinkCheck.AutoSize = true;
             this.cbRelinkCheck.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbRelinkCheck.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbRelinkCheck.Location = new System.Drawing.Point(240, 145);
+            this.cbRelinkCheck.Location = new System.Drawing.Point(240, 179);
             this.cbRelinkCheck.Name = "cbRelinkCheck";
             this.cbRelinkCheck.Size = new System.Drawing.Size(64, 15);
             this.cbRelinkCheck.TabIndex = 106;
@@ -529,7 +546,7 @@
             this.rbLogFileMode.AutoSize = true;
             this.rbLogFileMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.rbLogFileMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.rbLogFileMode.Location = new System.Drawing.Point(408, 148);
+            this.rbLogFileMode.Location = new System.Drawing.Point(408, 182);
             this.rbLogFileMode.Name = "rbLogFileMode";
             this.rbLogFileMode.Size = new System.Drawing.Size(89, 15);
             this.rbLogFileMode.TabIndex = 101;
@@ -558,7 +575,7 @@
             this.rbOnlySN.AutoSize = true;
             this.rbOnlySN.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.rbOnlySN.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.rbOnlySN.Location = new System.Drawing.Point(408, 133);
+            this.rbOnlySN.Location = new System.Drawing.Point(408, 167);
             this.rbOnlySN.Name = "rbOnlySN";
             this.rbOnlySN.Size = new System.Drawing.Size(74, 15);
             this.rbOnlySN.TabIndex = 99;
@@ -573,7 +590,7 @@
             this.rbFullMode.Checked = true;
             this.rbFullMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.rbFullMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.rbFullMode.Location = new System.Drawing.Point(408, 119);
+            this.rbFullMode.Location = new System.Drawing.Point(408, 153);
             this.rbFullMode.Name = "rbFullMode";
             this.rbFullMode.Size = new System.Drawing.Size(59, 15);
             this.rbFullMode.TabIndex = 98;
@@ -588,7 +605,7 @@
             this.cbEngineerMode.AutoSize = true;
             this.cbEngineerMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbEngineerMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbEngineerMode.Location = new System.Drawing.Point(310, 146);
+            this.cbEngineerMode.Location = new System.Drawing.Point(309, 179);
             this.cbEngineerMode.Name = "cbEngineerMode";
             this.cbEngineerMode.Size = new System.Drawing.Size(90, 15);
             this.cbEngineerMode.TabIndex = 95;
@@ -601,7 +618,7 @@
             this.cbBarcodeMode.AutoSize = true;
             this.cbBarcodeMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbBarcodeMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbBarcodeMode.Location = new System.Drawing.Point(310, 117);
+            this.cbBarcodeMode.Location = new System.Drawing.Point(309, 154);
             this.cbBarcodeMode.Name = "cbBarcodeMode";
             this.cbBarcodeMode.Size = new System.Drawing.Size(77, 15);
             this.cbBarcodeMode.TabIndex = 94;
@@ -611,114 +628,201 @@
             // 
             // gbCodeEditor
             // 
-            this.gbCodeEditor.Controls.Add(this.label5);
-            this.gbCodeEditor.Controls.Add(this.label4);
-            this.gbCodeEditor.Controls.Add(this.label3);
-            this.gbCodeEditor.Controls.Add(this.lMm);
-            this.gbCodeEditor.Controls.Add(this.dudSsss);
-            this.gbCodeEditor.Controls.Add(this.dudRr);
-            this.gbCodeEditor.Controls.Add(this.dudDd);
-            this.gbCodeEditor.Controls.Add(this.dudMm);
-            this.gbCodeEditor.Controls.Add(this.dudYy);
-            this.gbCodeEditor.Controls.Add(this.lYy);
+            this.gbCodeEditor.Controls.Add(this.dudDd2);
+            this.gbCodeEditor.Controls.Add(this.dudMm2);
+            this.gbCodeEditor.Controls.Add(this.lDd2);
+            this.gbCodeEditor.Controls.Add(this.lMm2);
+            this.gbCodeEditor.Controls.Add(this.cbSnNamingRule);
+            this.gbCodeEditor.Controls.Add(this.flowLayoutPanel2);
+            this.gbCodeEditor.Controls.Add(this.flowLayoutPanel1);
             this.gbCodeEditor.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
             this.gbCodeEditor.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
             this.gbCodeEditor.Location = new System.Drawing.Point(245, 61);
             this.gbCodeEditor.Name = "gbCodeEditor";
-            this.gbCodeEditor.Size = new System.Drawing.Size(256, 56);
+            this.gbCodeEditor.Size = new System.Drawing.Size(256, 89);
             this.gbCodeEditor.TabIndex = 93;
             this.gbCodeEditor.TabStop = false;
             this.gbCodeEditor.Text = "Code Editor";
             // 
-            // label5
+            // cbSnNamingRule
             // 
-            this.label5.AutoSize = true;
-            this.label5.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.label5.Location = new System.Drawing.Point(198, 15);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(31, 13);
-            this.label5.TabIndex = 103;
-            this.label5.Text = "SSSS";
+            this.cbSnNamingRule.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbSnNamingRule.FormattingEnabled = true;
+            this.cbSnNamingRule.Location = new System.Drawing.Point(5, 15);
+            this.cbSnNamingRule.Name = "cbSnNamingRule";
+            this.cbSnNamingRule.Size = new System.Drawing.Size(152, 21);
+            this.cbSnNamingRule.TabIndex = 108;
+            this.cbSnNamingRule.SelectedIndexChanged += new System.EventHandler(this.cbSnNamingRule_SelectedIndexChanged);
             // 
-            // label4
+            // flowLayoutPanel2
             // 
-            this.label4.AutoSize = true;
-            this.label4.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.label4.Location = new System.Drawing.Point(149, 15);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(21, 13);
-            this.label4.TabIndex = 102;
-            this.label4.Text = "RR";
+            this.flowLayoutPanel2.AutoSize = true;
+            this.flowLayoutPanel2.Controls.Add(this.dudYy);
+            this.flowLayoutPanel2.Controls.Add(this.dudMm);
+            this.flowLayoutPanel2.Controls.Add(this.dudDd);
+            this.flowLayoutPanel2.Controls.Add(this.dudRr);
+            this.flowLayoutPanel2.Controls.Add(this.dudSsss);
+            this.flowLayoutPanel2.Controls.Add(this.dudWw);
+            this.flowLayoutPanel2.Controls.Add(this.dudD);
+            this.flowLayoutPanel2.Controls.Add(this.dudL);
+            this.flowLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.flowLayoutPanel2.Location = new System.Drawing.Point(3, 58);
+            this.flowLayoutPanel2.Name = "flowLayoutPanel2";
+            this.flowLayoutPanel2.Size = new System.Drawing.Size(250, 28);
+            this.flowLayoutPanel2.TabIndex = 107;
+            this.flowLayoutPanel2.WrapContents = false;
             // 
-            // label3
+            // dudYy
             // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.label3.Location = new System.Drawing.Point(104, 15);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(23, 13);
-            this.label3.TabIndex = 101;
-            this.label3.Text = "DD";
+            this.dudYy.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudYy.Location = new System.Drawing.Point(3, 3);
+            this.dudYy.Name = "dudYy";
+            this.dudYy.Size = new System.Drawing.Size(40, 22);
+            this.dudYy.TabIndex = 100;
+            this.dudYy.TextChanged += new System.EventHandler(this.domainUpDown_TextChanged);
+            // 
+            // dudMm
+            // 
+            this.dudMm.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudMm.Location = new System.Drawing.Point(49, 3);
+            this.dudMm.Name = "dudMm";
+            this.dudMm.Size = new System.Drawing.Size(40, 22);
+            this.dudMm.TabIndex = 101;
+            this.dudMm.TextChanged += new System.EventHandler(this.domainUpDown_TextChanged);
+            // 
+            // dudDd
+            // 
+            this.dudDd.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudDd.Location = new System.Drawing.Point(95, 3);
+            this.dudDd.Name = "dudDd";
+            this.dudDd.Size = new System.Drawing.Size(40, 22);
+            this.dudDd.TabIndex = 102;
+            // 
+            // dudRr
+            // 
+            this.dudRr.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudRr.Location = new System.Drawing.Point(141, 3);
+            this.dudRr.Name = "dudRr";
+            this.dudRr.Size = new System.Drawing.Size(40, 22);
+            this.dudRr.TabIndex = 103;
+            // 
+            // dudSsss
+            // 
+            this.dudSsss.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudSsss.Location = new System.Drawing.Point(187, 3);
+            this.dudSsss.Name = "dudSsss";
+            this.dudSsss.Size = new System.Drawing.Size(55, 22);
+            this.dudSsss.TabIndex = 104;
+            // 
+            // dudWw
+            // 
+            this.dudWw.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudWw.Location = new System.Drawing.Point(248, 3);
+            this.dudWw.Name = "dudWw";
+            this.dudWw.Size = new System.Drawing.Size(40, 22);
+            this.dudWw.TabIndex = 105;
+            this.dudWw.TextChanged += new System.EventHandler(this.domainUpDown_TextChanged);
+            // 
+            // dudD
+            // 
+            this.dudD.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudD.Location = new System.Drawing.Point(294, 3);
+            this.dudD.Name = "dudD";
+            this.dudD.Size = new System.Drawing.Size(40, 22);
+            this.dudD.TabIndex = 106;
+            // 
+            // dudL
+            // 
+            this.dudL.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudL.Location = new System.Drawing.Point(340, 3);
+            this.dudL.Name = "dudL";
+            this.dudL.Size = new System.Drawing.Size(40, 22);
+            this.dudL.TabIndex = 107;
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Controls.Add(this.lYy);
+            this.flowLayoutPanel1.Controls.Add(this.lMm);
+            this.flowLayoutPanel1.Controls.Add(this.lDd);
+            this.flowLayoutPanel1.Controls.Add(this.lRr);
+            this.flowLayoutPanel1.Controls.Add(this.lSsss);
+            this.flowLayoutPanel1.Controls.Add(this.lWw);
+            this.flowLayoutPanel1.Controls.Add(this.lD);
+            this.flowLayoutPanel1.Controls.Add(this.lL);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 45);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(247, 18);
+            this.flowLayoutPanel1.TabIndex = 109;
             // 
             // lMm
             // 
             this.lMm.AutoSize = true;
             this.lMm.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.lMm.Location = new System.Drawing.Point(55, 15);
+            this.lMm.Location = new System.Drawing.Point(30, 0);
             this.lMm.Name = "lMm";
             this.lMm.Size = new System.Drawing.Size(29, 13);
-            this.lMm.TabIndex = 100;
+            this.lMm.TabIndex = 105;
             this.lMm.Text = "MM";
             // 
-            // dudSsss
+            // lDd
             // 
-            this.dudSsss.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.dudSsss.Location = new System.Drawing.Point(193, 30);
-            this.dudSsss.Name = "dudSsss";
-            this.dudSsss.Size = new System.Drawing.Size(55, 22);
-            this.dudSsss.TabIndex = 99;
+            this.lDd.AutoSize = true;
+            this.lDd.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lDd.Location = new System.Drawing.Point(65, 0);
+            this.lDd.Name = "lDd";
+            this.lDd.Size = new System.Drawing.Size(23, 13);
+            this.lDd.TabIndex = 106;
+            this.lDd.Text = "DD";
             // 
-            // dudRr
+            // lRr
             // 
-            this.dudRr.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.dudRr.Location = new System.Drawing.Point(147, 30);
-            this.dudRr.Name = "dudRr";
-            this.dudRr.Size = new System.Drawing.Size(40, 22);
-            this.dudRr.TabIndex = 98;
+            this.lRr.AutoSize = true;
+            this.lRr.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lRr.Location = new System.Drawing.Point(94, 0);
+            this.lRr.Name = "lRr";
+            this.lRr.Size = new System.Drawing.Size(21, 13);
+            this.lRr.TabIndex = 107;
+            this.lRr.Text = "RR";
             // 
-            // dudDd
+            // lSsss
             // 
-            this.dudDd.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.dudDd.Location = new System.Drawing.Point(103, 30);
-            this.dudDd.Name = "dudDd";
-            this.dudDd.Size = new System.Drawing.Size(40, 22);
-            this.dudDd.TabIndex = 97;
+            this.lSsss.AutoSize = true;
+            this.lSsss.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lSsss.Location = new System.Drawing.Point(121, 0);
+            this.lSsss.Name = "lSsss";
+            this.lSsss.Size = new System.Drawing.Size(31, 13);
+            this.lSsss.TabIndex = 108;
+            this.lSsss.Text = "SSSS";
             // 
-            // dudMm
+            // lWw
             // 
-            this.dudMm.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.dudMm.Location = new System.Drawing.Point(57, 30);
-            this.dudMm.Name = "dudMm";
-            this.dudMm.Size = new System.Drawing.Size(40, 22);
-            this.dudMm.TabIndex = 96;
+            this.lWw.AutoSize = true;
+            this.lWw.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lWw.Location = new System.Drawing.Point(158, 0);
+            this.lWw.Name = "lWw";
+            this.lWw.Size = new System.Drawing.Size(29, 13);
+            this.lWw.TabIndex = 109;
+            this.lWw.Text = "WW";
             // 
-            // dudYy
+            // lD
             // 
-            this.dudYy.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.dudYy.Location = new System.Drawing.Point(11, 30);
-            this.dudYy.Name = "dudYy";
-            this.dudYy.Size = new System.Drawing.Size(40, 22);
-            this.dudYy.TabIndex = 95;
+            this.lD.AutoSize = true;
+            this.lD.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lD.Location = new System.Drawing.Point(193, 0);
+            this.lD.Name = "lD";
+            this.lD.Size = new System.Drawing.Size(15, 13);
+            this.lD.TabIndex = 110;
+            this.lD.Text = "D";
             // 
-            // lYy
+            // lL
             // 
-            this.lYy.AutoSize = true;
-            this.lYy.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
-            this.lYy.Location = new System.Drawing.Point(13, 15);
-            this.lYy.Name = "lYy";
-            this.lYy.Size = new System.Drawing.Size(21, 13);
-            this.lYy.TabIndex = 93;
-            this.lYy.Text = "YY";
+            this.lL.AutoSize = true;
+            this.lL.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lL.Location = new System.Drawing.Point(214, 0);
+            this.lL.Name = "lL";
+            this.lL.Size = new System.Drawing.Size(13, 13);
+            this.lL.TabIndex = 111;
+            this.lL.Text = "L";
             // 
             // lRssiCh2_3
             // 
@@ -810,7 +914,7 @@
             this.tbLogFilePath.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.tbLogFilePath.Font = new System.Drawing.Font("Nirmala UI", 10F);
             this.tbLogFilePath.ForeColor = System.Drawing.Color.MidnightBlue;
-            this.tbLogFilePath.Location = new System.Drawing.Point(13, 135);
+            this.tbLogFilePath.Location = new System.Drawing.Point(13, 167);
             this.tbLogFilePath.Name = "tbLogFilePath";
             this.tbLogFilePath.Size = new System.Drawing.Size(207, 25);
             this.tbLogFilePath.TabIndex = 72;
@@ -833,7 +937,7 @@
             this.lLogFilePath.AutoSize = true;
             this.lLogFilePath.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lLogFilePath.ForeColor = System.Drawing.Color.White;
-            this.lLogFilePath.Location = new System.Drawing.Point(9, 120);
+            this.lLogFilePath.Location = new System.Drawing.Point(9, 152);
             this.lLogFilePath.Name = "lLogFilePath";
             this.lLogFilePath.Size = new System.Drawing.Size(76, 13);
             this.lLogFilePath.TabIndex = 71;
@@ -1262,12 +1366,62 @@
             this.tbStartTime.Text = "10";
             this.tbStartTime.Visible = false;
             // 
+            // lMm2
+            // 
+            this.lMm2.AutoSize = true;
+            this.lMm2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lMm2.Location = new System.Drawing.Point(166, 8);
+            this.lMm2.Name = "lMm2";
+            this.lMm2.Size = new System.Drawing.Size(29, 13);
+            this.lMm2.TabIndex = 110;
+            this.lMm2.Text = "MM";
+            this.lMm2.Visible = false;
+            // 
+            // lDd2
+            // 
+            this.lDd2.AutoSize = true;
+            this.lDd2.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lDd2.Location = new System.Drawing.Point(211, 8);
+            this.lDd2.Name = "lDd2";
+            this.lDd2.Size = new System.Drawing.Size(23, 13);
+            this.lDd2.TabIndex = 111;
+            this.lDd2.Text = "DD";
+            this.lDd2.Visible = false;
+            // 
+            // dudMm2
+            // 
+            this.dudMm2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudMm2.Location = new System.Drawing.Point(167, 21);
+            this.dudMm2.Name = "dudMm2";
+            this.dudMm2.Size = new System.Drawing.Size(40, 22);
+            this.dudMm2.TabIndex = 112;
+            this.dudMm2.Visible = false;
+            // 
+            // dudDd2
+            // 
+            this.dudDd2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.dudDd2.Location = new System.Drawing.Point(211, 21);
+            this.dudDd2.Name = "dudDd2";
+            this.dudDd2.Size = new System.Drawing.Size(40, 22);
+            this.dudDd2.TabIndex = 113;
+            this.dudDd2.Visible = false;
+            // 
+            // lYy
+            // 
+            this.lYy.AutoSize = true;
+            this.lYy.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
+            this.lYy.Location = new System.Drawing.Point(3, 0);
+            this.lYy.Name = "lYy";
+            this.lYy.Size = new System.Drawing.Size(21, 13);
+            this.lYy.TabIndex = 104;
+            this.lYy.Text = "YY";
+            // 
             // CustomerAndMpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
-            this.ClientSize = new System.Drawing.Size(534, 406);
+            this.ClientSize = new System.Drawing.Size(534, 446);
             this.Controls.Add(this.bRelinkTest);
             this.Controls.Add(this.gbPrompt);
             this.Controls.Add(this.tbStartTime);
@@ -1324,6 +1478,9 @@
             this.gbOperatorMode.PerformLayout();
             this.gbCodeEditor.ResumeLayout(false);
             this.gbCodeEditor.PerformLayout();
+            this.flowLayoutPanel2.ResumeLayout(false);
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.gbPrompt.ResumeLayout(false);
             this.gbPrompt.PerformLayout();
             this.ResumeLayout(false);
@@ -1397,16 +1554,6 @@
         private System.Windows.Forms.Label lRssiCh2_1;
         private System.Windows.Forms.Label lRssiCh2_0;
         private System.Windows.Forms.GroupBox gbCodeEditor;
-        private System.Windows.Forms.Label lYy;
-        private System.Windows.Forms.DomainUpDown dudSsss;
-        private System.Windows.Forms.DomainUpDown dudRr;
-        private System.Windows.Forms.DomainUpDown dudDd;
-        private System.Windows.Forms.DomainUpDown dudMm;
-        private System.Windows.Forms.DomainUpDown dudYy;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label lMm;
         private System.Windows.Forms.CheckBox cbBarcodeMode;
         private System.Windows.Forms.Button bRenewRssi;
         private System.Windows.Forms.CheckBox cbEngineerMode;
@@ -1424,5 +1571,28 @@
         private System.Windows.Forms.TextBox tbRssiCriteria;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.CheckBox cbNgInterrupt;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel2;
+        private System.Windows.Forms.DomainUpDown dudYy;
+        private System.Windows.Forms.DomainUpDown dudMm;
+        private System.Windows.Forms.DomainUpDown dudDd;
+        private System.Windows.Forms.DomainUpDown dudRr;
+        private System.Windows.Forms.DomainUpDown dudSsss;
+        private ComboBox cbSnNamingRule;
+        private DomainUpDown dudWw;
+        private DomainUpDown dudD;
+        private DomainUpDown dudL;
+        private FlowLayoutPanel flowLayoutPanel1;
+        private Label lMm;
+        private Label lDd;
+        private Label lRr;
+        private Label lSsss;
+        private Label lWw;
+        private Label lD;
+        private Label lL;
+        private DomainUpDown dudDd2;
+        private DomainUpDown dudMm2;
+        private Label lDd2;
+        private Label lMm2;
+        private Label lYy;
     }
 }
