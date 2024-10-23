@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
@@ -48,6 +49,7 @@ namespace IntegratedGuiV2
         private bool I2cConnected = false;
         private bool ForceConnectWithoutInvoke = false;
         private bool Sas3Module = false;
+        private bool IsListeningForHideKeys = false;
         private string CurrentDate = DateTime.Now.ToString("yyMMdd");
         private int Revision = 1;
         private string TempFolderPath = string.Empty;
@@ -423,6 +425,8 @@ namespace IntegratedGuiV2
             this.tbVenderSn.KeyDown += TbVenderSnCh1_KeyDown;
             mainForm.OnPluginWaiting += HandlePluginWaiting;
             mainForm.OnPluginDetected += HandlePluginDetected;
+            tbHideKey.Enter += tbHideKey_MouseEnter;
+            tbHideKey.Leave += tbHideKey_MouseLeave;
 
             if (!(mainForm.ChannelSetApi(1) < 0)) // (bool setMode, bool setPassword)
                 I2cConnected = true;
@@ -529,11 +533,16 @@ namespace IntegratedGuiV2
             mainForm.UpdateSecurityLockStateFromNuvotonIcpApi();
         }
 
+        private void TbHideKey_Leave(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
         private void MainForm_Load(object sender, EventArgs e)
         {
             this.Activate();
             this.BringToFront();
-            tbRssiCh1_3.Select();
+            tbHideKey.Select();
         }
 
         private void _InitialUi()
@@ -571,6 +580,10 @@ namespace IntegratedGuiV2
 
         private void _InitialUiForWriteSn()
         {
+            tbOrignalSNCh1.Text = "";
+            tbOrignalSNCh2.Text = "";
+            tbReNewSnCh1.Text = "";
+            tbReNewSnCh2.Text = "";
             tbOrignalSNCh1.BackColor = Color.LightBlue;
             tbOrignalSNCh2.BackColor = Color.LightBlue;
             tbReNewSnCh1.BackColor = Color.LightBlue;
@@ -583,6 +596,9 @@ namespace IntegratedGuiV2
 
         private void _HideKeys_KeyDown(object sender, KeyEventArgs e)
         {
+            if (!IsListeningForHideKeys)
+                return;
+
             Keys[][] expectedKeys = {
                 new Keys[] { Keys.NumPad4, Keys.NumPad4, Keys.NumPad6, Keys.NumPad6 },
                 new Keys[] { Keys.NumPad8, Keys.NumPad8, Keys.NumPad2, Keys.NumPad2 },
@@ -1139,8 +1155,14 @@ namespace IntegratedGuiV2
         {
             LastBinPaths lastPath = _LoadLastPathsAndSetup();
             string initialDirectory = lastPath.ZipPath;
-            tbLogFilePath.Text = lastPath.LogFilePath;
-            tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+            string logFilePath = lastPath.LogFilePath;
+
+            if (string.IsNullOrEmpty(logFilePath))
+                _EnterDefaultLogfilePath();
+            else {
+                tbLogFilePath.Text = logFilePath;
+                tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+            }
 
             if (!string.IsNullOrEmpty(lastPath.RssiCriteria))
                 tbRssiCriteria.Text = lastPath.RssiCriteria;
@@ -1797,32 +1819,17 @@ namespace IntegratedGuiV2
 
             I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
             Thread.Sleep(200);
-
-            if (Sas3Module)
-                mainForm._SetSas3Password();
-
-            _UpdateMessage(ch, "CheckVendorSN");
-            if (mainForm.InformationReadApi() < 0) return -1;
-            originalVenderSn = mainForm.GetVendorSnFromDdmiApi();
+            _GetModuleVenderSn(true, ch);
             originalDateCode = mainForm.GetDateCodeFromDdmiApi();
+            originalVenderSn = ch == 1
+                ? tbOrignalSNCh1.Text
+                : tbOrignalSNCh2.Text;
 
-            if (ProcessingChannel == 1) {
-                tbOrignalSNCh1.Text = originalVenderSn;
-                tbOrignalSNCh1.BackColor = Color.DarkBlue;
-                tbOrignalSNCh1.ForeColor = Color.White;
-            }
-            else {
-                tbOrignalSNCh2.Text = originalVenderSn;
-                tbOrignalSNCh2.BackColor = Color.DarkBlue;
-                tbOrignalSNCh2.ForeColor = Color.White;
-            }
+            mainForm.SetVendorSnToDdmiApi(venderSn);
+            mainForm.SetDataCodeToDdmiApi(dataCode);
 
             if (DebugMode)
-                ShowDebugInfo(venderSn, originalVenderSn, originalDateCode);
-            else {
-                mainForm.SetVendorSnToDdmiApi(venderSn);
-                mainForm.SetDataCodeToDdmiApi(dataCode);
-            }
+                ShowDebugInfo(originalVenderSn, originalDateCode);
 
             if (!Sas3Module) {
                 _UpdateMessage(ch, "Writing information");
@@ -1841,20 +1848,7 @@ namespace IntegratedGuiV2
             }
             
             _UpdateMessage(ch, "StoreFlash..Done");
-            if (mainForm.InformationReadApi() < 0) return -1;
-            Thread.Sleep(10);
-
-            if (ProcessingChannel == 1) {
-                tbReNewSnCh1.Text = mainForm.GetVendorSnFromDdmiApi();
-                tbReNewSnCh1.BackColor = Color.DarkBlue;
-                tbReNewSnCh1.ForeColor = Color.White;
-            }
-            
-            else if (ProcessingChannel == 2) {
-                tbReNewSnCh2.Text = mainForm.GetVendorSnFromDdmiApi();
-                tbReNewSnCh2.BackColor = Color.DarkBlue;
-                tbReNewSnCh1.ForeColor = Color.White;
-            }
+            _GetModuleVenderSn(false, ch);
             
             if (_RxPowerUpdateWithoutThread() < 0) return -1;
 
@@ -1873,10 +1867,8 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private void ShowDebugInfo(string venderSn, string originalVenderSn, string originalDateCode)
+        private void ShowDebugInfo(string originalVenderSn, string originalDateCode)
         {
-            mainForm.SetVendorSnToDdmiApi(venderSn);
-            mainForm.SetDataCodeToDdmiApi(CurrentDate);
             MessageBox.Show("Information check"
                         + "\nBefore:\n"
                         + "VenderSn: " + originalVenderSn
@@ -2022,6 +2014,9 @@ namespace IntegratedGuiV2
             }
             else
                 I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
+
+            cbI2cConnect.Focus();
+            cbI2cConnect.Select();
         }
 
         private void tbLogFilePath_Click(object sender, EventArgs e)
@@ -2357,6 +2352,13 @@ namespace IntegratedGuiV2
 
         }
 
+        private void _EnterDefaultLogfilePath()
+        {
+            string initialDirectory = Application.StartupPath;
+            tbLogFilePath.Text = Path.Combine(initialDirectory, "LogFolder");
+            tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+        }
+
         private void bLogFileComparison_Click(object sender, EventArgs e)
         {
             int ComparisonResults = _LogFileComparison();
@@ -2376,18 +2378,23 @@ namespace IntegratedGuiV2
             string DirectoryPath = tbLogFilePath.Text;
             string ObjectFileName;
             string RegisterFilePath;
+            string VenderSn;
 
             //mainForm.InformationReadApi();
-            //string OriginalVenderSn = mainForm.GetVendorSnFromDdmiApi();
+            //string OriginalVenderSn = mainForm.GetVendorSnFromDdmiA_pi();
             //string OriginalDateCode = mainForm.GetDateCodeFromDdmiApi();
             FirstRound = true;
 
             loadingForm.Show(this);
             _DisableButtons();
             _InitialUi();
+            _InitialUiForWriteSn();
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
-                ObjectFileName = tbVenderSn.Text + (ProcessingChannel == 1 ? "A" : "B");
+
+                _GetModuleVenderSn(true, ProcessingChannel);
+                VenderSn = ProcessingChannel == 1 ? tbOrignalSNCh1.Text : tbOrignalSNCh2.Text;
+                ObjectFileName = VenderSn + (ProcessingChannel == 1 ? "A" : "B");
                 RegisterFilePath = Path.Combine(DirectoryPath, ObjectFileName + ".csv"); //Generate the CfgFilePath with config folder
 
                 if (!Directory.Exists(DirectoryPath)) {
@@ -2447,6 +2454,48 @@ namespace IntegratedGuiV2
             
         }
 
+        private int _GetModuleVenderSn(bool currentVenderSn, int ch)
+        {
+            string VenderSn;
+
+            if (Sas3Module)
+                mainForm._SetSas3Password();
+
+            _UpdateMessage(ch, "CheckVendorSN");
+            if (mainForm.InformationReadApi() < 0)
+                return -1;
+            VenderSn = mainForm.GetVendorSnFromDdmiApi();
+            VenderSn = VenderSn.Replace(" ", "");
+
+            if (currentVenderSn) {
+                if (ch == 1) {
+                    tbOrignalSNCh1.Text = VenderSn;
+                    tbOrignalSNCh1.BackColor = Color.DarkBlue;
+                    tbOrignalSNCh1.ForeColor = Color.White;
+                }
+                else {
+                    tbOrignalSNCh2.Text = VenderSn;
+                    tbOrignalSNCh2.BackColor = Color.DarkBlue;
+                    tbOrignalSNCh2.ForeColor = Color.White;
+                }
+            }
+            else {
+                if (ch == 1) {
+                    tbReNewSnCh1.Text = VenderSn;
+                    tbReNewSnCh1.BackColor = Color.DarkBlue;
+                    tbReNewSnCh1.ForeColor = Color.White;
+                }
+
+                else {
+                    tbReNewSnCh2.Text = VenderSn;
+                    tbReNewSnCh2.BackColor = Color.DarkBlue;
+                    tbReNewSnCh1.ForeColor = Color.White;
+                }
+            }
+
+            return 0;
+        }
+
         private void cbBarcodeMode_CheckedChanged(object sender, EventArgs e)
         {
             if (cbBarcodeMode.Checked) {
@@ -2472,6 +2521,16 @@ namespace IntegratedGuiV2
                 UpdateSerialNumberTextBox();
                 _EnableButtonsForBarcodeMode();
             }
+        }
+
+        private void tbHideKey_MouseEnter(object sender, EventArgs e)
+        {
+            IsListeningForHideKeys = true;
+        }
+
+        private void tbHideKey_MouseLeave(object sender, EventArgs e)
+        {
+            IsListeningForHideKeys = false;
         }
 
         private void ReRssi_Click(object sender, EventArgs e)

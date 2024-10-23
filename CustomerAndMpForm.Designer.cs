@@ -139,6 +139,7 @@ namespace IntegratedGuiV2
             this.lBaseTime = new System.Windows.Forms.Label();
             this.lIntervalTime = new System.Windows.Forms.Label();
             this.lCount = new System.Windows.Forms.Label();
+            this.tbHideKey = new System.Windows.Forms.TextBox();
             this.gbOperatorMode.SuspendLayout();
             this.gbCodeEditor.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -442,7 +443,7 @@ namespace IntegratedGuiV2
             this.cbI2cConnect.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbI2cConnect.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbI2cConnect.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbI2cConnect.Location = new System.Drawing.Point(469, 0);
+            this.cbI2cConnect.Location = new System.Drawing.Point(444, 0);
             this.cbI2cConnect.Name = "cbI2cConnect";
             this.cbI2cConnect.Size = new System.Drawing.Size(65, 15);
             this.cbI2cConnect.TabIndex = 63;
@@ -1290,7 +1291,7 @@ namespace IntegratedGuiV2
             this.cbSecurityLock.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbSecurityLock.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbSecurityLock.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbSecurityLock.Location = new System.Drawing.Point(388, 0);
+            this.cbSecurityLock.Location = new System.Drawing.Point(363, 0);
             this.cbSecurityLock.Name = "cbSecurityLock";
             this.cbSecurityLock.Size = new System.Drawing.Size(70, 15);
             this.cbSecurityLock.TabIndex = 80;
@@ -1455,12 +1456,27 @@ namespace IntegratedGuiV2
             this.lCount.Text = "Count";
             this.lCount.Visible = false;
             // 
+            // tbHideKey
+            // 
+            this.tbHideKey.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
+            this.tbHideKey.Font = new System.Drawing.Font("Nirmala UI", 3F);
+            this.tbHideKey.ForeColor = System.Drawing.Color.MidnightBlue;
+            this.tbHideKey.Location = new System.Drawing.Point(518, 1);
+            this.tbHideKey.Name = "tbHideKey";
+            this.tbHideKey.ReadOnly = true;
+            this.tbHideKey.Size = new System.Drawing.Size(13, 13);
+            this.tbHideKey.TabIndex = 110;
+            this.tbHideKey.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
+            this.tbHideKey.Enter += new System.EventHandler(this.tbHideKey_MouseEnter);
+            this.tbHideKey.Leave += new System.EventHandler(this.tbHideKey_MouseLeave);
+            // 
             // CustomerAndMpForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 19F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
             this.ClientSize = new System.Drawing.Size(534, 446);
+            this.Controls.Add(this.tbHideKey);
             this.Controls.Add(this.lCount);
             this.Controls.Add(this.lIntervalTime);
             this.Controls.Add(this.lBaseTime);
@@ -1639,5 +1655,6 @@ namespace IntegratedGuiV2
         private Label lBaseTime;
         private Label lIntervalTime;
         private Label lCount;
+        private TextBox tbHideKey;
     }
 }

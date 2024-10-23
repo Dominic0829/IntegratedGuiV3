@@ -583,6 +583,7 @@ namespace IntegratedGuiV2
             this.bIcpConnect.TabIndex = 1019;
             this.bIcpConnect.Text = "Connect";
             this.bIcpConnect.UseVisualStyleBackColor = true;
+            this.bIcpConnect.Visible = false;
             this.bIcpConnect.Click += new System.EventHandler(this.bIcpConnect_Click);
             // 
             // ucNuvotonIcpTool

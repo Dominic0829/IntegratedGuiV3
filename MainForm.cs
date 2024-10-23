@@ -1200,11 +1200,17 @@ namespace IntegratedGuiV2
                 StateUpdated("Read State:\nPreparing resources...", 3);
 
             if (logFileMode) {
-                LastBinPaths lastPath = _LoadLastPaths();
-                folderPath = lastPath.LogFilePath;
-
-                if(string.IsNullOrEmpty(folderPath))
+                if (fileName == "ModuleRegisterFile") {
                     folderPath = Path.Combine(Application.StartupPath, "LogFolder");
+                }
+                else {
+                    LastBinPaths lastPath = _LoadLastPaths();
+                    folderPath = lastPath.LogFilePath;
+
+                    if (string.IsNullOrEmpty(folderPath))
+                        folderPath = Path.Combine(Application.StartupPath, "LogFolder");
+                }
+                
             }
             else {
                 folderPath = lastUsedDirectory;
@@ -2871,6 +2877,70 @@ namespace IntegratedGuiV2
 
         private bool _LoadFilesPathForBin(string fileType)
         {
+            string sourceFileName, sourceFilePath;
+            //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
+                openFileDialog.Title = "Files path";
+                openFileDialog.Filter = "Binary Files (*.bin)|*.bin";
+                //openFileDialog.InitialDirectory = initialDirectory;
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK) {
+                    string originalPath = openFileDialog.FileName;
+                    string originalFileName = Path.GetFileName(originalPath); // Get original filename
+                    lastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                    //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory );
+
+                    if (originalFileName.Contains(" ")) {
+                        string newFileName = originalFileName.Replace(" ", "_");
+                        string newPath = Path.Combine(lastUsedDirectory, newFileName);
+                        sourceFileName = newFileName;
+
+                        try {
+                            File.Move(originalPath, newPath); // 覆蓋原檔
+                            //sourceFilePath = newPath;
+
+                            if (DebugMode)
+                                MessageBox.Show($"已重新命名為: {newFileName}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        catch (IOException ex) {
+                            if (DebugMode)
+                                MessageBox.Show($"無法重新命名: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                    else {
+                        //sourceFilePath = originalPath;
+                        sourceFileName = originalFileName;
+                    }
+
+                    if (fileType == "APROM") {
+                        APROMPath = Path.Combine(lastUsedDirectory, sourceFileName);
+                        cbAPPath.Checked = true;
+                        MessageBox.Show("APROMPath: \n" + APROMPath);
+                    }
+
+                    if (fileType == "DATAROM") {
+                        DATAROMPath = Path.Combine(lastUsedDirectory, sourceFileName);
+                        cbDAPath.Checked = true;
+                        MessageBox.Show("DATAROMPath: \n" + DATAROMPath);
+                    }
+
+                    return true;
+                }
+                else {
+                    if (fileType == "APROM")
+                        cbAPPath.Checked = false;
+
+                    if (fileType == "DATAROM")
+                        cbDAPath.Checked = false;
+
+                    return false;
+                }
+            }
+        }
+        /*
+        private bool _LoadFilesPathForBin2(string fileType)
+        {
             //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
@@ -2912,7 +2982,7 @@ namespace IntegratedGuiV2
                 }
             }
         }
-
+        */
         private bool _LoadFilesPathForText(string fileType)
         {
             //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -2982,12 +3052,16 @@ namespace IntegratedGuiV2
         {
             LastBinPaths lastPath = _LoadLastPaths();
             string DirectoryPath = Application.StartupPath;
+            string BackupRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\ModuleRegisterFile.csv");
+            
+            /*
             string BackupRegisterFilePath = lastPath.LogFilePath;
 
             if (string.IsNullOrEmpty(BackupRegisterFilePath))
                 BackupRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\ModuleRegisterFile.csv");
             else
                 BackupRegisterFilePath = Path.Combine(BackupRegisterFilePath, "ModuleRegisterFile.csv");
+            */
 
             StateUpdated("Write State:\nPreparing resources...", 61);
 
