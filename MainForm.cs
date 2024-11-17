@@ -195,6 +195,22 @@ namespace IntegratedGuiV2
             }
         }
 
+        public string GetSerialNumberApi()
+        {
+            if (this.InvokeRequired)
+                return (string)this.Invoke(new Action(() => _GetSerialNumber()));
+            else
+                return (_GetSerialNumber());
+        }
+
+        public int SetSerialNumberApi(string serialNumber)
+        {
+            if (this.InvokeRequired)
+                return (int)this.Invoke(new Action(() => _SetSerialNumber(serialNumber)));
+            else
+                return _SetSerialNumber(serialNumber);
+        }
+
         public void SetVarBoolStateToMainFormApi(string varName, bool value)
         {
             Type type = this.GetType();
@@ -223,6 +239,14 @@ namespace IntegratedGuiV2
                 return (int)this.Invoke(new Action(() => _ComparisonRegisterForSas3(filePath, onlyVerifyMode, comparisonObject, engineerMode, ch)));
             else
                 return _ComparisonRegisterForSas3(filePath, onlyVerifyMode, comparisonObject, engineerMode, ch);
+        }
+
+        public int ComparisonRegisterForFinalCheckApi(string filePath, string comparisonObject, bool engineerMode)
+        {
+            if (this.InvokeRequired)
+                return (int)this.Invoke(new Action(() => _ComparisonRegisterForFinalCheck(filePath, comparisonObject, engineerMode)));
+            else
+                return _ComparisonRegisterForFinalCheck(filePath, comparisonObject, engineerMode);
         }
 
         public int ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
@@ -279,9 +303,9 @@ namespace IntegratedGuiV2
         public int InformationWriteApi() // Used for MpForm
         {
             if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucInformation.WriteApi()));
+                return (int)this.Invoke(new Action(() => ucInformation.WriteAllApi()));
             else
-                return ucInformation.WriteApi();
+                return ucInformation.WriteAllApi();
         }
         
         public int WriteVendorSerialNumberApi(string vendorSn, string dataCode)
@@ -292,20 +316,12 @@ namespace IntegratedGuiV2
                 return ucInformation.WriteVendorSerialNumberApi(vendorSn, dataCode);
         }
         
-        public int InformationStoreIntoFlashApi() // Used for MpForm
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
-            else
-                return ucInformation.StoreIntoFlashApi();
-        }
-
         public int InformationReadApi() // Used for MpForm
         {
             if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucInformation.ReadApi()));
+                return (int)this.Invoke(new Action(() => ucInformation.ReadAllApi()));
             else
-                return ucInformation.ReadApi();
+                return ucInformation.ReadAllApi();
         }
 
         public void SetToChannle2Api(bool mode)
@@ -971,6 +987,23 @@ namespace IntegratedGuiV2
             return 0;
         }
         */
+        private string _GetSerialNumber()
+        {
+            return ucMemoryDump.GetSerialNumberApi();
+        }
+
+        private int _SetSerialNumber(string serialNumber)
+        {
+            int tmp;
+
+            ucInformation.SetPasswordApi();
+            _SetQsfpMode(0x4D);
+            tmp = ucMemoryDump.SetSerialNumberApi(serialNumber);
+            StoreIntoFlashApi();
+
+            return tmp;
+        }
+
         private int _GetPassword(int length, byte[] data)
         {
             string dataS;
@@ -1203,6 +1236,9 @@ namespace IntegratedGuiV2
                 if (fileName == "ModuleRegisterFile") {
                     folderPath = Path.Combine(Application.StartupPath, "LogFolder");
                 }
+                else if (fileName == "ReWriteRegister") {
+                    folderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
+                }
                 else {
                     LastBinPaths lastPath = _LoadLastPaths();
                     folderPath = lastPath.LogFilePath;
@@ -1210,7 +1246,6 @@ namespace IntegratedGuiV2
                     if (string.IsNullOrEmpty(folderPath))
                         folderPath = Path.Combine(Application.StartupPath, "LogFolder");
                 }
-                
             }
             else {
                 folderPath = lastUsedDirectory;
@@ -1622,7 +1657,7 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi(ucInformation.WritePassword) < 0)
+            if (ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi(ucInformation.SetPasswordApi) < 0)
             {
                 MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi() faile Error!!");
                 return;
@@ -1637,7 +1672,7 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
                 return;
             }
-            if (ucMemoryDump.SetWritePasswordCBApi(ucInformation.WritePassword) < 0)
+            if (ucMemoryDump.SetWritePasswordCBApi(ucInformation.SetPasswordApi) < 0)
             {
                 MessageBox.Show("ucMemoryDump.SetWritePasswordCBApi() faile Error!!");
                 return;
@@ -1653,7 +1688,6 @@ namespace IntegratedGuiV2
                 MessageBox.Show("ucQsfpCorrector.SetQsfpI2cWriteCBApi() faile Error!!");
                 return;
             }
-
 
             if (ucMald37045cConfig.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
             {
@@ -1847,9 +1881,9 @@ namespace IntegratedGuiV2
             sAcConfig = "//Write,DevAddr,RegAddr,Value\n" + "//Read,DevAddr,RegAddr,Value\n" +
                 "//Delay10mSec,Time\n";
 
-            ucInformation.WriteApi();
-            ucDigitalDiagnosticsMonitoring.bWrite_Click(null, null);
-            ucMemoryDump.WriteApi();
+            ucInformation.WriteAllApi();
+            ucDigitalDiagnosticsMonitoring.WriteAllApi();
+            ucMemoryDump.WriteAllApi();
 
             sfdSelectFile.Filter = "cfg files (*.cfg)|*.cfg";
             if (sfdSelectFile.ShowDialog() != DialogResult.OK)
@@ -2711,7 +2745,7 @@ namespace IntegratedGuiV2
                 tbInformationReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
-                if (ucInformation.ReadApi() < 0)
+                if (ucInformation.ReadAllApi() < 0)
                 {
                     tbInformationReadState.BackColor = Color.Red;
                     StateUpdated("Read State:\nInformation...Failed", 3);
@@ -3165,7 +3199,7 @@ namespace IntegratedGuiV2
                 tbInformationReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
-                if (ucInformation.WriteApi() < 0)
+                if (ucInformation.WriteAllApi() < 0)
                 {
                     tbInformationReadState.BackColor = Color.Red;
                     StateUpdated("Write State:\nInformation...Failed", 65);
@@ -3190,9 +3224,9 @@ namespace IntegratedGuiV2
                 tbDdmReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
-                if (ucDigitalDiagnosticsMonitoring.WriteApi() < 0)
+                if (ucDigitalDiagnosticsMonitoring.WriteAllApi() < 0)
                 {
-                    returnValue = ucDigitalDiagnosticsMonitoring.WriteApi();
+                    returnValue = ucDigitalDiagnosticsMonitoring.WriteAllApi();
                     MessageBox.Show("rv : " + returnValue);
                     tbDdmReadState.BackColor = Color.Red;
                     StateUpdated("Write State:\nDdm...Failed", 68);
@@ -3218,7 +3252,7 @@ namespace IntegratedGuiV2
                 tbMemDumpReadState.BackColor = Color.SteelBlue;
                 Application.DoEvents();
 
-                if (ucMemoryDump.WriteApi() < 0)
+                if (ucMemoryDump.WriteAllApi() < 0)
                 {
                     tbMemDumpReadState.BackColor = Color.Red;
                     StateUpdated("Write State:\nMemoryDump...Failed", 70);
@@ -3422,11 +3456,11 @@ namespace IntegratedGuiV2
             RemoveDoubleQuotes(dt2);//Cfg
             ApplyMask(dt1, dt2, masks);
             
-            if (engineerMode) 
-                DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-
             // Error alarm, if there are differences
             if (!CompareDataTables(dt1, dt2)) {
+                if (engineerMode)
+                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 StateUpdated("Verify State:\nVerify failed", null);
@@ -3545,6 +3579,97 @@ namespace IntegratedGuiV2
                 else if (comparisonObject == "LogFile")
                     StateUpdated("Verify State:\nLogFIle are matching", null);
             }
+
+            return 0;
+        }
+
+        internal int _ComparisonRegisterForFinalCheck(string RegisterFilePath, string comparisonObject, bool engineerMode)
+        {
+            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
+            string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
+            string filePath1;
+            string filePath2 = RegisterFilePath; // Reference cfg file
+            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
+            List<(string page, int row, int[] columns)> masks;
+
+            if (comparisonObject == "UpPage00") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
+                };
+            }
+            else if (comparisonObject == "Page03") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Up 03h", 70, new[] {14, 15}),
+                };
+            }
+            else if (comparisonObject == "Page81") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("81h", 50, new[] {12, 13, 14, 15}),
+                    ("81h", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("81h", 70, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                };
+            }
+            else if (comparisonObject == "PageTx") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Tx", 70, new[] {15}),
+                };
+            }
+            else if (comparisonObject == "PageRx") {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Rx", 70, new[] {15}),
+                };
+            }
+            else {
+                masks = new List<(string page, int row, int[] columns)>
+                {
+                    ("Up 00h", 70, new[] {15}),
+                };
+            }
+            
+            StateUpdated("Verify State:\n " + comparisonObject + "check...", null);
+
+            // Export current module register file
+            if (_ExportModuleCfg(fileName1, comparisonObject) < 0)
+                return -1;
+
+            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
+            _ReformatedCsvFileForFinalCheck(filePath1, 1, executableFileFolderPath, comparisonObject);
+            _ReformatedCsvFileForFinalCheck(filePath2, 2, executableFileFolderPath, comparisonObject);
+            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
+            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
+            DataTable dt1 = _ReadCsvToDataTable(filePath1);
+            DataTable dt2 = _ReadCsvToDataTable(filePath2);
+
+            RemoveDoubleQuotes(dt1);//Module
+            RemoveDoubleQuotes(dt2);//Cfg
+            ApplyMask(dt1, dt2, masks);
+
+            // Error alarm, if there are differences
+            if (!CompareDataTables(dt1, dt2)) {
+                if (engineerMode)
+                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+
+                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
+                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                StateUpdated("Verify State:\nVerify failed", null);
+                return 1;
+            }
+
+            // Delete the temp file, if there are no errors
+            if (File.Exists(filePath1))
+                File.Delete(filePath1);
+
+            if (File.Exists(filePath2))
+                File.Delete(filePath2);
+
+            
+            StateUpdated("Verify State:\n" + comparisonObject + "are matching", null);
 
             return 0;
         }
@@ -3680,6 +3805,88 @@ namespace IntegratedGuiV2
                     MessageBox.Show("Get data from: \n" + tempFilePath +
                                 "\n\n Task type: " + comparisonObject + 
                                 "\n Getdata rowCount: " + rowCount);
+                }
+            }
+        }
+
+        private void _ReformatedCsvFileForFinalCheck(string FilePath, int fineNumber, string tempFilePath, string comparisonObject)
+        {
+            int NumberOfSearchRows;
+
+            if (comparisonObject == "UpPage00" || comparisonObject == "Page03" ||
+                comparisonObject == "Page80" || comparisonObject == "Page81")
+                NumberOfSearchRows = 8; // Up00h, 03h, 80h, 81h
+            else
+                NumberOfSearchRows = 16; // Tx, Rx rows
+
+            if (fineNumber == 1)
+                tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
+            else if (fineNumber == 2)
+                tempFilePath = Path.Combine(tempFilePath, "temp2_" + Path.GetFileName(FilePath));
+            else
+                return;
+
+            if (File.Exists(tempFilePath))
+                File.Delete(tempFilePath);
+
+            using (StreamReader reader = new StreamReader(FilePath))
+            using (StreamWriter writer = new StreamWriter(tempFilePath)) {
+                string line;
+                bool isHeaderFound = false;
+                int rowCount = 0;
+
+                while ((line = reader.ReadLine()) != null) {
+                    if (!isHeaderFound && line.StartsWith("Page,Row")) {
+                        isHeaderFound = true;
+                        writer.WriteLine(line);
+                        break;
+                    }
+                }
+
+                while ((line = reader.ReadLine()) != null) {
+                    if (comparisonObject == "UpPage00") {
+                        if (line.Contains("\"Up 00h\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else if (comparisonObject == "Page03") {
+                        if (line.Contains("\"Up 03h\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else if (comparisonObject == "Page80") {
+                        if (line.Contains("\"80h\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else if (comparisonObject == "Page81") {
+                        if (line.Contains("\"81h\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else if (comparisonObject == "PageTx") {
+                        if (line.Contains("\"Tx\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else if (comparisonObject == "PageRx") {
+                        if (line.Contains("\"Rx\"")) {
+                            writer.WriteLine(line);
+                            rowCount++;
+                        }
+                    }
+                    else {
+                        MessageBox.Show("This page has not been defined yet\n" + "ComparisonObject: " + comparisonObject);
+                    }
+
+                    if (rowCount >= NumberOfSearchRows) {
+                        break;
+                    }
                 }
             }
         }
@@ -3867,7 +4074,7 @@ namespace IntegratedGuiV2
             _InitialStateBar();
 
             _GlobalWriteFromUi(false);
-            ucInformation.StoreIntoFlashApi();
+            StoreIntoFlashApi();
             _EnableButtons();
             loadingForm.Close();
         }
@@ -3875,7 +4082,7 @@ namespace IntegratedGuiV2
         private void bStoreIntoFlash_Click(object sender, EventArgs e)
         {
             _DisableButtons();
-            ucInformation.StoreIntoFlashApi();
+            StoreIntoFlashApi();
             _EnableButtons();
         }
 
