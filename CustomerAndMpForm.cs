@@ -20,11 +20,8 @@ using System.Web.UI;
 using System.Windows.Forms;
 using System.Xml;
 using ComponentFactory.Krypton.Toolkit;
-using I2cMasterInterface;
 using Ionic.Zip;
 using NuvotonIcpTool;
-using QsfpDigitalDiagnosticMonitoring;
-using Rt145Rt146Config;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace IntegratedGuiV2
@@ -51,6 +48,7 @@ namespace IntegratedGuiV2
         private bool ForceConnectWithoutInvoke = false;
         private bool Sas3Module = false;
         private bool IsListeningForHideKeys = false;
+        private bool IsSwitching = false;
         private string CurrentDate = DateTime.Now.ToString("yyMMdd");
         private int Revision = 1;
         private string TempFolderPath = string.Empty;
@@ -252,7 +250,7 @@ namespace IntegratedGuiV2
                 MessageBox.Show("Please select a valid naming convention.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            UpdateSerialNumberTextBox();
+            _UpdateSerialNumberTextBox();
         }
 
         private string GenerateSerialNumber()
@@ -291,21 +289,21 @@ namespace IntegratedGuiV2
         private void domainUpDown_TextChanged(object sender, EventArgs e)
         {
             _SerialNumberRule2Control();
-            UpdateSerialNumberTextBox();
+            _UpdateSerialNumberTextBox();
         }
 
-        private void UpdateSerialNumberTextBox()
+        private void _UpdateSerialNumberTextBox()
         {
-            string yy = GetDomainUpDownValue("dudYy");
-            string mm = GetDomainUpDownValue("dudMm");
+            string yy = _GetDomainUpDownValue("dudYy");
+            string mm = _GetDomainUpDownValue("dudMm");
             string mm2 = !string.IsNullOrEmpty(dudMm2.Text) ? dudMm2.Text : DateTime.Now.ToString("MM");
-            string dd = GetDomainUpDownValue("dudDd");
+            string dd = _GetDomainUpDownValue("dudDd");
             string dd2 = !string.IsNullOrEmpty(dudDd2.Text) ? dudDd2.Text : DateTime.Now.ToString("dd");
-            string rr = GetDomainUpDownValue("dudRr");
-            string ssss = GetDomainUpDownValue("dudSsss");
-            string ww = GetDomainUpDownValue("dudWw");
-            string d = GetDomainUpDownValue("dudD");
-            string l = GetDomainUpDownValue("dudL");
+            string rr = _GetDomainUpDownValue("dudRr");
+            string ssss = _GetDomainUpDownValue("dudSsss");
+            string ww = _GetDomainUpDownValue("dudWw");
+            string d = _GetDomainUpDownValue("dudD");
+            string l = _GetDomainUpDownValue("dudL");
 
             int selectedRuleIndex = cbSnNamingRule.SelectedIndex;
 
@@ -340,7 +338,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        private string GetDomainUpDownValue(string name)
+        private string _GetDomainUpDownValue(string name)
         {
             var control = flowLayoutPanel2.Controls.Find(name, true).FirstOrDefault()
                  ?? this.Controls.Find(name, true).FirstOrDefault(); // 如果找不到則從主表單尋找
@@ -348,34 +346,25 @@ namespace IntegratedGuiV2
             return control?.Text ?? string.Empty;
         }
 
-        /*
-        private void UpdateSerialNumberTextBox()
+        private void _SetDomainUpDownValue(string name, int value)
         {
-            string yy = !string.IsNullOrEmpty(dudYy.Text) ? dudYy.Text : DateTime.Now.ToString("yy");
-            string mm = !string.IsNullOrEmpty(dudMm.Text) ? dudMm.Text : DateTime.Now.ToString("MM");
-            string dd = !string.IsNullOrEmpty(dudDd.Text) ? dudDd.Text : DateTime.Now.ToString("dd");
-            string rr = !string.IsNullOrEmpty(dudRr.Text) ? dudRr.Text : Revision.ToString("D2");
-            string ssss = !string.IsNullOrEmpty(dudSsss.Text) ? dudSsss.Text : SerialNumber.ToString("D4");
+            var control = flowLayoutPanel2.Controls.Find(name, true).FirstOrDefault()
+                         ?? this.Controls.Find(name, true).FirstOrDefault(); // 如果找不到則從主表單尋找
 
-            string ww = dudWw != null && !string.IsNullOrEmpty(dudWw.Text)
-                        ? dudWw.Text : GetCurrentWeekOfYear().ToString("D2");
-            string d = dudD != null && !string.IsNullOrEmpty(dudD.Text)
-                       ? dudD.Text : "1";
-            string l = dudL != null && !string.IsNullOrEmpty(dudL.Text)
-                       ? dudL.Text : "1";
-
-            int selectedRule = cbSnNamingRule.SelectedIndex;
-
-            if (selectedRule == 0)
-                tbVenderSn.Text = yy + mm + dd + rr + ssss;
-            else if (selectedRule == 1)
-                tbVenderSn.Text = yy + ww + d + l + ssss;
-            else if (selectedRule == 2)
-                tbVenderSn.Text = yy + mm + dd + ssss;
-
-            tbDateCode.Text = yy + mm + dd;
+            if (control is DomainUpDown domainUpDown) {
+                if (value > 9999) {
+                    value %= 9999;
+                    MessageBox.Show($"Value exceeded 9999. Adjusted to: {value}",
+                                    "Value Adjusted", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                domainUpDown.Text = value.ToString("D4");
+            }
+            else {
+                MessageBox.Show($"Control with name '{name}' not found or is not a DomainUpDown.",
+                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
-        */
+
         private void BindEvents()
         {
             //dudYy.TextChanged += new EventHandler(domainUpDown_TextChanged);
@@ -413,10 +402,10 @@ namespace IntegratedGuiV2
             InitializeNamingRules();
             BindNamingRulesToComboBox();
             BindEvents();
-            UpdateSerialNumberTextBox();
+            _UpdateSerialNumberTextBox();
             mainForm = new MainForm(true);
             this.FormClosing += new FormClosingEventHandler(_FormClosing);
-            this.Size = new Size(550, 280);
+            _AdjustGuiSizeAndCenter(550, 280);
             this.Text = "OptiSync Manager";
             cProgressBar1.Value = 0;
             cProgressBar2.Value = 0;
@@ -435,7 +424,10 @@ namespace IntegratedGuiV2
             else {
                 MessageBox.Show("I2c master connection failed.\nPlease check if the hardware configuration or UI is activated.",
                                 "I2c master connection failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Application.Exit();
+                this.FormClosing -= _FormClosing;
+                this.Close();
+                Application.ExitThread();
+                Environment.Exit(0);
             }
 
             mainForm.ReadStateUpdated += MainForm_ReadStateUpdated;
@@ -564,6 +556,7 @@ namespace IntegratedGuiV2
             lCh1Message.ForeColor = Color.White;
             lCh2Message.ForeColor = Color.White;
             bStart.Select();
+            _InitialRssiTextBox();
 
             if (!FirstRound) {
                 for (int i = 100; i > -1; i -= 5)// For ProgressBar renew
@@ -608,7 +601,7 @@ namespace IntegratedGuiV2
                 new Keys[] { Keys.NumPad1, Keys.NumPad1, Keys.NumPad1, Keys.Down},
                 new Keys[] { Keys.NumPad2, Keys.NumPad2, Keys.NumPad2, Keys.Down},
                 new Keys[] { Keys.NumPad3, Keys.NumPad3, Keys.NumPad3, Keys.Down},
-                new Keys[] { Keys.T, Keys.T, Keys.T, Keys.Down},
+                new Keys[] { Keys.T, Keys.NumPad2, Keys.NumPad3, Keys.NumPad6, Keys.NumPad8},
                 new Keys[] { Keys.NumPad0, Keys.NumPad0, Keys.NumPad0, Keys.Down},
                 new Keys[] { Keys.NumPad3, Keys.NumPad2, Keys.NumPad3, Keys.NumPad4}
                 };
@@ -672,7 +665,7 @@ namespace IntegratedGuiV2
             int errorCode = 0;
             cbEngineerMode.Checked = true;
 
-            if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length == 12 && 
+            if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length == 12 &&
                    tbCustomerSn.Focused && !cbDeepCheck.Checked) {
                 loadingForm.Show(this);
                 tbVenderSn.Text = "";
@@ -688,7 +681,7 @@ namespace IntegratedGuiV2
                 tbDateCode.Text = tbVenderSn.Text.Substring(0, 6);
 
                 if (_SerialNumberSerach() < 0) {
-                    _PromptError();
+                    _PromptError(false);
                     tbTruelightSn.Text = "Search failed";
                     _InitialReWriteSnForFinish();
                     return;
@@ -697,7 +690,7 @@ namespace IntegratedGuiV2
                 if (cbReParameter.Checked) {
                     errorCode = _SetParameterFromPage8081();
                     if (errorCode < 0) {
-                        _PromptError();
+                        _PromptError(false);
                         MessageBox.Show("ErrorCode: " + errorCode);
                         return;
                     }
@@ -705,7 +698,7 @@ namespace IntegratedGuiV2
 
                 errorCode = _WriteTruelightSn(tbTruelightSn.Text);
                 if (errorCode < 0) {
-                    _PromptError();
+                    _PromptError(false);
                     MessageBox.Show("ErrorCode: " + errorCode);
                     return;
                 }
@@ -713,26 +706,24 @@ namespace IntegratedGuiV2
                     _PromptCompleted();
 
                 if (cbReParameter.Checked && WriteSnDateCodeFlow() < 0)
-                    _PromptError();
+                    _PromptError(false);
                 else
                     _PromptCompleted();
 
                 _GetTruelightSn(false, 1);
                 _InitialReWriteSnForFinish();
-                
             }
-            else if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length == 12 && 
+            else if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length == 12 &&
                         tbCustomerSn.Focused && cbDeepCheck.Checked) {
                 loadingForm.Show(this);
                 _InformationCheck(true);
-
             }
             else if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length != 12 && tbCustomerSn.Focused) {
                 MessageBox.Show("Please enter 12 characters.");
                 //tbCustomerSn.Text = "";
-                return;
             }
 
+        exit:
             loadingForm.Close();
             this.BringToFront();
             this.Activate();
@@ -777,7 +768,7 @@ namespace IntegratedGuiV2
                         }
 
                         if (cbBarcodeMode.Checked && WriteSnDateCodeFlow() < 0)
-                            _PromptError();
+                            _PromptError(false);
                         else
                             _PromptCompleted();
                     }
@@ -785,7 +776,7 @@ namespace IntegratedGuiV2
                     else if (rbOnlySN.Checked) {
                         
                         if (cbBarcodeMode.Checked && WriteSnDateCodeFlow() < 0)
-                            _PromptError();
+                            _PromptError(false);
                         else
                             _PromptCompleted();
                     }
@@ -794,14 +785,14 @@ namespace IntegratedGuiV2
 
                         if (cbBarcodeMode.Checked) {
 
-                            ComparisonResults = _LogFileComparison(false);
+                            ComparisonResults = _LogFileComparison(false, true);
 
                             if (ComparisonResults < 0)
-                                _PromptError();
+                                _PromptError(true);
                             else if (ComparisonResults == 1)
                                 _PromptWrong();
                             else
-                                _PromptCorrect();
+                                _PromptCorrect(true);
                         }
                     }
                 }
@@ -834,7 +825,7 @@ namespace IntegratedGuiV2
             _LoadXmlFileLite("MSP4M_1M25_r01_20240731.zip");
 
             if (lMode.Text == "Customer") {
-                this.Size = new Size(550, 280);
+                _AdjustGuiSizeAndCenter(550, 280);
                 // rbSingle.Enabled = true;
                 //rbBoth.Enabled = true;
                 cbSecurityLock.Visible = false;
@@ -849,12 +840,12 @@ namespace IntegratedGuiV2
                 bCfgFileComparison.Visible = false;
                 bLogFileComparison.Visible = false;
                 bRenewRssi.Visible = false;
+                cbCfgCheckAfterFw.Visible = false;
             }
 
             else if (lMode.Text == "MP") {
-                this.Size = new Size(550, 500);
+                _AdjustGuiSizeAndCenter(550, 550);
                 rbSingle.Select();
-                _GenerateDateCode();
                 //rbSingle.Enabled = false;
                 //rbBoth.Enabled = false;
                 cbSecurityLock.Visible = true;
@@ -869,6 +860,7 @@ namespace IntegratedGuiV2
                 bCfgFileComparison.Visible = true;
                 bLogFileComparison.Visible = true;
                 bRenewRssi.Visible = true;
+                cbCfgCheckAfterFw.Visible = true;
 
                 if (rbBoth.Checked) {
                     tbOrignalSNCh2.Visible = true;
@@ -928,14 +920,7 @@ namespace IntegratedGuiV2
 
         private void _DisplayRelinkControlUi()
         {
-            lBaseTime.Visible = true;
-            lIntervalTime.Visible = true;
-            lCount.Visible = true;
-            tbStartTime.Visible = true;
-            tbIntervalTime.Visible = true;
-            tbRelinkCount.Visible = true;
-            bRelinkTest.Visible = true;
-
+            gbRelinkTest.Visible = true;
             _ResetSequence();
         }
 
@@ -1535,7 +1520,8 @@ namespace IntegratedGuiV2
         private void _ConfigFilePathChanges()
         {
             bool customerMode = lMode.Text == "Customer";
-            int channelNumber = customerMode ? 1 : 13;
+            //int channelNumber = customerMode ? 1 : 13;
+            int channelNumber = 1;
 
             if (tbFilePath.Text == "Please click here, to import the Config file...") {
                 tbFilePath.Text = "";
@@ -1546,8 +1532,8 @@ namespace IntegratedGuiV2
             _LoadXmlFile();
 
             if (lMode.Text == "Customer") {
-                this.Size = new Size(550, 280);
-                // rbSingle.Enabled = true;
+                _AdjustGuiSizeAndCenter(550, 280);
+                //rbSingle.Enabled = true;
                 //rbBoth.Enabled = true;
                 cbSecurityLock.Visible = false;
                 gbOperatorMode.Visible = false;
@@ -1561,12 +1547,12 @@ namespace IntegratedGuiV2
                 bCfgFileComparison.Visible = false;
                 bLogFileComparison.Visible = false;
                 bRenewRssi.Visible = false;
+                cbCfgCheckAfterFw.Visible = false;
             }
 
             else if (lMode.Text == "MP") {
-                this.Size = new Size(550, 500);
+                _AdjustGuiSizeAndCenter(550, 550);
                 rbSingle.Select();
-                _GenerateDateCode();
                 //rbSingle.Enabled = false;
                 //rbBoth.Enabled = false;
                 cbSecurityLock.Visible = true;
@@ -1581,6 +1567,7 @@ namespace IntegratedGuiV2
                 bCfgFileComparison.Visible = true;
                 bLogFileComparison.Visible = true;
                 bRenewRssi.Visible = true;
+                cbCfgCheckAfterFw.Visible = true;
 
                 if (rbBoth.Checked) {
                     tbOrignalSNCh2.Visible = true;
@@ -1595,19 +1582,26 @@ namespace IntegratedGuiV2
             I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
         }
 
+        private void _AdjustGuiSizeAndCenter(int width, int height)
+        {
+            this.Size = new Size(width, height);
+            Rectangle screenBounds = Screen.GetWorkingArea(this);
+            //int centerX = screenBounds.Left + (screenBounds.Width - this.Width) / 2;
+            int centerY = screenBounds.Top + (screenBounds.Height - this.Height) / 2;
+            //this.Location = new Point(centerX, centerY);
+            this.Location = new Point(this.Location.X, centerY);
+        }
+
         private int _RxPowerUpdateWithoutThread()
         {
             int RssiCriteria;
             int[] rxPowers = new int[4];
             bool isParsed = int.TryParse(tbRssiCriteria.Text, out RssiCriteria);
             if (!isParsed) {
-                MessageBox.Show("Please enter a valid integer value for the RSSI criteria.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Please enter a valid integer value for the RSSI criteria.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return -1;
             }
             _SaveLastPathsAndSetup(null, null, tbRssiCriteria.Text);
-
-            if (ProcessingChannel == 1)
-                _InitialRssiTextBox();
 
             if (mainForm.RxPowerReadApiFromDdmApi() < 0) {
                 MessageBox.Show("Please check the module plugin status");
@@ -1659,6 +1653,8 @@ namespace IntegratedGuiV2
 
                 textBoxes[i].Text = rxPowers[i].ToString();
             }
+
+            Application.DoEvents();
 
             return ErrorCount;
         }
@@ -1716,6 +1712,7 @@ namespace IntegratedGuiV2
             tbVenderSn.Enabled = true;
             tbRssiCriteria.Enabled = false;
             cbNgInterrupt.Enabled = false;
+            bCheckSerialNumber.Enabled = false;
         }
         private void _EnableButtonsForBarcodeMode()
         {
@@ -1735,6 +1732,7 @@ namespace IntegratedGuiV2
             cbEngineerMode.Enabled = true;
             tbRssiCriteria.Enabled = true;
             cbNgInterrupt.Enabled = true;
+            bCheckSerialNumber.Enabled = true;
         }
 
         private void _DisableButtons()
@@ -1755,6 +1753,10 @@ namespace IntegratedGuiV2
             bCfgFileComparison.Enabled = false;
             bLogFileComparison.Enabled = false;
             bRenewRssi.Enabled = false;
+            bCheckSerialNumber.Enabled = false;
+            gbOptionsControl.Enabled = false;
+            cbLogCheckAfterSn.Enabled = false;
+            cbCfgCheckAfterFw.Enabled = false;
         }
 
         private void _EnableButtons()
@@ -1773,6 +1775,10 @@ namespace IntegratedGuiV2
             bCfgFileComparison.Enabled = true;
             bLogFileComparison.Enabled = true;
             bRenewRssi.Enabled = true;
+            bCheckSerialNumber.Enabled = true;
+            gbOptionsControl.Enabled = true;
+            cbLogCheckAfterSn.Enabled = true;
+            cbCfgCheckAfterFw.Enabled = true;
             //loadingForm.Close();
             this.BringToFront();
             this.Activate();
@@ -1796,6 +1802,11 @@ namespace IntegratedGuiV2
             return 0;
         }
 
+        private void _DisplayCurrentModuleRegister()
+        {
+
+        }
+
         private int _RemoteControl(bool customerMode)
         {
             string DirectoryPath = TempFolderPath;
@@ -1803,6 +1814,13 @@ namespace IntegratedGuiV2
             string RegisterFilePath = Path.Combine(DirectoryPath, RegisterFileName); //Generate the CfgFilePath with config folder
             string BackupFileName = "ModuleRegisterFile";
             int relinkCount = 0, startTime = 0, intervalTime = 0;
+
+            //Check module status
+            mainForm.InformationReadApi();
+            if (string.IsNullOrEmpty(mainForm.GetVendorSnFromDdmiApi())) {
+                MessageBox.Show("Please confirm the plug-in status of the module.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return -1;
+            }
 
             tbOrignalTLSN.Text = mainForm.GetSerialNumberApi();
 
@@ -1816,9 +1834,6 @@ namespace IntegratedGuiV2
                 return -1;
             }
             else {
-                //if (_RxPowerUpdateWithoutThread() < 0)
-                  //  return -1;
-
                 mainForm.ExportLogfileApi(BackupFileName, true, false); //目標模組Cfg Backup
 
                 if (ProcessingChannel == 1) {
@@ -1834,7 +1849,6 @@ namespace IntegratedGuiV2
                     MessageBox.Show("GlobalRead...Done");
                     return -1;
                 }
-                    
 
                 //Set ICPTool Funciton
                 mainForm.SetAutoReconnectApi(true); // An automatic connection to MCU will be initiated.
@@ -1912,14 +1926,22 @@ namespace IntegratedGuiV2
 
         private int _RemoteControlForSas3(bool customerMode)
         {
+            string DutCheck;
             string DirectoryPath = TempFolderPath;
             string RegisterFileName = "RegisterFile.csv";
             string RegisterFilePath = Path.Combine(DirectoryPath, RegisterFileName); //Generate the CfgFilePath with config folder
-           
-            if (_RxPowerUpdateWithoutThread() < 0)
-                return -1;
 
-           
+            //Check module status
+            mainForm.InformationReadApi();
+            DutCheck = mainForm.GetVenderPnApi();
+
+            /*
+            if (!DutCheck.Contains("AP3AD5D5")) {
+                MessageBox.Show("Please confirm whether the plug-in module is SAS3.0", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return -1;
+            }
+            */
+
             mainForm._WriteFromRegisterFileForSas3(customerMode, RegisterFilePath, ProcessingChannel);
             Thread.Sleep(10);
 
@@ -1950,11 +1972,7 @@ namespace IntegratedGuiV2
             string LogFileName;
             int channelNumber;
 
-            LogFileName = CurrentDate + (cbSnNamingRule.SelectedIndex == 0
-                ? Revision.ToString("D2") + SerialNumber.ToString("D4")
-                : SerialNumber.ToString("D4"));
-            
-            LogFileName = LogFileName + (ch == 1 ? "A" : "B");
+            LogFileName = venderSn + (ch == 1 ? "A" : "B");
 
             channelNumber = (ch == 1
                 ? (lMode.Text == "Customer" || string.IsNullOrEmpty(lMode.Text)) ? 1 : 13
@@ -1997,7 +2015,6 @@ namespace IntegratedGuiV2
 
             if (Sas3Module) {
                 if (mainForm.ExportLogfileForSas3Api(LogFileName, true, true, ProcessingChannel) < 0)
-                    
                     return -1; //Must be implement
             }
             else {
@@ -2046,7 +2063,8 @@ namespace IntegratedGuiV2
             int tmp;
 
             _DisableButtons();
-            int channelNumber = customerMode ? 1 : 13;
+            //int channelNumber = customerMode ? 1 : 13;
+            int channelNumber;
             loadingForm.Show(this);
             _InitialUi();
             _SaveLastPathsAndSetup(tbFilePath.Text, null, null);
@@ -2054,13 +2072,16 @@ namespace IntegratedGuiV2
             //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
-                if (ProcessingChannel == 1)
-                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
-                else if (ProcessingChannel == 2)
-                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
-                else {
-                    channelNumber = 0;
-                    return -1;
+                switch (ProcessingChannel) {
+                    case 1:
+                        channelNumber = 1;
+                        break;
+                    case 2:
+                        channelNumber = 2;
+                        break;
+                    default:
+                        channelNumber = 0;
+                        return -1;
                 }
 
                 I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
@@ -2083,13 +2104,15 @@ namespace IntegratedGuiV2
                 
                 FirstRound = false;
             }
-
+            
             if (DoubleSideMode) {
-                mainForm.ChannelSwitchApi(customerMode, channelNumber); // return to ch1
+                //mainForm.ChannelSwitchApi(customerMode, channelNumber); // return to ch1
                 _ReadRssiForBothSide();
             }
 
-            ProcessingChannel = 1;
+            if (cbCfgCheckAfterFw.Checked)
+                _CfgFileComparison();
+
             if (!cbBarcodeMode.Checked)
                 _EnableButtons();
 
@@ -2152,9 +2175,13 @@ namespace IntegratedGuiV2
 
         private void I2cMasterConnect_CheckedChanged(object sender, EventArgs e)
         {
+            if (IsSwitching)
+                return;
+            IsSwitching = true;
+
             int channelNumber;
 
-            if ((lMode.Text == "Customer") || (lMode.Text == ""))
+            if ((lMode.Text == "Customer") || (lMode.Text == "_"))
                 channelNumber = 1;
             else
                 channelNumber = 13;
@@ -2165,12 +2192,17 @@ namespace IntegratedGuiV2
                 else {
                     MessageBox.Show("I2c master connection failed.\nPlease check if the hardware configuration or UI is activated.",
                                     "I2c master connection failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    Application.Exit();
+                    this.FormClosing -= _FormClosing;
+                    this.Close();
+                    Application.ExitThread();
+                    Environment.Exit(0);
                 }
             }
             else
                 I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
 
+            Thread.Sleep(100);
+            IsSwitching = false;
             cbI2cConnect.Focus();
             cbI2cConnect.Select();
         }
@@ -2229,25 +2261,13 @@ namespace IntegratedGuiV2
 
                 _UpdateMessage(ProcessingChannel, "VenderSN writed");
 
-                if (ProcessingChannel == 1) {
-                    if (cbSnNamingRule.SelectedIndex == 0)
-                        tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
-                    else
-                        tbVenderSn.Text = CurrentDate + SerialNumber.ToString("D4");
-
-                    tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
-                }
-                else if (ProcessingChannel == 2) {
-                    tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
+                if (!Sas3Module) {
+                    if (ProcessingChannel == 1)
+                        tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
+                    else if (ProcessingChannel == 2)
+                        tbVersionCodeCh2.Text = mainForm.GetFirmwareVersionCodeApi();
                 }
 
-                if (Sas3Module)
-                    ComparisonResults = mainForm.ComparisonRegisterForSas3Api(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked, ProcessingChannel);
-                else
-                    ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
-
-                if (ComparisonResults < 0)
-                    return -1;
 
                 _lMessageColorManagement(ComparisonResults);
                 Application.DoEvents();
@@ -2258,13 +2278,20 @@ namespace IntegratedGuiV2
                 }
             }
 
+            if (cbLogCheckAfterSn.Checked) {
+                if (_LogFileComparison(false, true) < 0)
+                    return -1;
+            }
+
             if (DoubleSideMode) {
                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0)// return to ch1
                     return _CloseLoadingFormAndReturn(-1);
             }
 
+            SerialNumber = Convert.ToUInt16(_GetDomainUpDownValue("dudSsss"));
             SerialNumber++;
-            tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + SerialNumber.ToString("D4");
+            _SetDomainUpDownValue("dudSsss", SerialNumber);
+            _UpdateSerialNumberTextBox();
             this.BringToFront();
             this.Activate();
             
@@ -2286,13 +2313,6 @@ namespace IntegratedGuiV2
 
             loadingForm.Close();
             return returnValue;
-        }
-
-        private void _GenerateDateCode()
-        {
-            int initilaSN1 = 1;
-            tbVenderSn.Text = CurrentDate + Revision.ToString("D2") + initilaSN1.ToString("D4");
-            tbDateCode.Text = CurrentDate;
         }
 
         private int _VenderSnInputFormatCheck()
@@ -2357,7 +2377,7 @@ namespace IntegratedGuiV2
 
         }
 
-        private void _PromptCorrect()
+        private void _PromptCorrect(bool comparisonMode)
         {
             if (cbBarcodeMode.Checked) {
                 gbPrompt.Visible = true;
@@ -2366,7 +2386,8 @@ namespace IntegratedGuiV2
                 lStatus.Text = "Correct";
             }
            
-            _UpdateMessage(ProcessingChannel, "Verify State:\nLogfile are matching");
+            if (comparisonMode)
+                _UpdateMessage(ProcessingChannel, "Verify State:\nComparison match");
 
         }
         private void _PromptWrong()
@@ -2377,11 +2398,11 @@ namespace IntegratedGuiV2
                 lStatus.Visible = true;
                 lStatus.Text = "Wrong !!";
             }
-            
+
             _UpdateMessage(ProcessingChannel, "Verify State:\nWrong !!");
         }
 
-        private void _PromptError()
+        private void _PromptError(bool comparisonMode)
         {
             if (cbBarcodeMode.Checked) {
                 gbPrompt.Visible = true;
@@ -2389,8 +2410,9 @@ namespace IntegratedGuiV2
                 lStatus.Visible = true;
                 lStatus.Text = "Error !!";
             }
-            
-            _UpdateMessage(ProcessingChannel, "Verify State:\nLogfile Mismatch!!");
+
+            if (comparisonMode)
+                _UpdateMessage(ProcessingChannel, "Verify State:\nLogfile Mismatch!!");
         }
 
         private void _PromptCompleted()
@@ -2432,7 +2454,13 @@ namespace IntegratedGuiV2
 
         private void bCfgFileComparison_Click(object sender, EventArgs e)
         {
+            loadingForm.Show(this);
+            _DisableButtons();
+            _InitialUi();
             _CfgFileComparison();
+            loadingForm.Close();
+            this.BringToFront();
+            this.Activate();
         }
 
         private int _CfgFileComparison()
@@ -2444,11 +2472,6 @@ namespace IntegratedGuiV2
             string DirectoryPath = TempFolderPath;
             string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;
-
-
-            loadingForm.Show(this);
-            _DisableButtons();
-            _InitialUi();
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 if (ProcessingChannel == 1)
@@ -2466,7 +2489,7 @@ namespace IntegratedGuiV2
                 else {
                     ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
                 }
-                    
+                
                 if (ComparisonResults < 0) 
                     return _CloseLoadingFormAndReturn(-1);
 
@@ -2481,10 +2504,7 @@ namespace IntegratedGuiV2
                 if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) 
                     return _CloseLoadingFormAndReturn(-1);
 
-            loadingForm.Close();
-            this.BringToFront();
-            this.Activate();
-
+            
             if (!cbBarcodeMode.Checked)
                 _EnableButtons();
                         
@@ -2499,7 +2519,7 @@ namespace IntegratedGuiV2
             switch (colorControl) {
                 case 0:
                     newColor = Color.White;
-                    _PromptCorrect();
+                    _PromptCorrect(false);
                     break;
                 case 1:
                     newColor = Color.DeepPink;
@@ -2523,17 +2543,17 @@ namespace IntegratedGuiV2
 
         private void bLogFileComparison_Click(object sender, EventArgs e)
         {
-            int ComparisonResults = _LogFileComparison(false);
+            int ComparisonResults = _LogFileComparison(false, false);
 
             if (ComparisonResults < 0)
-                _PromptError();
+                _PromptError(true);
             else if (ComparisonResults == 1)
                 _PromptWrong();
             else
-                _PromptCorrect();
+                _PromptCorrect(true);
         }
 
-        private int _LogFileComparison(bool liteMode)
+        private int _LogFileComparison(bool liteMode, bool continuousMode)
         {
             if (!liteMode) {
                 _InitializeUIForgbPrompt();
@@ -2552,10 +2572,12 @@ namespace IntegratedGuiV2
             //string OriginalDateCode = mainForm.GetDateCodeFromDdmiApi();
             FirstRound = true;
 
-            loadingForm.Show(this);
-            _DisableButtons();
-            _InitialUi();
-            _InitialUiForWriteSn();
+            if (!continuousMode) {
+                loadingForm.Show(this);
+                _DisableButtons();
+                _InitialUi();
+                _InitialUiForWriteSn();
+            }
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 _GetModuleVenderSn(true, ProcessingChannel);
@@ -2605,12 +2627,14 @@ namespace IntegratedGuiV2
                 if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) 
                     return _CloseLoadingFormAndReturn(-1);
 
-            loadingForm.Close();
-            this.BringToFront();
-            this.Activate();
+            if (!continuousMode) {
+                loadingForm.Close();
+                this.BringToFront();
+                this.Activate();
 
-            if (!cbBarcodeMode.Checked) 
-                _EnableButtons();
+                if (!cbBarcodeMode.Checked)
+                    _EnableButtons();
+            }
 
             if (ComparisonResults < 0)
                 return -1;
@@ -2712,7 +2736,7 @@ namespace IntegratedGuiV2
                 rbOnlySN.Visible = false;
                 rbLogFileMode.Visible = false;
                 gbPrompt.Visible = false;
-                UpdateSerialNumberTextBox();
+                _UpdateSerialNumberTextBox();
                 _EnableButtonsForBarcodeMode();
             }
         }
@@ -2731,6 +2755,7 @@ namespace IntegratedGuiV2
         {
             loadingForm.Show(this);
             _DisableButtons();
+            _InitialUi();
             _ReadRssiForBothSide();
             _EnableButtons();
 
@@ -2746,6 +2771,9 @@ namespace IntegratedGuiV2
                 bCheckSerialNumber.Enabled = false;
                 bSearchNumber.Enabled = false;
                 cbAutoWirte.Enabled = false;
+                bCfgFileTlMode.Enabled = false;
+                bLogFileTlMode.Enabled  = false;
+                bExportRegister.Enabled = false;
             }
             else {
                 if (!cbAutoWirte.Checked)
@@ -2754,6 +2782,9 @@ namespace IntegratedGuiV2
                 bCheckSerialNumber.Enabled = true;
                 bSearchNumber.Enabled = false;
                 cbAutoWirte.Enabled = true;
+                bCfgFileTlMode.Enabled = true;
+                bLogFileTlMode.Enabled = true;
+                bExportRegister.Enabled = true;
             }
             Application.DoEvents();
         }
@@ -2794,26 +2825,65 @@ namespace IntegratedGuiV2
         {
             int errorCode = 0;
             int errorCount = 0;
+            int channelNumber;
             string TempRegisterFilePath = Path.Combine(TempFolderPath, "RegisterFile.csv"); //For UpPage00, Page03
             string DirectoryPath = Application.StartupPath;
             string ReWriteRegister = Path.Combine(DirectoryPath, "RegisterFiles/ReWriteRegister.csv"); //For Page81,PageTx,PageRx
-            
+
+            _DisableButtons();
             _InitializeUIForgbPrompt();
             _InitializeUIForInfCheck();
             _UIActionForReWriteSerialNumber(true);
-            _GetSerialNumber();
-            _GetFirmwareVersion(ProcessingChannel);
-            _GetCustomerSn(ProcessingChannel);
+
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                switch (ProcessingChannel) {
+                    case 1:
+                        channelNumber = 1;
+                        break;
+                    case 2:
+                        channelNumber = 2;
+                        break;
+                    default:
+                        channelNumber = 0;
+                        return -1;
+                }
+
+                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+                Thread.Sleep(100);
+
+                _GetSerialNumber();
+                _GetFirmwareVersion(ProcessingChannel);
+                _GetCustomerSn(ProcessingChannel);
+            }
+               
+            if (DoubleSideMode) {
+                ProcessingChannel = 1;
+                mainForm.ChannelSetApi(1);
+            }
+
             _CheckTextBoxAndNotifyForSn();
 
             if (deepCheck) {
+                if (!File.Exists(ReWriteRegister)) {
+                    MessageBox.Show("Please check if the log file exists at the specified path?" +
+                                        "\n\nTarget path: " + ReWriteRegister + "<<Missing file");
+                    return 0;
+                }
+
                 //Part A: 透過撈出的String 跟Database 進行比對...from CSN, check to SN.
                 _SerialNumberSerach();
                 errorCode = _CheckAllSerialNumber();
 
-                if (errorCode < 0) {
-                    _PromptError();
-                    MessageBox.Show("ErrorCode: " + errorCode);
+                if (errorCode == -2) {
+                    _PromptError(false);
+                    MessageBox.Show("ErrorCode: " + errorCode +
+                                    "\n Input CustomerSn doesn't match the module CSN.");
+                    return -1;
+                }
+                else if (errorCode == -3) {
+                    _PromptError(false);
+                    MessageBox.Show("ErrorCode: " + errorCode +
+                                    "\n Input TruelightSn doesn't match the module TLSN.");
                     return -1;
                 }
 
@@ -2837,11 +2907,11 @@ namespace IntegratedGuiV2
 
                 if (errorCount == 0) {
                     tbCustomerSn.Text = "";
-                    _PromptCorrect();
+                    _PromptCorrect(false);
                 }
                 else {
                     lCh1Message.Text = "Error count: " + errorCount;
-                    _PromptError();
+                    _PromptError(false);
                 }
             }
 
@@ -2854,6 +2924,7 @@ namespace IntegratedGuiV2
             else
                 bCheckSerialNumber.Select();
 
+            _EnableButtons();
             return 0;
         }
 
@@ -3006,7 +3077,9 @@ namespace IntegratedGuiV2
                 tbOrignalTLSN,
                 //tbReNewTLSN,
                 tbOrignalSNCh1,
-                tbVersionCodeCh1
+                tbOrignalSNCh2,
+                tbVersionCodeCh1,
+                tbVersionCodeCh2
             };
 
             foreach (var textBox in textBoxesToCheck) {
@@ -3126,6 +3199,39 @@ namespace IntegratedGuiV2
             bExportRegister.Enabled = true;
         }
 
+        private void button1_Click(object sender, EventArgs e)
+        {
+            int tmp = Convert.ToUInt16( _GetDomainUpDownValue("dudSsss"));
+            MessageBox.Show("Step1\ndudSsss.Text_UInt16: " + _GetDomainUpDownValue("dudSsss"));
+            
+            SerialNumber = tmp;
+            SerialNumber++;
+            MessageBox.Show("Step2\nSerialNumber: " + SerialNumber.ToString("D4"));
+            
+            _SetDomainUpDownValue("dudSsss", SerialNumber);
+            tmp = Convert.ToUInt16(_GetDomainUpDownValue("dudSsss"));
+            MessageBox.Show("Step3\ndudSsss.Text_UInt16: " + tmp.ToString("D4"));
+
+            SerialNumber = 10003;
+            SerialNumber++;
+            MessageBox.Show("Step4\nSerialNumber: " + SerialNumber.ToString("D4"));
+
+            _SetDomainUpDownValue("dudSsss", SerialNumber);
+            tmp = Convert.ToUInt16(_GetDomainUpDownValue("dudSsss"));
+            MessageBox.Show("Step5\ndudSsss.Text_UInt16: " + tmp.ToString("D4"));
+        }
+
+        private void bHardwareValidation_Click(object sender, EventArgs e)
+        {
+            string ModelType = lProduct.Text;
+            mainForm.HardwareIdentificationValidationApi(ModelType, true);
+        }
+
+        private void bCurrentRegister_Click(object sender, EventArgs e)
+        {
+            _DisplayCurrentModuleRegister();
+        }
+
         private void cbReWriteTLSN_CheckChanged(object sender, EventArgs e)
         {
             cbBarcodeMode_CheckedChanged(null, null);
@@ -3136,7 +3242,7 @@ namespace IntegratedGuiV2
                 rbFullMode.Visible = false;
                 rbOnlySN.Visible = false;
                 rbLogFileMode.Visible = false;
-                this.Size = new Size(700, 500);
+                _AdjustGuiSizeAndCenter(700, 550);
             }
             else {
                 cbBarcodeMode.Checked = false;
@@ -3146,7 +3252,7 @@ namespace IntegratedGuiV2
                 rbLogFileMode.Visible = true;
                 cbReParameter.Checked = false;
                 cbDeepCheck.Checked = false;
-                this.Size = new Size(550, 500);
+                _AdjustGuiSizeAndCenter(550, 550);
             }
             
             tbVenderSn.Enabled = false;
@@ -3159,8 +3265,9 @@ namespace IntegratedGuiV2
 
         private void _ReadRssiForBothSide()
         {
-            mainForm.ChannelSetApi(13);
+            mainForm.ChannelSetApi(0);
             ProcessingChannel = 1;
+            mainForm.ChannelSetApi(13);
             Thread.Sleep(500);
             _RxPowerUpdateWithoutThread();
             Thread.Sleep(200);
@@ -3173,6 +3280,9 @@ namespace IntegratedGuiV2
                 Thread.Sleep(200);
                 mainForm.ChannelSetApi(13);
             }
+
+            ProcessingChannel = 1;
+            mainForm.ChannelSetApi(1);
         }
 
         private void PerformLongRunningOperation()
@@ -3189,7 +3299,7 @@ namespace IntegratedGuiV2
         {
             loadingForm.Show(this);
             int relinkCount = 0, startTime = 0, intervalTime = 0;
-            _DisableButtons();
+            //_DisableButtons();
             mainForm.SetAutoReconnectApi(true);
             ForceConnectWithoutInvoke = true;
 
@@ -3204,7 +3314,7 @@ namespace IntegratedGuiV2
 
             lCh1Message.Text = mainForm.ForceConnectApi(true, relinkCount, startTime, intervalTime).ToString();
             ForceConnectWithoutInvoke = false;
-            _EnableButtons();
+            //_EnableButtons();
             loadingForm.Close();
         }
 

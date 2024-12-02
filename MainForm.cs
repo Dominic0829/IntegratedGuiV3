@@ -7,13 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using I2cMasterInterface;
-using ExfoIqs1600ScpiInterface;
 using System.Xml;
 
 using ComponentFactory.Krypton.Toolkit;
-using Mald37045cMata37044c;
 using QsfpDigitalDiagnosticMonitoring;
-using Rt145Rt146Config;
 using System.Threading;
 using System.Runtime.Remoting.Channels;
 using System.Web.UI.Design;
@@ -25,7 +22,6 @@ using NuvotonIcpTool;
 using System.Reflection;
 using Ionic.Zip;
 using System.Runtime.Remoting.Messaging;
-using Gn1190Corrector;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 using System.Globalization;
 using System.Diagnostics;
@@ -135,6 +131,14 @@ namespace IntegratedGuiV2
                 return (string)cbProductSelect.SelectedItem;
         }
 
+        public bool HardwareIdentificationValidationApi(string modelType, bool messageMode)
+        {
+            if (this.InvokeRequired)
+                return (bool)this.Invoke(new Action(() => HardwareIdentificationValidation(modelType, messageMode)));
+            else
+                return (HardwareIdentificationValidation(modelType, messageMode));
+        }
+
         public Dictionary<string, bool> GetCheckBoxStates()
         {
             return new Dictionary<string, bool>
@@ -198,9 +202,17 @@ namespace IntegratedGuiV2
         public string GetSerialNumberApi()
         {
             if (this.InvokeRequired)
-                return (string)this.Invoke(new Action(() => _GetSerialNumber()));
+                return (string)this.Invoke(new Action(() => ucMemoryDump.GetSerialNumberApi()));
             else
-                return (_GetSerialNumber());
+                return (ucMemoryDump.GetSerialNumberApi());
+        }
+
+        public string GetHiddenPasswordApi()
+        {
+            if (this.InvokeRequired)
+                return (string)this.Invoke(new Action(() => ucMemoryDump.GetHiddenPasswordApi()));
+            else
+                return (ucMemoryDump.GetHiddenPasswordApi());
         }
 
         public int SetSerialNumberApi(string serialNumber)
@@ -324,6 +336,14 @@ namespace IntegratedGuiV2
                 return ucInformation.ReadAllApi();
         }
 
+        public string GetVenderPnApi() // Used for MpForm
+        {
+            if (this.InvokeRequired)
+                return (string)this.Invoke(new Action(() => ucInformation.GetVenderPnApi()));
+            else
+                return ucInformation.GetVenderPnApi();
+        }
+
         public void SetToChannle2Api(bool mode)
         {
             if (this.InvokeRequired)
@@ -379,15 +399,7 @@ namespace IntegratedGuiV2
             else
                 return _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel);
         }
-        /*
-        public int WriteRegisterPageForSas3Api(string targetPage, int delayTime, string registerFilePath, int processingChannel, byte starAddr, int numberOfBytes)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel, starAddr, numberOfBytes)));
-            else
-                return _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel, starAddr, numberOfBytes);
-        }
-        */
+
         public void SetVarBoolStateToNuvotonIcpApi(string varName, bool value)
         {
             ucNuvotonIcpTool.SetVarBoolState(varName, value);
@@ -614,7 +626,7 @@ namespace IntegratedGuiV2
         {
             if (!I2cConnected)
             {
-                if (_I2cMasterConnect(ch) < 0)
+                if (_I2cMasterConnect(ch) < 0) // 必須ch, 不能指定為ProcessChannel.
                     return -1;
 
                 I2cConnected = true;
@@ -716,14 +728,13 @@ namespace IntegratedGuiV2
             if (writeToFile == false) {
                 rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
                 if (rv < 0) {
-                    //MessageBox.Show("TRx module no response!!");
+                    MessageBox.Show("TRx module no response!!");
                     _I2cMasterDisconnect();
-                    ErrorState = -2;
                 }
                 else if (rv != length) {
                     //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
                     MessageBox.Show("Please confirm the module plug-in status\n_I2cReadIcConfig");
-                    ErrorState = -1;
+                    return -1;
                 }
 
                 return rv;
@@ -753,8 +764,8 @@ namespace IntegratedGuiV2
                     _I2cMasterDisconnect();
                 }
                 else if (rv != length) {
-                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
                     MessageBox.Show("Please confirm the module plug-in status\n_I2cRead");
+                    return -1;
                 }
 
                 return rv;
@@ -789,6 +800,7 @@ namespace IntegratedGuiV2
                 else if (rv != length) {
                     //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
                     MessageBox.Show("Please confirm the module plug-in status\n_I2cRead16");
+                    return -1;
                 }
 
                 return rv;
@@ -987,11 +999,7 @@ namespace IntegratedGuiV2
             return 0;
         }
         */
-        private string _GetSerialNumber()
-        {
-            return ucMemoryDump.GetSerialNumberApi();
-        }
-
+       
         private int _SetSerialNumber(string serialNumber)
         {
             int tmp;
@@ -1108,8 +1116,13 @@ namespace IntegratedGuiV2
                 case "81h":
                
                     if (ucMemoryDump.WriteRegisterPageApi(targetPage, delayTime, registerFilePath) < 0)
-                            return -1;
+                        return -1;
                     
+                    break;
+
+                case "Low Page":
+                    if (ucMemoryDump.WriteLowPagePartRegisterApi(delayTime, registerFilePath) < 0)
+                        return -1;
                     break;
 
                 case "Tx":
@@ -1264,8 +1277,9 @@ namespace IntegratedGuiV2
                 }
                 else {
                     DialogResult result = MessageBox.Show($"File {fileName} already exists." +
-                                                      $"\nDo you want to overwrite it?",
-                                                      "File Exists", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                                                      $"\nDo you want to overwrite it?","File Exists", 
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+
                     if (result == DialogResult.Yes) {
                         File.Delete(exportFilePath);
                     }
@@ -1346,8 +1360,9 @@ namespace IntegratedGuiV2
                 }
                 else {
                     DialogResult result = MessageBox.Show($"File {fileName} already exists." +
-                                                      $"\nDo you want to overwrite it?",
-                                                      "File Exists", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                                                      $"\nDo you want to overwrite it?","File Exists",
+                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+
                     if (result == DialogResult.Yes) {
                         File.Delete(exportFilePath);
                     }
@@ -1489,23 +1504,21 @@ namespace IntegratedGuiV2
             }
         }
 
-        // 將 DataTable 導出到 CSV 檔案
         private void ExportDataTableToCsv(DataTable dt, string filePath)
         {
             StringBuilder sb = new StringBuilder();
             string directoryPath = Path.GetDirectoryName(filePath);
 
-            // 將欄位名稱加入CSV
+            // 欄位名稱加入CSV
             IEnumerable<string> columnNames = dt.Columns.Cast<DataColumn>().Select(column => column.ColumnName);
             sb.AppendLine(string.Join(",", columnNames.ToArray()));
 
-            // 將每一行資料加入CSV
+            // 每一行資料加入CSV
             foreach (DataRow row in dt.Rows) {
                 IEnumerable<string> fields = row.ItemArray.Select(field => "\"" + field.ToString().Replace("\"", "\"\"") + "\"");
                 sb.AppendLine(string.Join(",", fields.ToArray()));
             }
 
-            // 寫入檔案
             File.WriteAllText(filePath, sb.ToString());
         }
 
@@ -1587,8 +1600,7 @@ namespace IntegratedGuiV2
             OnPluginWaiting?.Invoke(isWaiting);
         }
 
-        // 當DUT插入檢測成功時的處理程序
-        private void HandlePluginDetected(bool isDetected)
+        private void HandlePluginDetected(bool isDetected) // 當DUT插入檢測成功時的處理程序
         {
             OnPluginDetected?.Invoke(isDetected);
         }
@@ -1984,7 +1996,7 @@ namespace IntegratedGuiV2
 
         private void _GenerateXmlFileFromUcComponents()
         {
-            string folderPath = System.Windows.Forms.Application.StartupPath;
+            string folderPath = Application.StartupPath;
             string combinedPath = Path.Combine(folderPath, "XmlFolder");
             string xmlFilePath = Path.Combine(combinedPath, "Permission settings file.xml");
             xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
@@ -2297,6 +2309,76 @@ namespace IntegratedGuiV2
             _FormatChangeFromTextToCsv(exportFilePath, targetASidePath, targetBSidePath);
         }
         */
+
+        private bool HardwareIdentificationValidation(string modelType, bool messageMode)
+        {
+            bool isVerified = false;
+
+            switch (modelType) {
+                case "SAS3.0":
+                    isVerified = VerifySAS30Module(messageMode);
+                    break;
+
+                case "SAS4.0":
+                case "PCIe4.0":
+                case "QSFP28":
+
+                    isVerified = VerifyMini58Module(messageMode);
+                    break;
+
+                default:
+                    MessageBox.Show("Unknown module type. Please check!", "Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    break;
+            }
+
+            if (!isVerified) {
+                //LogError
+            }
+
+            return isVerified;
+        }
+
+        private bool VerifySAS30Module(bool messageMode)
+        {
+            string venderPn = GetVenderPnApi();
+
+            if (messageMode) {
+                if (venderPn.Contains("AP3AD5D5")) {
+                    MessageBox.Show("Verification PASS!!\nVendorPn: " + venderPn, "Pass",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return true;
+                }
+                else {
+                    MessageBox.Show("Please confirm whether the plug-in module is SAS3.0", "Error!!",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+            else 
+                return venderPn.Contains("AP3AD5D5") ? true : false;
+        }
+
+        private bool VerifyMini58Module(bool messageMode)
+        {
+            string hiddenPassword = GetHiddenPasswordApi();
+
+            if (messageMode) {
+                if (hiddenPassword == "3234") {
+                    MessageBox.Show("Verification PASS!!\nHiddenPassword: " + hiddenPassword, "Hidden password check",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return true;
+                }
+                else {
+                    MessageBox.Show("Please confirm whether the plug-in module is Mini58 MCU", "Error!!",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+            }
+            else
+                return hiddenPassword == "3234" ? true:false;
+        }
+
         private void CompressAndDeleteFolder(string folderPath)
         {
             string zipFilePath = folderPath + ".zip";
@@ -2370,7 +2452,7 @@ namespace IntegratedGuiV2
             OpenFileDialog ofdSelectFile = new OpenFileDialog();
             XmlReader xrConfig;
 
-            string folderPath = System.Windows.Forms.Application.StartupPath;
+            string folderPath = Application.StartupPath;
             string combinedPath = Path.Combine(folderPath, "XmlFolder");
             string xmlFilePath = Path.Combine(combinedPath, configXml);
             xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
@@ -2610,7 +2692,7 @@ namespace IntegratedGuiV2
                 tbInnerStateCh2.BackColor = Color.YellowGreen;
             }
 
-            System.Windows.Forms.Application.DoEvents();
+            Application.DoEvents();
         }
        
         private void _EnableIcConfig()
@@ -3102,14 +3184,16 @@ namespace IntegratedGuiV2
             if (CustomerMode)
             {
                 if (WriteRegisterPageApi("Up 00h", 200, BackupRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
-                StateUpdated("Write State:\nUpPage 00h...Done", 63);
+                StateUpdated("Write State:\nUpPage 00h...Done", 64);
                 if (WriteRegisterPageApi("Up 03h", 200, BackupRegisterFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
             else
             {
+                if (WriteRegisterPageApi("Low Page", 200, CfgFilePath) < 0) return -1;
+                StateUpdated("Write State:\nLow Page...Done", 63);
                 if (WriteRegisterPageApi("Up 00h", 200, CfgFilePath) < 0) return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nUpPage 00h...Done", 63);
+                StateUpdated("Write State:\nUpPage 00h...Done", 64);
                 if (WriteRegisterPageApi("Up 03h", 200, CfgFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
@@ -3137,19 +3221,19 @@ namespace IntegratedGuiV2
                 //StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
             else {
-                if (WriteRegisterPageForSas3Api("Page 00", 1000, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 00", 1200, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 00...Done", 30);
                 
-                if (WriteRegisterPageForSas3Api("Page 70", 1000, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 70", 1200, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 70...Done", 50);
 
-                if (WriteRegisterPageForSas3Api("Page 73", 1000, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 73", 1200, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 73...Done", 70);
 
-                if (WriteRegisterPageForSas3Api("Page 3A", 1000, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 3A", 1200, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 3A...Done", 90);
 
@@ -3410,6 +3494,14 @@ namespace IntegratedGuiV2
             if (comparisonObject == "CfgFile") {
                 masks = new List<(string page, int row, int[] columns)>
                 {
+                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
+                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
                 };
@@ -3550,13 +3642,13 @@ namespace IntegratedGuiV2
             RemoveDoubleQuotes(dt2);
             ApplyMask(dt1, dt2, masks);
 
-            if (engineerMode)
-                DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-
             // Error alarm, if there are differences
             if (!CompareDataTables(dt1, dt2)) {
-                //MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
-                  //              "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (engineerMode)
+                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+
+                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
+                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 StateUpdated("Verify State:\nVerify failed", null);
                 return 1;
             }
@@ -3592,9 +3684,23 @@ namespace IntegratedGuiV2
             string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
             List<(string page, int row, int[] columns)> masks;
 
-            if (comparisonObject == "UpPage00") {
+            if (comparisonObject == "Low Page") {
+                masks = new List<(string page, int row, int[] columns)> {
+                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
+                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                };
+            }
+
+            else if (comparisonObject == "UpPage00") {
                 masks = new List<(string page, int row, int[] columns)>
                 {
+                    
                     ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
                 };
@@ -3674,6 +3780,102 @@ namespace IntegratedGuiV2
             return 0;
         }
 
+        private List<(string page, int row, int[] columns)> _GetMasks (string comparisonObject, string products)
+        {
+            if (products == "SAS4" || comparisonObject == "CfgFile") {
+                return new List <(string page, int row, int[] columns)> {
+                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
+                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
+                };
+            }
+            else if (products == "SAS4" || comparisonObject == "LogFile") {
+                return new List<(string page, int row, int[] columns)> {
+                    ("80h", 70, new[] {12, 13, 14, 15}),
+                    ("81h", 70, new[] {15})
+                };
+            }
+
+            if (products == "SAS3" || comparisonObject == "CfgFile") {
+                return new List<(string page, int row, int[] columns)> {
+                    ("Page 00", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Page 00", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15}),
+                    ("Page 00", 70, new[] {15})
+                };
+            }
+            else if (products == "SAS3" || comparisonObject == "LogFile") {
+                return new List<(string page, int row, int[] columns)> {
+                    ("Page 00", 70, new[] {15})
+                };
+            }
+
+            if (products == "FQC") {
+                if (comparisonObject == "Low Page") {
+                    return new List<(string page, int row, int[] columns)> {
+                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
+                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                };
+                }
+
+                else if (comparisonObject == "UpPage00") {
+                    return new List<(string page, int row, int[] columns)>
+                    {
+                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
+                    };
+                }
+                else if (comparisonObject == "Page03") {
+                    return new List<(string page, int row, int[] columns)>
+                    {
+                    ("Up 03h", 70, new[] {14, 15}),
+                    };
+                }
+                else if (comparisonObject == "Page81") {
+                    return new List<(string page, int row, int[] columns)>
+                    {
+                    ("81h", 50, new[] {12, 13, 14, 15}),
+                    ("81h", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("81h", 70, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    };
+                }
+                else if (comparisonObject == "PageTx") {
+                    return new List<(string page, int row, int[] columns)>
+                    {
+                    ("Tx", 70, new[] {15}),
+                    };
+                }
+                else if (comparisonObject == "PageRx") {
+                    return new List<(string page, int row, int[] columns)>
+                    {
+                    ("Rx", 70, new[] {15}),
+                    };
+                }
+                else {
+                    return new List<(string page, int row, int[] columns)>
+                    {
+                    ("Up 00h", 70, new[] {15}),
+                    };
+                }
+            }
+
+            return new List<(string page, int row, int[] columns)> {
+                ("80h", 70, new[] {12, 13, 14, 15})
+            };
+        }
+
         private void _ReformatedCsvFile(string FilePath, int fineNumber, string tempFilePath, string comparisonObject)
         {
             int NumberOfSearchRows;
@@ -3709,15 +3911,20 @@ namespace IntegratedGuiV2
 
                 while ((line = reader.ReadLine()) != null) {
                     if (comparisonObject == "CfgFile") {
-                        if (line.Contains("\"Up 00h\"") || line.Contains("\"Up 03h\"")) {
+                        if (line.Contains("\"Low Page\"") ||
+                            line.Contains("\"Up 00h\"") || 
+                            line.Contains("\"Up 03h\"")) {
                             writer.WriteLine(line);
                             rowCount++;
                         }
                     }
                     else {
-                        if (line.Contains("\"Up 00h\"") || line.Contains("\"Up 03h\"") ||
-                            line.Contains("\"80h\"") || line.Contains("\"81h\"") ||
-                            line.Contains("\"Rx\"") || line.Contains("\"Tx\"")) {
+                        if (line.Contains("\"Up 00h\"") ||
+                            line.Contains("\"Up 03h\"") ||
+                            line.Contains("\"80h\"") ||
+                            line.Contains("\"81h\"") ||
+                            line.Contains("\"Rx\"") ||
+                            line.Contains("\"Tx\"")) {
                             writer.WriteLine(line);
                             rowCount++;
                         }
