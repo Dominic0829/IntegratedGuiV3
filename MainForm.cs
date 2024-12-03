@@ -199,12 +199,22 @@ namespace IntegratedGuiV2
             }
         }
 
+        
+
+        public void StartFlashingApi() // Used for MpForm
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => ucNuvotonIcpTool.StartFlashingApi()));
+            else
+                ucNuvotonIcpTool.StartFlashingApi();
+        }
+
         public string GetSerialNumberApi()
         {
             if (this.InvokeRequired)
-                return (string)this.Invoke(new Action(() => ucMemoryDump.GetSerialNumberApi()));
+                return this.Invoke(new Action(() => _CurrentRegister()));
             else
-                return (ucMemoryDump.GetSerialNumberApi());
+                return (_CurrentRegister());
         }
 
         public string GetHiddenPasswordApi()
@@ -3482,6 +3492,61 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
+        internal int _CurrentRegisters(string comparisonObject, bool engineerMode)
+        {
+            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
+            string filePath1;
+            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
+            var masks = _GetMasks("SAS4", comparisonObject);
+
+            StateUpdated("Current module:\nShow register contents...", null);
+
+            // Export current module register file
+            if (_ExportModuleCfg(fileName1, comparisonObject) < 0)
+                return -1;
+
+            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
+            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath, comparisonObject);
+            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
+            DataTable dt1 = _ReadCsvToDataTable(filePath1);
+
+            RemoveDoubleQuotes(dt1);//Module
+            ApplyMask(dt1, dt2, masks);
+
+            // Error alarm, if there are differences
+            if (!CompareDataTables(dt1, dt2)) {
+                if (engineerMode)
+                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+                else
+                    MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
+                                    "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                StateUpdated("Verify State:\nVerify failed", null);
+                return 1;
+            }
+
+            // Delete the temp file, if there are no errors
+            if (File.Exists(filePath1))
+                File.Delete(filePath1);
+
+            if (File.Exists(filePath2))
+                File.Delete(filePath2);
+
+            if (!onlyVerifyMode) {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile are matching", 97);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle are matching", 97);
+            }
+            else {
+                if (comparisonObject == "CfgFile")
+                    StateUpdated("Verify State:\nCfgFile are matching", null);
+                else if (comparisonObject == "LogFile")
+                    StateUpdated("Verify State:\nLogFIle are matching", null);
+            }
+
+            return 0;
+        }
+
         internal int _ComparisonRegister(string RegisterFilePath, bool onlyVerifyMode,string comparisonObject, bool engineerMode)
         {
             string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
@@ -3489,35 +3554,7 @@ namespace IntegratedGuiV2
             string filePath1;
             string filePath2 = RegisterFilePath; // Reference cfg file
             string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            List<(string page, int row, int[] columns)> masks;
-
-            if (comparisonObject == "CfgFile") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
-                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
-                };
-            }
-            else if (comparisonObject == "LogFile") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("81h", 70, new[] {15}),
-                };
-            }
-            else {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("81h", 70, new[] {15}),
-                };
-            }
+            var masks = _GetMasks("SAS4", comparisonObject);
 
             if (!onlyVerifyMode) {
                 if (comparisonObject == "CfgFile")
@@ -3552,7 +3589,7 @@ namespace IntegratedGuiV2
             if (!CompareDataTables(dt1, dt2)) {
                 if (engineerMode)
                     DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-
+                else
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 StateUpdated("Verify State:\nVerify failed", null);
@@ -3589,29 +3626,7 @@ namespace IntegratedGuiV2
             string filePath1;
             string filePath2 = RegisterFilePath; // Reference cfg file
             string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            List<(string page, int row, int[] columns)> masks;
-
-            if (comparisonObject == "CfgFile") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("Page 00", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Page 00", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
-                };
-            }
-            /*
-            else if (comparisonObject == "LogFile") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("81h", 70, new[] {15}),
-                };
-            }
-            */
-            else {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("Page 00", 70, new[] {15}),
-                };
-            }
+            var masks = _GetMasks("SAS3", comparisonObject);
 
             if (!onlyVerifyMode) {
                 if (comparisonObject == "CfgFile")
@@ -3646,7 +3661,7 @@ namespace IntegratedGuiV2
             if (!CompareDataTables(dt1, dt2)) {
                 if (engineerMode)
                     DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-
+                else
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 StateUpdated("Verify State:\nVerify failed", null);
@@ -3682,62 +3697,8 @@ namespace IntegratedGuiV2
             string filePath1;
             string filePath2 = RegisterFilePath; // Reference cfg file
             string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            List<(string page, int row, int[] columns)> masks;
+            var masks = _GetMasks("FQC", comparisonObject);
 
-            if (comparisonObject == "Low Page") {
-                masks = new List<(string page, int row, int[] columns)> {
-                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
-                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                };
-            }
-
-            else if (comparisonObject == "UpPage00") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    
-                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
-                };
-            }
-            else if (comparisonObject == "Page03") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("Up 03h", 70, new[] {14, 15}),
-                };
-            }
-            else if (comparisonObject == "Page81") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("81h", 50, new[] {12, 13, 14, 15}),
-                    ("81h", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("81h", 70, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                };
-            }
-            else if (comparisonObject == "PageTx") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("Tx", 70, new[] {15}),
-                };
-            }
-            else if (comparisonObject == "PageRx") {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("Rx", 70, new[] {15}),
-                };
-            }
-            else {
-                masks = new List<(string page, int row, int[] columns)>
-                {
-                    ("Up 00h", 70, new[] {15}),
-                };
-            }
-            
             StateUpdated("Verify State:\n " + comparisonObject + "check...", null);
 
             // Export current module register file
@@ -3760,7 +3721,7 @@ namespace IntegratedGuiV2
             if (!CompareDataTables(dt1, dt2)) {
                 if (engineerMode)
                     DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-
+                else
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 StateUpdated("Verify State:\nVerify failed", null);
@@ -3780,9 +3741,9 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private List<(string page, int row, int[] columns)> _GetMasks (string comparisonObject, string products)
+        private List<(string page, int row, int[] columns)> _GetMasks (string products, string comparisonObject)
         {
-            if (products == "SAS4" || comparisonObject == "CfgFile") {
+            if (products == "SAS4" && comparisonObject == "CfgFile") {
                 return new List <(string page, int row, int[] columns)> {
                     ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
@@ -3796,21 +3757,31 @@ namespace IntegratedGuiV2
                     ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
                 };
             }
-            else if (products == "SAS4" || comparisonObject == "LogFile") {
+            else if (products == "SAS4" && comparisonObject == "LogFile") {
                 return new List<(string page, int row, int[] columns)> {
+                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
+                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15}),
                     ("80h", 70, new[] {12, 13, 14, 15}),
                     ("81h", 70, new[] {15})
                 };
             }
 
-            if (products == "SAS3" || comparisonObject == "CfgFile") {
+            if (products == "SAS3" && comparisonObject == "CfgFile") {
                 return new List<(string page, int row, int[] columns)> {
                     ("Page 00", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Page 00", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15}),
                     ("Page 00", 70, new[] {15})
                 };
             }
-            else if (products == "SAS3" || comparisonObject == "LogFile") {
+            else if (products == "SAS3" && comparisonObject == "LogFile") {
                 return new List<(string page, int row, int[] columns)> {
                     ("Page 00", 70, new[] {15})
                 };
@@ -3881,9 +3852,9 @@ namespace IntegratedGuiV2
             int NumberOfSearchRows;
 
             if (comparisonObject == "LogFile")
-                NumberOfSearchRows = 32; // Up00h, 03h, 80h, 81h, 8x4=32 rows. with Rx/TxCfg (16x2)=32+32=64 rows.
+                NumberOfSearchRows = 40; // Low Page, Up00h, 03h, 80h, 81h, 8x5=40 rows. with Rx/TxCfg (16x2)=32+32=64 rows.
             else
-                NumberOfSearchRows = 16; // Up00h, 03h 8+8 rows
+                NumberOfSearchRows = 24; // Low Page, Up00h, 03h 8*3 rows
 
             if (fineNumber == 1)
                 tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
@@ -3919,7 +3890,8 @@ namespace IntegratedGuiV2
                         }
                     }
                     else {
-                        if (line.Contains("\"Up 00h\"") ||
+                        if (line.Contains("\"Low Page\"") ||
+                            line.Contains("\"Up 00h\"") ||
                             line.Contains("\"Up 03h\"") ||
                             line.Contains("\"80h\"") ||
                             line.Contains("\"81h\"") ||
@@ -4103,7 +4075,7 @@ namespace IntegratedGuiV2
             Form form = new Form {
                 Text = "Differences",
                 Width = 1300,
-                Height = 450,
+                Height = 600,
                 Font = new Font("Times New Roman", 8)
             };
 
@@ -4173,6 +4145,66 @@ namespace IntegratedGuiV2
             form.ShowDialog();
         }
 
+        private void DisplayCurrentRegister(DataTable dt1, List<(string page, int row, int[] columns)> masks)
+        {
+            Form form = new Form {
+                Text = "Differences",
+                Width = 1300,
+                Height = 600,
+                Font = new Font("Times New Roman", 8)
+            };
+
+            DataGridView dgv = new DataGridView {
+                Dock = DockStyle.Fill,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
+                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
+                Font = new Font("Times New Roman", 8),
+                EnableHeadersVisualStyles = false
+            };
+
+            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
+            dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.Silver;
+
+            foreach (DataColumn col in dt1.Columns) {
+                DataGridViewColumn newCol;
+                if (col.ColumnName != "Page" && col.ColumnName != "Row") {
+                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
+                    newCol.Width = 50;
+                }
+                else if (col.ColumnName == "Row") {
+                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
+                    newCol.Width = 35;
+                    newCol.DefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
+                    newCol.DefaultCellStyle.BackColor = Color.Silver;
+                }
+                else if (col.ColumnName == "Page") {
+                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
+                    newCol.Width = 50;
+                    newCol.DefaultCellStyle.BackColor = Color.Gray;
+                }
+            }
+
+            for (int row = 0; row < dt1.Rows.Count; row++) {
+                dgv.Rows.Add();
+                for (int col = 0; col < dt1.Columns.Count; col++) {
+                    dgv.Rows[row].Cells[col].Value = dt1.Rows[row][col];
+
+                    // Mask邏輯著色
+                    if (col > 1) // 忽略 "Page" 和 "Row" 列
+                    {
+                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(),
+                                     Convert.ToInt32(dgv.Rows[row].Cells[1].Value),
+                                     col - 2, masks)) {
+                            dgv.Rows[row].Cells[col].Style.BackColor = Color.Black;
+                        }
+                    }
+                }
+            }
+
+            form.Controls.Add(dgv);
+            form.ShowDialog();
+        }
+
         private bool IsMasked(string page, int row, int col, List<(string page, int row, int[] columns)> masks)
         {
             foreach (var mask in masks) {
@@ -4181,6 +4213,19 @@ namespace IntegratedGuiV2
                 }
             }
             return false;
+        }
+
+        private void ApplyMask(DataTable dt1, List<(string page, int row, int[] columns)> masks)
+        {
+            foreach (var mask in masks) {
+                foreach (DataRow row in dt1.Rows) {
+                    if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
+                        foreach (int columnIndex in mask.columns) {
+                            row[columnIndex + 2] = "FF"; // 覆蓋 dt1
+                        }
+                    }
+                }
+            }
         }
 
         private void ApplyMask(DataTable dt1, DataTable dt2, List<(string page, int row, int[] columns)> masks)

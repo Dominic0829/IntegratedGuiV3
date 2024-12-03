@@ -1700,9 +1700,9 @@ namespace IntegratedGuiV2
             this.bCheckSerialNumber.FlatAppearance.BorderSize = 0;
             this.bCheckSerialNumber.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bCheckSerialNumber.ForeColor = System.Drawing.Color.White;
-            this.bCheckSerialNumber.Location = new System.Drawing.Point(20, 475);
+            this.bCheckSerialNumber.Location = new System.Drawing.Point(120, 474);
             this.bCheckSerialNumber.Name = "bCheckSerialNumber";
-            this.bCheckSerialNumber.Size = new System.Drawing.Size(90, 25);
+            this.bCheckSerialNumber.Size = new System.Drawing.Size(82, 25);
             this.bCheckSerialNumber.TabIndex = 113;
             this.bCheckSerialNumber.Text = "SN. Check";
             this.bCheckSerialNumber.UseVisualStyleBackColor = false;
@@ -1884,9 +1884,9 @@ namespace IntegratedGuiV2
             this.bCurrentRegister.FlatAppearance.BorderSize = 0;
             this.bCurrentRegister.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bCurrentRegister.ForeColor = System.Drawing.Color.White;
-            this.bCurrentRegister.Location = new System.Drawing.Point(122, 475);
+            this.bCurrentRegister.Location = new System.Drawing.Point(19, 474);
             this.bCurrentRegister.Name = "bCurrentRegister";
-            this.bCurrentRegister.Size = new System.Drawing.Size(116, 25);
+            this.bCurrentRegister.Size = new System.Drawing.Size(100, 25);
             this.bCurrentRegister.TabIndex = 123;
             this.bCurrentRegister.Text = "Current register";
             this.bCurrentRegister.UseVisualStyleBackColor = false;

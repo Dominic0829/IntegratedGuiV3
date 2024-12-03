@@ -1713,6 +1713,7 @@ namespace IntegratedGuiV2
             tbRssiCriteria.Enabled = false;
             cbNgInterrupt.Enabled = false;
             bCheckSerialNumber.Enabled = false;
+            bCurrentRegister.Enabled = false;
         }
         private void _EnableButtonsForBarcodeMode()
         {
@@ -1733,6 +1734,7 @@ namespace IntegratedGuiV2
             tbRssiCriteria.Enabled = true;
             cbNgInterrupt.Enabled = true;
             bCheckSerialNumber.Enabled = true;
+            bCurrentRegister.Enabled = true;
         }
 
         private void _DisableButtons()
@@ -1757,6 +1759,7 @@ namespace IntegratedGuiV2
             gbOptionsControl.Enabled = false;
             cbLogCheckAfterSn.Enabled = false;
             cbCfgCheckAfterFw.Enabled = false;
+            bCurrentRegister.Enabled = false;
         }
 
         private void _EnableButtons()
@@ -1779,6 +1782,7 @@ namespace IntegratedGuiV2
             gbOptionsControl.Enabled = true;
             cbLogCheckAfterSn.Enabled = true;
             cbCfgCheckAfterFw.Enabled = true;
+            bCurrentRegister.Enabled = true;
             //loadingForm.Close();
             this.BringToFront();
             this.Activate();
@@ -2887,15 +2891,15 @@ namespace IntegratedGuiV2
                     return -1;
                 }
 
+                if (mainForm.ComparisonRegisterForFinalCheckApi(ReWriteRegister, "Low Page", true) != 0)
+                    errorCount++;
+
                 if (mainForm.ComparisonRegisterForFinalCheckApi(ReWriteRegister, "Page81", true) != 0)
                     errorCount++;
 
                 if (mainForm.ComparisonRegisterForFinalCheckApi(TempRegisterFilePath, "UpPage00", true) != 0)
                     errorCount++;
                 
-                if (mainForm.ComparisonRegisterForFinalCheckApi(TempRegisterFilePath, "Page03", true) !=0)
-                    errorCount++;
-
                 if (mainForm.ComparisonRegisterForFinalCheckApi(TempRegisterFilePath, "Page03", true) !=0)
                     errorCount++;
 
