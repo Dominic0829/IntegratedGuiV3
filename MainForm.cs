@@ -41,7 +41,6 @@ namespace IntegratedGuiV2
         private int ProcessingChannel = 1;
         private bool FirstRead = false;
         private bool AutoSelectIcConfig = false;
-        private int ErrorState = 0;
         private string sAcConfig;
         private string APROMPath, DATAROMPath;
         private string ASidePath, BSidePath;
@@ -199,6 +198,15 @@ namespace IntegratedGuiV2
             }
         }
 
+        
+        public bool GetChipIdApi(string modelType)
+        {
+            if (this.InvokeRequired)
+                return (bool)this.Invoke(new Action(() => _GetChipId(modelType)));
+            else
+                return (_GetChipId(modelType));
+        }
+
         public string GetSerialNumberApi()
         {
             if (this.InvokeRequired)
@@ -237,12 +245,12 @@ namespace IntegratedGuiV2
                 throw new ArgumentException("Invalid Var Name or Var is not a bool type");
             }
         }
-        public int ComparisonRegisterApi(string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode)
+        public int ComparisonRegisterApi(string modelType, string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode)
         {
             if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode)));
+                return (int)this.Invoke(new Action(() => _ComparisonRegister(modelType, filePath, onlyVerifyMode, comparisonObject, engineerMode)));
             else
-                return _ComparisonRegister(filePath, onlyVerifyMode, comparisonObject, engineerMode);
+                return _ComparisonRegister(modelType, filePath, onlyVerifyMode, comparisonObject, engineerMode);
         }
 
         public int ComparisonRegisterForSas3Api(string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode, int ch)
@@ -253,20 +261,20 @@ namespace IntegratedGuiV2
                 return _ComparisonRegisterForSas3(filePath, onlyVerifyMode, comparisonObject, engineerMode, ch);
         }
 
-        public int ComparisonRegisterForFinalCheckApi(string filePath, string comparisonObject, bool engineerMode)
+        public int ComparisonRegisterForFinalCheckApi(string modelType, string filePath, string comparisonObject, bool engineerMode)
         {
             if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ComparisonRegisterForFinalCheck(filePath, comparisonObject, engineerMode)));
+                return (int)this.Invoke(new Action(() => _ComparisonRegisterForFinalCheck(modelType, filePath, comparisonObject, engineerMode)));
             else
-                return _ComparisonRegisterForFinalCheck(filePath, comparisonObject, engineerMode);
+                return _ComparisonRegisterForFinalCheck(modelType, filePath, comparisonObject, engineerMode);
         }
 
-        public int ExportLogfileApi(string fileName, bool logFileMode, bool writeSnMode)
+        public int ExportLogfileApi(string modelType, string fileName, bool logFileMode, bool writeSnMode)
         {
             if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ExportLogfile(fileName, logFileMode, writeSnMode)));
+                return (int)this.Invoke(new Action(() => _ExportLogfile(modelType, fileName, logFileMode, writeSnMode)));
             else
-                return _ExportLogfile(fileName, logFileMode, writeSnMode);
+                return _ExportLogfile(modelType, fileName, logFileMode, writeSnMode);
         }
 
         public int ExportLogfileForSas3Api(string fileName, bool logFileMode, bool writeSnMode, int processingChannel)
@@ -296,12 +304,12 @@ namespace IntegratedGuiV2
             return ucNuvotonIcpTool.ReturnSleepTime;
         }
 
-        public void CurrentRegistersApi()
+        public void CurrentRegistersApi(string modelType)
         {
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => _CurrentRegisters()));
+                this.Invoke(new Action(() => _CurrentRegisters(modelType)));
             else
-                _CurrentRegisters();
+                _CurrentRegisters(modelType);
         }
 
         public void StartFlashingApi() // Used for MpForm
@@ -577,7 +585,7 @@ namespace IntegratedGuiV2
 
         private int _I2cMasterConnect(int ch)
         {
-            if (i2cMaster.ConnectApi(400) < 0)
+            if (i2cMaster.ConnectApi(100) < 0)
                 return -1;
 
             if (ch == 1)
@@ -589,6 +597,8 @@ namespace IntegratedGuiV2
 
             cbConnect.Checked = true;
             I2cConnected = true;
+            if (_WriteModulePassword() < 0)
+                return -1;
 
             if (_SetQsfpMode(0x4D) < 0)
                 return -1;
@@ -729,7 +739,7 @@ namespace IntegratedGuiV2
                 if (_I2cMasterConnect(ProcessingChannel) < 0)
                     return -1;
             }
-
+           
             if (_SetQsfpMode(0x4D) < 0)
                 return -1;
 
@@ -756,7 +766,7 @@ namespace IntegratedGuiV2
                 return 0;
             }
         }
-        
+
         private int _I2cRead(byte devAddr, byte regAddr, byte length, byte[] data)
         {
             int i, rv;
@@ -973,41 +983,7 @@ namespace IntegratedGuiV2
 
             return 0;
         }
-        /*
-        private int _WritePassword()
-        {
-            byte[] data = new byte[4];
-
-            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB == null)
-                return -1;
-
-            if ((tbPasswordB0.Text.Length == 0) || (tbPasswordB1.Text.Length == 0) ||
-                (tbPasswordB2.Text.Length == 0) || (tbPasswordB3.Text.Length == 0)) {
-                MessageBox.Show("Please input 4 hex value password before write!!");
-                return -1;
-            }
-
-            try {
-                data[0] = (byte)Convert.ToInt32(tbPasswordB0.Text, 10);
-                data[1] = (byte)Convert.ToInt32(tbPasswordB1.Text, 10);
-                data[2] = (byte)Convert.ToInt32(tbPasswordB2.Text, 10);
-                data[3] = (byte)Convert.ToInt32(tbPasswordB3.Text, 10);
-            }
-            catch (Exception e) {
-                MessageBox.Show(e.ToString());
-                return -1;
-            }
-
-            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB(80, 123, 4, data) < 0) {
-                MessageBox.Show("_WritePassword1 rv: " + ucDigitalDiagnosticsMonitoring.i2cWriteCB(80, 123, 4, data));
-                return -1;
-            }
-
-            //MessageBox.Show("_WritePassword2 rv: " + i2cWriteCB(80, 123, 4, data));
-            return 0;
-        }
-        */
-       
+        
         private int _SetSerialNumber(string serialNumber)
         {
             int tmp;
@@ -1046,18 +1022,56 @@ namespace IntegratedGuiV2
             return 4;
         }
 
-        private void AppendRxRegisterContents(string exportFilePath)
+        private void AppendRxRegisterContents(string modelType, string exportFilePath)
+        {
+            string IcRegisterContent;
+
+            switch (modelType) {
+                case "SAS4.0":
+                    IcRegisterContent = ucMata37044cConfig.ReadAllRegisterApi();
+                    File.AppendAllText(exportFilePath, IcRegisterContent);
+                    break;
+
+                case "PCIe4.0":
+                    IcRegisterContent = ucRt145Config.ReadAllRegisterApi();
+                    File.AppendAllText(exportFilePath, IcRegisterContent);
+                    break;
+            }
+               
+            return;
+        }
+
+        private void AppendTxRegisterContents(string modelType, string exportFilePath)
         {
             string vendorInfo;
+
+            switch (modelType) {
+                case "SAS4.0":
+                    vendorInfo = ucMald37045cConfig.ReadAllRegisterApi();
+                    File.AppendAllText(exportFilePath, vendorInfo);
+                    break;
+
+                case "PCIe4.0":
+                    vendorInfo = ucRt146Config.ReadAllRegisterApi();
+                    File.AppendAllText(exportFilePath, vendorInfo);
+                    break;
+            }
+
+            return;
+        }
+        /*
+        private void AppendRxRegisterContents(string exportFilePath)
+        {
+            string IcRegisterContent;
             string ChipId;
                 
             ChipId = "37044_";
             ChipId += ucMata37044cConfig.GetChipId();
 
             if (ErrorState >= 0) {
-                vendorInfo = ucMata37044cConfig.ReadAllRegisterApi();
+                IcRegisterContent = ucMata37044cConfig.ReadAllRegisterApi();
                 //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
-                File.AppendAllText(exportFilePath, vendorInfo);
+                File.AppendAllText(exportFilePath, IcRegisterContent);
                 ErrorState = 0;
                 return;
             }
@@ -1067,25 +1081,14 @@ namespace IntegratedGuiV2
             ChipId += ucRt145Config.GetChipId();
 
             if (ErrorState >= 0) {
-                vendorInfo = ucRt145Config.ReadAllRegisterApi();
+                IcRegisterContent = ucRt145Config.ReadAllRegisterApi();
                 //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
-                File.AppendAllText(exportFilePath, vendorInfo);
+                File.AppendAllText(exportFilePath, IcRegisterContent);
                 ErrorState = 0;
                 return;
             }
-
-            /*
-            if (ErrorState < 0) {
-                if (ErrorState == -2)
-                    lMessage.Text = "Module no response.";
-                else if (ErrorState == -1)
-                    lMessage.Text = "Target is not Macom_370xx";
-
-                ErrorState = 0;
-            }
-            */
         }
-
+        
         private void AppendTxRegisterContents(string exportFilePath)
         {
             string vendorInfo;
@@ -1114,7 +1117,7 @@ namespace IntegratedGuiV2
                 return;
             }
         }
-
+        */
         private int _WriteRegisterPage (string targetPage, int delayTime, string registerFilePath)
         {
             switch (targetPage) {
@@ -1179,7 +1182,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _ExportModuleCfg(string fileName, string comparisonObject)
+        private int _ExportModuleCfg(string modelType, string fileName, string comparisonObject)
         {
             string executableFileFolderPath = Application.StartupPath;
             string exportFilePath;
@@ -1204,8 +1207,8 @@ namespace IntegratedGuiV2
             AppendFileContentToAnother(tempUcMemoryFile, exportFilePath);
             
             if (comparisonObject == "LogFile") {
-                AppendRxRegisterContents(exportFilePath);
-                AppendTxRegisterContents(exportFilePath);
+                AppendRxRegisterContents(modelType, exportFilePath);
+                AppendTxRegisterContents(modelType, exportFilePath);
             }
 
             if (File.Exists(tempUcMemoryFile))
@@ -1244,7 +1247,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _ExportLogfile(string fileName, bool logFileMode, bool writeSnMode)
+        private int _ExportLogfile(string modelType, string fileName, bool logFileMode, bool writeSnMode)
         {
             string folderPath;
             string exportFilePath;
@@ -1315,12 +1318,12 @@ namespace IntegratedGuiV2
             if (!writeSnMode)
                 StateUpdated("Read State:\nUpPage 00h/03h...Done", 10);
            
-            AppendRxRegisterContents(exportFilePath);
+            AppendRxRegisterContents(modelType, exportFilePath);
 
             if (!writeSnMode)
                 StateUpdated("Read State:\nRxIcConfig...Done", 20);
             
-            AppendTxRegisterContents(exportFilePath);
+            AppendTxRegisterContents(modelType, exportFilePath);
 
             if (!writeSnMode)
                 StateUpdated("Read State:\nTxIcConfig...Done", 30);
@@ -2125,7 +2128,8 @@ namespace IntegratedGuiV2
         
         private void _GenerateXmlFileForProject()
         {
-            string LogFileName = "RegisterFile";
+            string modelType = cbProductSelect.Text;
+            string logFileName = "RegisterFile";
             XmlDocument xmlDoc = new XmlDocument();
             XmlElement root = xmlDoc.CreateElement("Project");
             xmlDoc.AppendChild(root);
@@ -2189,7 +2193,7 @@ namespace IntegratedGuiV2
                 lastUsedDirectory = folderPath;
                 _GlobalWriteFromUi(false);
                 _InitialStateBar();
-                _ExportLogfile(LogFileName, false, false); // Export CfgFile to config folder
+                _ExportLogfile(modelType, logFileName, false, false); // Export CfgFile to config folder
 
                 if (!string.IsNullOrWhiteSpace(targetApromPath)) {
                     string destinationFilePath = Path.Combine(folderPath, Path.GetFileName(APROMPath));
@@ -2345,6 +2349,41 @@ namespace IntegratedGuiV2
             }
 
             return isVerified;
+        }
+
+        private bool _GetChipId(string modelType)
+        {
+            string LddChipId = "";
+            string TiaChipId = "";
+
+            if (modelType == "SAS4.0") {
+                TiaChipId = ucMata37044cConfig.GetChipId();
+                LddChipId = ucMald37045cConfig.GetChipId();
+                if ((TiaChipId == "0x77") && (LddChipId == "0x79"))
+                    return true;
+                
+            }
+            else if (modelType == "PCIe4.0") {
+                TiaChipId = ucRt145Config.GetChipId();
+                LddChipId = ucRt146Config.GetChipId();
+                if ((TiaChipId == "0x58") && (LddChipId == "0xFF"))
+                    return true;
+            }
+            /*
+            else if (modelType == "QSFP28") {
+                TiaChipId = ucGn2108Config.GetChipId();
+                LddChipId = ucGn2109Config.GetChipId();
+                if ((TiaChipId == "") && (LddChipId == ""))
+                    return true;
+            }*/
+            else {
+                MessageBox.Show("This product is not in the list\nModel: " + modelType );
+            }
+
+            MessageBox.Show("LDD Chip ID: " + LddChipId +
+                            "\nTIA Chip ID: " + TiaChipId);
+
+            return false;
         }
 
         private bool VerifySAS30Module(bool messageMode)
@@ -3490,7 +3529,7 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
-        internal int _CurrentRegisters()
+        internal int _CurrentRegisters(string modelType)
         {
             string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
             string filePath1;
@@ -3500,7 +3539,7 @@ namespace IntegratedGuiV2
             StateUpdated("Current module:\nPreparing register contents...", null);
 
             // Export current module register file
-            if (_ExportModuleCfg(fileName1, "LogFile") < 0)
+            if (_ExportModuleCfg(modelType, fileName1, "LogFile") < 0)
                 return -1;
 
             filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
@@ -3519,7 +3558,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        internal int _ComparisonRegister(string RegisterFilePath, bool onlyVerifyMode,string comparisonObject, bool engineerMode)
+        internal int _ComparisonRegister(string modelType, string RegisterFilePath, bool onlyVerifyMode,string comparisonObject, bool engineerMode)
         {
             string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
             string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
@@ -3542,7 +3581,7 @@ namespace IntegratedGuiV2
             }
 
             // Export current module register file
-            if (_ExportModuleCfg(fileName1, comparisonObject) < 0)
+            if (_ExportModuleCfg(modelType, fileName1, comparisonObject) < 0)
                     return -1;
 
             filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
@@ -3665,7 +3704,7 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        internal int _ComparisonRegisterForFinalCheck(string RegisterFilePath, string comparisonObject, bool engineerMode)
+        internal int _ComparisonRegisterForFinalCheck(string modelType, string RegisterFilePath, string comparisonObject, bool engineerMode)
         {
             string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
             string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
@@ -3677,7 +3716,7 @@ namespace IntegratedGuiV2
             StateUpdated("Verify State:\n " + comparisonObject + "check...", null);
 
             // Export current module register file
-            if (_ExportModuleCfg(fileName1, comparisonObject) < 0)
+            if (_ExportModuleCfg(modelType, fileName1, comparisonObject) < 0)
                 return -1;
 
             filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
@@ -4311,6 +4350,7 @@ namespace IntegratedGuiV2
         private void bSaveCfgFile_Click(object sender, EventArgs e)
         {
             loadingForm.Show(this);
+            string modelType = cbProductSelect.Text;
             string LogFileName = "EngRegisterFile";
             lastUsedDirectory = Path.Combine(Application.StartupPath, "RegisterFiles");
             _DisableButtons();
@@ -4318,7 +4358,7 @@ namespace IntegratedGuiV2
             _GlobalWriteFromUi(false);
             _InitialStateBar();
 
-            _ExportLogfile(LogFileName, false, false);
+            _ExportLogfile(modelType, LogFileName, false, false);
             _EnableButtons();
             loadingForm.Close();
         }

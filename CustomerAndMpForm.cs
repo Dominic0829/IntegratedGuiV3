@@ -3,6 +3,7 @@ using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -52,7 +53,6 @@ namespace IntegratedGuiV2
         private string CurrentDate = DateTime.Now.ToString("yyMMdd");
         private int Revision = 1;
         private string TempFolderPath = string.Empty;
-        private string LogFileFolderPath = string.Empty;
         private CancellationTokenSource cancellationTokenSource;
 
         private Thread RxPowerUpdateThread;
@@ -1346,6 +1346,7 @@ namespace IntegratedGuiV2
         private void _SetLogFilePath()
         {
             string initialDirectory = Application.StartupPath;
+            string logFileFolderPath;
 
             using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog()) {
                 folderBrowserDialog.Description = "Select a Folder";
@@ -1354,8 +1355,8 @@ namespace IntegratedGuiV2
                 if (folderBrowserDialog.ShowDialog() == DialogResult.OK) {
                     tbLogFilePath.Text = folderBrowserDialog.SelectedPath;
                     tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
-                    LogFileFolderPath = folderBrowserDialog.SelectedPath;
-                    _SaveLastPathsAndSetup(null, LogFileFolderPath, null);
+                    logFileFolderPath = folderBrowserDialog.SelectedPath;
+                    _SaveLastPathsAndSetup(null, logFileFolderPath, null);
                 }
             }
         }
@@ -1714,6 +1715,7 @@ namespace IntegratedGuiV2
             cbNgInterrupt.Enabled = false;
             bCheckSerialNumber.Enabled = false;
             bCurrentRegister.Enabled = false;
+            bOpenLogFileFolder.Enabled = false;
         }
         private void _EnableButtonsForBarcodeMode()
         {
@@ -1735,6 +1737,7 @@ namespace IntegratedGuiV2
             cbNgInterrupt.Enabled = true;
             bCheckSerialNumber.Enabled = true;
             bCurrentRegister.Enabled = true;
+            bOpenLogFileFolder.Enabled = true;
         }
 
         private void _DisableButtons()
@@ -1760,6 +1763,7 @@ namespace IntegratedGuiV2
             cbLogCheckAfterSn.Enabled = false;
             cbCfgCheckAfterFw.Enabled = false;
             bCurrentRegister.Enabled = false;
+            bOpenLogFileFolder.Enabled = false;
         }
 
         private void _EnableButtons()
@@ -1783,6 +1787,7 @@ namespace IntegratedGuiV2
             cbLogCheckAfterSn.Enabled = true;
             cbCfgCheckAfterFw.Enabled = true;
             bCurrentRegister.Enabled = true;
+            bOpenLogFileFolder.Enabled = true;
             //loadingForm.Close();
             this.BringToFront();
             this.Activate();
@@ -1791,11 +1796,12 @@ namespace IntegratedGuiV2
         private int _ExportCurrentModuleRegister()
         {
             string BackupFileName = "ReWriteRegister";
+            string modelType = lProduct.Text;
             lCh1Message.Text = "";
             Application.DoEvents();
 
             tbOrignalTLSN.Text = mainForm.GetSerialNumberApi();
-            mainForm.ExportLogfileApi(BackupFileName, true, false); //目標模組Cfg Backup
+            mainForm.ExportLogfileApi(modelType, BackupFileName, true, false); //目標模組Cfg Backup
             mainForm.SetToChannle2Api(false);
             tbVersionCodeCh1.Text = mainForm.GetFirmwareVersionCodeApi();
             lCh1Message.Text = "Exported Register.";
@@ -1808,10 +1814,11 @@ namespace IntegratedGuiV2
 
         private int _RemoteControl(bool customerMode)
         {
-            string DirectoryPath = TempFolderPath;
-            string RegisterFileName = "RegisterFile.csv";
-            string RegisterFilePath = Path.Combine(DirectoryPath, RegisterFileName); //Generate the CfgFilePath with config folder
-            string BackupFileName = "ModuleRegisterFile";
+            string modelType = lProduct.Text;
+            string directoryPath = TempFolderPath;
+            string registerFileName = "RegisterFile.csv";
+            string registerFilePath = Path.Combine(directoryPath, registerFileName); //Generate the CfgFilePath with config folder
+            string backupFileName = "ModuleRegisterFile";
             int relinkCount = 0, startTime = 0, intervalTime = 0;
 
             //Check module status
@@ -1824,8 +1831,8 @@ namespace IntegratedGuiV2
             tbOrignalTLSN.Text = mainForm.GetSerialNumberApi();
 
             if (DebugMode) {
-                MessageBox.Show("directoryPath: \n" + DirectoryPath +
-                                "\nRegisterFilePath: \n" + RegisterFilePath);
+                MessageBox.Show("directoryPath: \n" + directoryPath +
+                                "\nRegisterFilePath: \n" + registerFilePath);
             }
 
             if (!((_PathCheck(lApName)) || (_PathCheck(lDataName)))) {
@@ -1833,7 +1840,7 @@ namespace IntegratedGuiV2
                 return -1;
             }
             else {
-                mainForm.ExportLogfileApi(BackupFileName, true, false); //目標模組Cfg Backup
+                mainForm.ExportLogfileApi(modelType, backupFileName, true, false); //目標模組Cfg Backup
 
                 if (ProcessingChannel == 1) {
                     mainForm.SetToChannle2Api(false);
@@ -1878,7 +1885,7 @@ namespace IntegratedGuiV2
                 Thread.Sleep(10);
                 mainForm.StartFlashingApi(); // Firmware update
                 Thread.Sleep(10);
-                mainForm._GlobalWriteFromRegisterFile(customerMode, RegisterFilePath, ProcessingChannel);
+                mainForm._GlobalWriteFromRegisterFile(customerMode, registerFilePath, ProcessingChannel);
                 Thread.Sleep(10);
                 tbReNewTLSN.Text = mainForm.GetSerialNumberApi();
                 _SnComparison();
@@ -1965,13 +1972,14 @@ namespace IntegratedGuiV2
 
         private int _WriteSnDatecode(int ch)
         {
+            string modelType = lProduct.Text;
             string venderSn = tbVenderSn.Text;
             string dataCode = tbDateCode.Text;
             string originalVenderSn, originalDateCode;
-            string LogFileName;
+            string logFileName;
             int channelNumber;
 
-            LogFileName = venderSn + (ch == 1 ? "A" : "B");
+            logFileName = venderSn + (ch == 1 ? "A" : "B");
 
             channelNumber = (ch == 1
                 ? (lMode.Text == "Customer" || string.IsNullOrEmpty(lMode.Text)) ? 1 : 13
@@ -2013,11 +2021,11 @@ namespace IntegratedGuiV2
             if (_RxPowerUpdateWithoutThread() < 0) return -1;
 
             if (Sas3Module) {
-                if (mainForm.ExportLogfileForSas3Api(LogFileName, true, true, ProcessingChannel) < 0)
+                if (mainForm.ExportLogfileForSas3Api(logFileName, true, true, ProcessingChannel) < 0)
                     return -1; //Must be implement
             }
             else {
-                if (mainForm.ExportLogfileApi(LogFileName, true, true) < 0)
+                if (mainForm.ExportLogfileApi(modelType, logFileName, true, true) < 0)
                     return -1; //Must be implement
             }
             
@@ -2214,20 +2222,20 @@ namespace IntegratedGuiV2
         private void bWriteFromFile_Click(object sender, EventArgs e)
         {
             _DisableButtons();
+            string modelType = lProduct.Text;
+            string directoryPath = Application.StartupPath;
+            string tempRegisterFilePath = Path.Combine(directoryPath, "LogFolder/TempRegister.csv");
 
-            string DirectoryPath = Application.StartupPath;
-            string TempRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder/TempRegister.csv");
-
-            mainForm.WriteRegisterPageApi("Up 00h", 50, TempRegisterFilePath);
-            mainForm.WriteRegisterPageApi("Up 03h", 50, TempRegisterFilePath);
-            mainForm.WriteRegisterPageApi("80h", 200, TempRegisterFilePath);
-            mainForm.WriteRegisterPageApi("81h", 200, TempRegisterFilePath);
-            mainForm.WriteRegisterPageApi("Rx", 1000, TempRegisterFilePath);
-            mainForm.WriteRegisterPageApi("Tx", 1000, TempRegisterFilePath);
+            mainForm.WriteRegisterPageApi("Up 00h", 50, tempRegisterFilePath);
+            mainForm.WriteRegisterPageApi("Up 03h", 50, tempRegisterFilePath);
+            mainForm.WriteRegisterPageApi("80h", 200, tempRegisterFilePath);
+            mainForm.WriteRegisterPageApi("81h", 200, tempRegisterFilePath);
+            mainForm.WriteRegisterPageApi("Rx", 1000, tempRegisterFilePath);
+            mainForm.WriteRegisterPageApi("Tx", 1000, tempRegisterFilePath);
             mainForm.StoreIntoFlashApi();
             mainForm._GlobalRead();
             string LogFileName = "AfterFlasing";
-            mainForm.ExportLogfileApi(LogFileName, true, true);
+            mainForm.ExportLogfileApi(modelType, LogFileName, true, true);
 
             /*
             string[] commands = { "Up 00h", "Up 03h", "80h", "81h", "Tx", "Rx" };
@@ -2466,34 +2474,35 @@ namespace IntegratedGuiV2
         {
             _InitializeUIForgbPrompt();
             _InitializeUIForInfCheck();
-            int ComparisonResults = 0;
-            int ChannelNumber = 1;
-            string DirectoryPath = TempFolderPath;
-            string RegisterFilePath = Path.Combine(DirectoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
+            int comparisonResults = 0;
+            int channelNumber = 1;
+            string modelType = lProduct.Text;
+            string directoryPath = TempFolderPath;
+            string registerFilePath = Path.Combine(directoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
             FirstRound = true;
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 if (ProcessingChannel == 1)
-                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
                 else
-                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
+                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
 
-                I2cConnected = !(mainForm.ChannelSetApi(ChannelNumber) < 0);
+                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
                 Thread.Sleep(200);
 
                 if (Sas3Module) {
                     mainForm._KeyForSas3();
-                    ComparisonResults = mainForm.ComparisonRegisterForSas3Api(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked, ProcessingChannel);
+                    comparisonResults = mainForm.ComparisonRegisterForSas3Api(registerFilePath, true, "CfgFile", cbEngineerMode.Checked, ProcessingChannel);
                 }
                 else {
-                    ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "CfgFile", cbEngineerMode.Checked);
+                    comparisonResults = mainForm.ComparisonRegisterApi(modelType, registerFilePath, true, "CfgFile", cbEngineerMode.Checked);
                 }
                 
-                if (ComparisonResults < 0) 
+                if (comparisonResults < 0) 
                     return _CloseLoadingFormAndReturn(-1);
 
                 Thread.Sleep(100);
-                _lMessageColorManagement(ComparisonResults);
+                _lMessageColorManagement(comparisonResults);
                 
                 if (!DoubleSideMode)
                     break;
@@ -2559,12 +2568,13 @@ namespace IntegratedGuiV2
                 _InitializeUIForInfCheck();
             }
 
-            int ComparisonResults = 0;
-            int ChannelNumber = 1;
-            string DirectoryPath = tbLogFilePath.Text;
-            string ObjectFileName;
-            string RegisterFilePath;
-            string VenderSn;
+            int comparisonResults = 0;
+            int channelNumber = 1;
+            string modelType = lProduct.Text;
+            string directoryPath = tbLogFilePath.Text;
+            string objectFileName;
+            string registerFilePath;
+            string venderSn;
 
             //mainForm.InformationReadApi();
             //string OriginalVenderSn = mainForm.GetVendorSnFromDdmiA_pi();
@@ -2580,41 +2590,41 @@ namespace IntegratedGuiV2
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
                 _GetModuleVenderSn(true, ProcessingChannel);
-                VenderSn = ProcessingChannel == 1 ? tbOrignalSNCh1.Text : tbOrignalSNCh2.Text;
-                ObjectFileName = VenderSn + (ProcessingChannel == 1 ? "A" : "B");
-                RegisterFilePath = Path.Combine(DirectoryPath, ObjectFileName + ".csv"); //Generate the CfgFilePath with config folder
+                venderSn = ProcessingChannel == 1 ? tbOrignalSNCh1.Text : tbOrignalSNCh2.Text;
+                objectFileName = venderSn + (ProcessingChannel == 1 ? "A" : "B");
+                registerFilePath = Path.Combine(directoryPath, objectFileName + ".csv"); //Generate the CfgFilePath with config folder
 
-                if (!Directory.Exists(DirectoryPath)) {
+                if (!Directory.Exists(directoryPath)) {
                     MessageBox.Show("Please check if the log file path has been correctly specified?");
                     goto exit;
                 }
 
-                if (!File.Exists(RegisterFilePath)) {
+                if (!File.Exists(registerFilePath)) {
                     MessageBox.Show("Please check if the log file exists at the specified path?" +
-                                    "\n\nTarget path: " + DirectoryPath + "\\..." +
-                                    "\nModule SN: " + ObjectFileName + ".csv" + "   <<Missing file");
+                                    "\n\nTarget path: " + directoryPath + "\\..." +
+                                    "\nModule SN: " + objectFileName + ".csv" + "   <<Missing file");
                     goto exit;
                 }
 
                 if (ProcessingChannel == 1) 
-                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
+                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
                 else 
-                    ChannelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
+                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
 
-                I2cConnected = !(mainForm.ChannelSetApi(ChannelNumber) < 0);
+                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
                 Thread.Sleep(300);
 
                 if (Sas3Module) {
                     mainForm._KeyForSas3();
-                    ComparisonResults = mainForm.ComparisonRegisterForSas3Api(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked, ProcessingChannel);
+                    comparisonResults = mainForm.ComparisonRegisterForSas3Api(registerFilePath, true, "LogFile", cbEngineerMode.Checked, ProcessingChannel);
                 }
                 else {
-                    ComparisonResults = mainForm.ComparisonRegisterApi(RegisterFilePath, true, "LogFile", cbEngineerMode.Checked);
+                    comparisonResults = mainForm.ComparisonRegisterApi(modelType, registerFilePath, true, "LogFile", cbEngineerMode.Checked);
                 }
 
-                if (ComparisonResults < 0) return -1;
+                if (comparisonResults < 0) return -1;
                 Thread.Sleep(100);
-                _lMessageColorManagement(ComparisonResults);
+                _lMessageColorManagement(comparisonResults);
                 Application.DoEvents();
 
                 if (!DoubleSideMode) 
@@ -2635,9 +2645,9 @@ namespace IntegratedGuiV2
                     _EnableButtons();
             }
 
-            if (ComparisonResults < 0)
+            if (comparisonResults < 0)
                 return -1;
-            else if (ComparisonResults == 1)
+            else if (comparisonResults == 1)
                 return 1;
             else                
                 return 0;
@@ -2825,9 +2835,10 @@ namespace IntegratedGuiV2
             int errorCode = 0;
             int errorCount = 0;
             int channelNumber;
-            string TempRegisterFilePath = Path.Combine(TempFolderPath, "RegisterFile.csv"); //For UpPage00, Page03
-            string DirectoryPath = Application.StartupPath;
-            string ReWriteRegister = Path.Combine(DirectoryPath, "RegisterFiles/ReWriteRegister.csv"); //For Page81,PageTx,PageRx
+            string modelType = lProduct.Text;
+            string tempRegisterFilePath = Path.Combine(TempFolderPath, "RegisterFile.csv"); //For UpPage00, Page03
+            string directoryPath = Application.StartupPath;
+            string reWriteRegister = Path.Combine(directoryPath, "RegisterFiles/ReWriteRegister.csv"); //For Page81,PageTx,PageRx
 
             _DisableButtons();
             _InitializeUIForgbPrompt();
@@ -2863,9 +2874,9 @@ namespace IntegratedGuiV2
             _CheckTextBoxAndNotifyForSn();
 
             if (deepCheck) {
-                if (!File.Exists(ReWriteRegister)) {
+                if (!File.Exists(reWriteRegister)) {
                     MessageBox.Show("Please check if the log file exists at the specified path?" +
-                                        "\n\nTarget path: " + ReWriteRegister + "<<Missing file");
+                                        "\n\nTarget path: " + reWriteRegister + "<<Missing file");
                     return 0;
                 }
 
@@ -2886,16 +2897,16 @@ namespace IntegratedGuiV2
                     return -1;
                 }
 
-                if (mainForm.ComparisonRegisterForFinalCheckApi(ReWriteRegister, "Low Page", true) != 0)
+                if (mainForm.ComparisonRegisterForFinalCheckApi(modelType, reWriteRegister, "Low Page", true) != 0)
                     errorCount++;
 
-                if (mainForm.ComparisonRegisterForFinalCheckApi(ReWriteRegister, "Page81", true) != 0)
+                if (mainForm.ComparisonRegisterForFinalCheckApi(modelType, reWriteRegister, "Page81", true) != 0)
                     errorCount++;
 
-                if (mainForm.ComparisonRegisterForFinalCheckApi(TempRegisterFilePath, "UpPage00", true) != 0)
+                if (mainForm.ComparisonRegisterForFinalCheckApi(modelType, tempRegisterFilePath, "UpPage00", true) != 0)
                     errorCount++;
                 
-                if (mainForm.ComparisonRegisterForFinalCheckApi(TempRegisterFilePath, "Page03", true) !=0)
+                if (mainForm.ComparisonRegisterForFinalCheckApi(modelType, tempRegisterFilePath, "Page03", true) !=0)
                     errorCount++;
 
                 //if (_LogFileComparison(true) != 0)
@@ -3147,6 +3158,28 @@ namespace IntegratedGuiV2
             return null;
         }
 
+        private void _OpenLogfileExplorer(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) {
+                MessageBox.Show("The file path is empty. Please check your input.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!Directory.Exists(path) && !File.Exists(path)) {
+                MessageBox.Show("The specified path does not exist. Please verify it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try {
+                // If the path is a file, get its directory
+                string folderPath = File.Exists(path) ? Path.GetDirectoryName(path) : path;
+                Process.Start("explorer.exe", folderPath);
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Failed to open File Explorer.\nError message: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void cbAutoWirte_CheckedChanged(object sender, EventArgs e)
         {
             _ReWriteSnCheckBoxChange();
@@ -3223,6 +3256,9 @@ namespace IntegratedGuiV2
         private void bHardwareValidation_Click(object sender, EventArgs e)
         {
             string ModelType = lProduct.Text;
+            if (mainForm.GetChipIdApi(ModelType))
+                MessageBox.Show("Get it!!");
+
             mainForm.HardwareIdentificationValidationApi(ModelType, true);
         }
 
@@ -3234,8 +3270,17 @@ namespace IntegratedGuiV2
             if (modelType != "SAS4.0")
                 MessageBox.Show("Crruent module is: " + modelType + "\nThe function only supports SAS4.0");
             else
-                mainForm.CurrentRegistersApi();
+                mainForm.HardwareIdentificationValidationApi(modelType, false);
+                mainForm.CurrentRegistersApi(modelType);
 
+            _EnableButtons();
+        }
+
+        private void bOpenLogFileFolder_Click(object sender, EventArgs e)
+        {
+            string path = tbLogFilePath.Text;
+            _DisableButtons();
+            _OpenLogfileExplorer(path);
             _EnableButtons();
         }
 

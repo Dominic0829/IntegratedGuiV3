@@ -169,6 +169,7 @@ namespace IntegratedGuiV2
             this.cbCfgCheckAfterFw = new System.Windows.Forms.CheckBox();
             this.bHardwareValidation = new System.Windows.Forms.Button();
             this.bCurrentRegister = new System.Windows.Forms.Button();
+            this.bOpenLogFileFolder = new System.Windows.Forms.Button();
             this.gbOperatorMode.SuspendLayout();
             this.gbCodeEditor.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -486,6 +487,7 @@ namespace IntegratedGuiV2
             // 
             // gbOperatorMode
             // 
+            this.gbOperatorMode.Controls.Add(this.bOpenLogFileFolder);
             this.gbOperatorMode.Controls.Add(this.cbLogCheckAfterSn);
             this.gbOperatorMode.Controls.Add(this.cbNgInterrupt);
             this.gbOperatorMode.Controls.Add(this.label6);
@@ -1868,13 +1870,12 @@ namespace IntegratedGuiV2
             this.bHardwareValidation.FlatAppearance.BorderSize = 0;
             this.bHardwareValidation.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bHardwareValidation.ForeColor = System.Drawing.Color.White;
-            this.bHardwareValidation.Location = new System.Drawing.Point(186, 446);
+            this.bHardwareValidation.Location = new System.Drawing.Point(186, 449);
             this.bHardwareValidation.Name = "bHardwareValidation";
             this.bHardwareValidation.Size = new System.Drawing.Size(124, 26);
             this.bHardwareValidation.TabIndex = 122;
             this.bHardwareValidation.Text = "HardwareValidation";
             this.bHardwareValidation.UseVisualStyleBackColor = false;
-            this.bHardwareValidation.Visible = false;
             this.bHardwareValidation.Click += new System.EventHandler(this.bHardwareValidation_Click);
             // 
             // bCurrentRegister
@@ -1891,6 +1892,20 @@ namespace IntegratedGuiV2
             this.bCurrentRegister.Text = "Current register";
             this.bCurrentRegister.UseVisualStyleBackColor = false;
             this.bCurrentRegister.Click += new System.EventHandler(this.bCurrentRegister_Click);
+            // 
+            // bOpenLogFileFolder
+            // 
+            this.bOpenLogFileFolder.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bOpenLogFileFolder.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bOpenLogFileFolder.FlatAppearance.BorderSize = 0;
+            this.bOpenLogFileFolder.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bOpenLogFileFolder.ForeColor = System.Drawing.Color.White;
+            this.bOpenLogFileFolder.Location = new System.Drawing.Point(223, 149);
+            this.bOpenLogFileFolder.Name = "bOpenLogFileFolder";
+            this.bOpenLogFileFolder.Size = new System.Drawing.Size(15, 20);
+            this.bOpenLogFileFolder.TabIndex = 124;
+            this.bOpenLogFileFolder.UseVisualStyleBackColor = false;
+            this.bOpenLogFileFolder.Click += new System.EventHandler(this.bOpenLogFileFolder_Click);
             // 
             // CustomerAndMpForm
             // 
@@ -2122,5 +2137,6 @@ namespace IntegratedGuiV2
         private CheckBox cbCfgCheckAfterFw;
         private Button bHardwareValidation;
         private Button bCurrentRegister;
+        private Button bOpenLogFileFolder;
     }
 }
