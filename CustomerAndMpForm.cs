@@ -1806,11 +1806,6 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private void _DisplayCurrentModuleRegister()
-        {
-
-        }
-
         private int _RemoteControl(bool customerMode)
         {
             string DirectoryPath = TempFolderPath;
@@ -3233,7 +3228,15 @@ namespace IntegratedGuiV2
 
         private void bCurrentRegister_Click(object sender, EventArgs e)
         {
-            _DisplayCurrentModuleRegister();
+            string modelType = lProduct.Text;
+            _DisableButtons();
+
+            if (modelType != "SAS4.0")
+                MessageBox.Show("Crruent module is: " + modelType + "\nThe function only supports SAS4.0");
+            else
+                mainForm.CurrentRegistersApi();
+
+            _EnableButtons();
         }
 
         private void cbReWriteTLSN_CheckChanged(object sender, EventArgs e)

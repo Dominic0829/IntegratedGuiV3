@@ -199,22 +199,12 @@ namespace IntegratedGuiV2
             }
         }
 
-        
-
-        public void StartFlashingApi() // Used for MpForm
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucNuvotonIcpTool.StartFlashingApi()));
-            else
-                ucNuvotonIcpTool.StartFlashingApi();
-        }
-
         public string GetSerialNumberApi()
         {
             if (this.InvokeRequired)
-                return this.Invoke(new Action(() => _CurrentRegister()));
+                return (string)this.Invoke(new Action(() => ucMemoryDump.GetSerialNumberApi()));
             else
-                return (_CurrentRegister());
+                return (ucMemoryDump.GetSerialNumberApi());
         }
 
         public string GetHiddenPasswordApi()
@@ -304,6 +294,14 @@ namespace IntegratedGuiV2
                 ucNuvotonIcpTool.ForceConnectApi(relinkTestMode);
 
             return ucNuvotonIcpTool.ReturnSleepTime;
+        }
+
+        public void CurrentRegistersApi()
+        {
+            if (this.InvokeRequired)
+                this.Invoke(new Action(() => _CurrentRegisters()));
+            else
+                _CurrentRegisters();
         }
 
         public void StartFlashingApi() // Used for MpForm
@@ -3492,57 +3490,31 @@ namespace IntegratedGuiV2
             return errorCount;
         }
 
-        internal int _CurrentRegisters(string comparisonObject, bool engineerMode)
+        internal int _CurrentRegisters()
         {
             string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
             string filePath1;
             string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            var masks = _GetMasks("SAS4", comparisonObject);
+            var masks = _GetMasks("SAS4", null);
 
-            StateUpdated("Current module:\nShow register contents...", null);
+            StateUpdated("Current module:\nPreparing register contents...", null);
 
             // Export current module register file
-            if (_ExportModuleCfg(fileName1, comparisonObject) < 0)
+            if (_ExportModuleCfg(fileName1, "LogFile") < 0)
                 return -1;
 
             filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
-            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath, comparisonObject);
+            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath, null);
             filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
             DataTable dt1 = _ReadCsvToDataTable(filePath1);
-
-            RemoveDoubleQuotes(dt1);//Module
-            ApplyMask(dt1, dt2, masks);
-
-            // Error alarm, if there are differences
-            if (!CompareDataTables(dt1, dt2)) {
-                if (engineerMode)
-                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-                else
-                    MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
-                                    "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                StateUpdated("Verify State:\nVerify failed", null);
-                return 1;
-            }
-
-            // Delete the temp file, if there are no errors
+            _RemoveDoubleQuotes(dt1);//Module
+            _ApplyMask(new List<DataTable> { dt1 }, masks);
+            _DisplayCurrentRegister(dt1, masks);
+            
             if (File.Exists(filePath1))
                 File.Delete(filePath1);
 
-            if (File.Exists(filePath2))
-                File.Delete(filePath2);
-
-            if (!onlyVerifyMode) {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile are matching", 97);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle are matching", 97);
-            }
-            else {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile are matching", null);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle are matching", null);
-            }
+            StateUpdated("Current module:\nThe output is ready", null);
 
             return 0;
         }
@@ -3581,14 +3553,16 @@ namespace IntegratedGuiV2
             DataTable dt1 = _ReadCsvToDataTable(filePath1);
             DataTable dt2 = _ReadCsvToDataTable(filePath2);
 
-            RemoveDoubleQuotes(dt1);//Module
-            RemoveDoubleQuotes(dt2);//Cfg
-            ApplyMask(dt1, dt2, masks);
-            
+            _RemoveDoubleQuotes(dt1);//Module
+            _RemoveDoubleQuotes(dt2);//Cfg
+            //ApplyMask(dt1, dt2, masks);
+            _ApplyMask(new List<DataTable> { dt1, dt2 }, masks);
+
+
             // Error alarm, if there are differences
-            if (!CompareDataTables(dt1, dt2)) {
+            if (!_CompareDataTables(dt1, dt2)) {
                 if (engineerMode)
-                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+                    _DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
                 else
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -3653,14 +3627,15 @@ namespace IntegratedGuiV2
             DataTable dt1 = _ReadCsvToDataTable(filePath1);
             DataTable dt2 = _ReadCsvToDataTable(filePath2);
 
-            RemoveDoubleQuotes(dt1);
-            RemoveDoubleQuotes(dt2);
-            ApplyMask(dt1, dt2, masks);
+            _RemoveDoubleQuotes(dt1);
+            _RemoveDoubleQuotes(dt2);
+            _ApplyMask(new List<DataTable> { dt1, dt2 }, masks);
+
 
             // Error alarm, if there are differences
-            if (!CompareDataTables(dt1, dt2)) {
+            if (!_CompareDataTables(dt1, dt2)) {
                 if (engineerMode)
-                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+                    _DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
                 else
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -3713,14 +3688,14 @@ namespace IntegratedGuiV2
             DataTable dt1 = _ReadCsvToDataTable(filePath1);
             DataTable dt2 = _ReadCsvToDataTable(filePath2);
 
-            RemoveDoubleQuotes(dt1);//Module
-            RemoveDoubleQuotes(dt2);//Cfg
-            ApplyMask(dt1, dt2, masks);
+            _RemoveDoubleQuotes(dt1);//Module
+            _RemoveDoubleQuotes(dt2);//Cfg
+            _ApplyMask(new List<DataTable> { dt1, dt2 }, masks);
 
             // Error alarm, if there are differences
-            if (!CompareDataTables(dt1, dt2)) {
+            if (!_CompareDataTables(dt1, dt2)) {
                 if (engineerMode)
-                    DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
+                    _DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
                 else
                 MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
                                 "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -3851,10 +3826,19 @@ namespace IntegratedGuiV2
         {
             int NumberOfSearchRows;
 
-            if (comparisonObject == "LogFile")
-                NumberOfSearchRows = 40; // Low Page, Up00h, 03h, 80h, 81h, 8x5=40 rows. with Rx/TxCfg (16x2)=32+32=64 rows.
-            else
-                NumberOfSearchRows = 24; // Low Page, Up00h, 03h 8*3 rows
+            switch (comparisonObject) {
+                case "CfgFile":
+                    NumberOfSearchRows = 24; // Low Page, Up00h, 03h 8*3 rows
+                    break;
+
+                case "LogFile":
+                    NumberOfSearchRows = 40; // Low Page, Up00h, 03h, 80h, 81h, 8x5=40 rows.
+                    break;
+
+                default:
+                    NumberOfSearchRows = 72; // Low Page, Up00h, 03h, 80h, 81h, 8x5=40 rows. with Rx/TxCfg (16x2)=40+32=72 rows.
+                    break;
+            }
 
             if (fineNumber == 1)
                 tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
@@ -4070,7 +4054,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void DisplayDifferencesInGrid(DataTable dt1, DataTable dt2, List<(string page, int row, int[] columns)> masks)
+        private void _DisplayDifferencesInGrid(DataTable dt1, DataTable dt2, List<(string page, int row, int[] columns)> masks)
         {
             Form form = new Form {
                 Text = "Differences",
@@ -4145,11 +4129,11 @@ namespace IntegratedGuiV2
             form.ShowDialog();
         }
 
-        private void DisplayCurrentRegister(DataTable dt1, List<(string page, int row, int[] columns)> masks)
+        private void _DisplayCurrentRegister(DataTable dt1, List<(string page, int row, int[] columns)> masks)
         {
             Form form = new Form {
                 Text = "Differences",
-                Width = 1300,
+                Width = 1000,
                 Height = 600,
                 Font = new Font("Times New Roman", 8)
             };
@@ -4192,10 +4176,15 @@ namespace IntegratedGuiV2
                     // Mask邏輯著色
                     if (col > 1) // 忽略 "Page" 和 "Row" 列
                     {
-                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(),
-                                     Convert.ToInt32(dgv.Rows[row].Cells[1].Value),
-                                     col - 2, masks)) {
-                            dgv.Rows[row].Cells[col].Style.BackColor = Color.Black;
+                        string pageValue = dgv.Rows[row].Cells[0].Value?.ToString();
+                        string rowValue = dgv.Rows[row].Cells[1].Value?.ToString();
+                        if (int.TryParse(rowValue, out int rowNumber)) {
+                            if (IsMasked(pageValue, rowNumber, col - 2, masks)) {
+                                dgv.Rows[row].Cells[col].Style.BackColor = Color.Black;
+                            }
+                        }
+                        else {
+                            Debug.WriteLine($"無效的 Row 值: {rowValue}");
                         }
                     }
                 }
@@ -4215,41 +4204,22 @@ namespace IntegratedGuiV2
             return false;
         }
 
-        private void ApplyMask(DataTable dt1, List<(string page, int row, int[] columns)> masks)
+        private void _ApplyMask(List<DataTable> tables, List<(string page, int row, int[] columns)> masks)
         {
             foreach (var mask in masks) {
-                foreach (DataRow row in dt1.Rows) {
-                    if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
-                        foreach (int columnIndex in mask.columns) {
-                            row[columnIndex + 2] = "FF"; // 覆蓋 dt1
+                foreach (var table in tables) {
+                    foreach (DataRow row in table.Rows) {
+                        if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
+                            foreach (int columnIndex in mask.columns) {
+                                row[columnIndex + 2] = "FF";
+                            }
                         }
                     }
                 }
             }
         }
 
-        private void ApplyMask(DataTable dt1, DataTable dt2, List<(string page, int row, int[] columns)> masks)
-        {
-            foreach (var mask in masks) {
-                foreach (DataRow row in dt1.Rows) {
-                    if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
-                        foreach (int columnIndex in mask.columns) {
-                            row[columnIndex + 2] = "FF"; // 覆蓋 dt1
-                        }
-                    }
-                }
-
-                foreach (DataRow row in dt2.Rows) {
-                    if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
-                        foreach (int columnIndex in mask.columns) {
-                            row[columnIndex + 2] = "FF"; // 覆蓋 dt2
-                        }
-                    }
-                }
-            }
-        }
-
-        private void RemoveDoubleQuotes(DataTable dataTable)
+        private void _RemoveDoubleQuotes(DataTable dataTable)
         {
             foreach (DataRow row in dataTable.Rows) {
                 foreach (DataColumn column in dataTable.Columns) {
@@ -4303,7 +4273,7 @@ namespace IntegratedGuiV2
             return dt;
         }
 
-        private bool CompareDataTables(DataTable dt1, DataTable dt2)
+        private bool _CompareDataTables(DataTable dt1, DataTable dt2)
         {
             if (dt1.Rows.Count != dt2.Rows.Count || dt1.Columns.Count != dt2.Columns.Count) {
                 return false;
