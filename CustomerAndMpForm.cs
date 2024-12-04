@@ -544,8 +544,8 @@ namespace IntegratedGuiV2
             lCh2EC.Text = "...";
             lCh1Message.Text = "...";
             lCh2Message.Text = "...";
-            cProgressBar1.Text = "Ch1";
-            cProgressBar2.Text = "Ch2";
+            cProgressBar1.Text = "A";
+            cProgressBar2.Text = "B";
             cProgressBar1.Value = 0;
             cProgressBar2.Value = 0;
             tbVersionCodeCh1.Text = "";
@@ -598,12 +598,12 @@ namespace IntegratedGuiV2
                 new Keys[] { Keys.NumPad8, Keys.NumPad8, Keys.NumPad2, Keys.NumPad2 },
                 new Keys[] { Keys.Left, Keys.Left, Keys.Right, Keys.Right },
                 new Keys[] { Keys.Up, Keys.Up, Keys.Down, Keys.Down },
-                new Keys[] { Keys.NumPad1, Keys.NumPad1, Keys.NumPad1, Keys.Down},
-                new Keys[] { Keys.NumPad2, Keys.NumPad2, Keys.NumPad2, Keys.Down},
-                new Keys[] { Keys.NumPad3, Keys.NumPad3, Keys.NumPad3, Keys.Down},
-                new Keys[] { Keys.T, Keys.NumPad2, Keys.NumPad3, Keys.NumPad6, Keys.NumPad8},
-                new Keys[] { Keys.NumPad0, Keys.NumPad0, Keys.NumPad0, Keys.Down},
-                new Keys[] { Keys.NumPad3, Keys.NumPad2, Keys.NumPad3, Keys.NumPad4}
+                new Keys[] { Keys.D,Keys.NumPad1, Keys.NumPad1, Keys.NumPad1, Keys.Down},
+                new Keys[] { Keys.D,Keys.NumPad2, Keys.NumPad2, Keys.NumPad2, Keys.Down},
+                new Keys[] { Keys.D,Keys.NumPad3, Keys.NumPad3, Keys.NumPad3, Keys.Down},
+                new Keys[] { Keys.C, Keys.NumPad2, Keys.NumPad3, Keys.NumPad6, Keys.NumPad8},
+                new Keys[] { Keys.D, Keys.NumPad3, Keys.NumPad2, Keys.NumPad3, Keys.NumPad4},
+                new Keys[] { Keys.D, Keys.NumPad0, Keys.NumPad0, Keys.NumPad8, Keys.NumPad0}
                 };
 
             Action[] actions = {
@@ -611,9 +611,9 @@ namespace IntegratedGuiV2
                 () => _OpenAdminAuthenticationForm(),
                 () => _OpenLoginForm(),
                 () => _OpenAdminAuthenticationForm(),
-                () => _OpenEngineerForm(0), // SAS4
-                () => _OpenEngineerForm(1), // PCIe4
-                () => _OpenEngineerForm(2), // QSFP28
+                () => _SelectModelBeforeActivateEngineerMode(0), // SAS4
+                () => _SelectModelBeforeActivateEngineerMode(1), // PCIe4
+                () => _SelectModelBeforeActivateEngineerMode(2), // QSFP28
                 () => _DisplayRelinkControlUi(),
                 () => _DisplayMpMode(),
                 () => _EnableHiddenEngineerMode(),
@@ -652,9 +652,23 @@ namespace IntegratedGuiV2
             ForceControl3 = sequenceIndices[9];
         }
 
+        private void _ResetSequence()
+        {
+            SequenceIndexA = 0;
+            SequenceIndexB = 0;
+            SequenceIndexDirectionA = 0;
+            SequenceIndexDirectionB = 0;
+            ForceOpenSas4 = 0;
+            ForceOpenPcie4 = 0;
+            ForceOpenQsfp28 = 0;
+            ForceControl1 = 0;
+            ForceControl2 = 0;
+            ForceControl3 = 0;
+        }
+
         private void _EnableHiddenEngineerMode()
         {
-
+            _DisplayMpMode();
             _ExtendFormForEngineerMode();
         }
 
@@ -839,7 +853,7 @@ namespace IntegratedGuiV2
             }
 
             _CleanTempFolder(); // Before change zip file, Clean the tempFolder
-            _LoadXmlFileLite("MSP4M_1M25_r01_20240731.zip");
+            _DirectDriveToLoadXmlFile();
 
             if (lMode.Text == "Customer") {
                 _AdjustGuiSizeAndCenter(550, 280);
@@ -898,7 +912,7 @@ namespace IntegratedGuiV2
             return currentIndex == expectedKeys.Length;
         }
 
-        private void _OpenEngineerForm(int productType) // 0_SAS4, 1_PCIe4,
+        private void _SelectModelBeforeActivateEngineerMode(int productType) // 0_SAS4, 1_PCIe4,
         {
             MainForm mainForm = new MainForm(true);
             loadingForm.Show(this);
@@ -939,20 +953,6 @@ namespace IntegratedGuiV2
         {
             gbRelinkTest.Visible = true;
             _ResetSequence();
-        }
-
-        private void _ResetSequence()
-        {
-            SequenceIndexA = 0;
-            SequenceIndexB = 0;
-            SequenceIndexDirectionA = 0;
-            SequenceIndexDirectionB = 0;
-            ForceOpenSas4 = 0;
-            ForceOpenPcie4 = 0;
-            ForceOpenQsfp28 = 0;
-            ForceControl1 = 0;
-            ForceControl2 = 0;
-            ForceControl3 = 0;
         }
 
         private void MainForm_ReadStateUpdated(object sender, string e)
@@ -1107,14 +1107,14 @@ namespace IntegratedGuiV2
                 tbVersionCodeReNewCh2.Visible = false;
                 tbOrignalSNCh2.Visible = false;
                 tbReNewSNCh2.Visible = false;
-                lRssiCh2_0.Visible = false;
-                lRssiCh2_1.Visible = false;
-                lRssiCh2_2.Visible = false;
-                lRssiCh2_3.Visible = false;
-                tbRssiCh2_0.Visible = false;
-                tbRssiCh2_1.Visible = false;
-                tbRssiCh2_2.Visible = false;
-                tbRssiCh2_3.Visible = false;
+                lRxPowerCh2_0.Visible = false;
+                lRxPowerCh2_1.Visible = false;
+                lRxPowerCh2_2.Visible = false;
+                lRxPowerCh2_3.Visible = false;
+                tbRxPowerCh2_0.Visible = false;
+                tbRxPowerCh2_1.Visible = false;
+                tbRxPowerCh2_2.Visible = false;
+                tbRxPowerCh2_3.Visible = false;
             }
             else if (rbBoth.Checked == true) {
                 cProgressBar1.Visible = true;
@@ -1126,14 +1126,14 @@ namespace IntegratedGuiV2
                 DoubleSideMode = true;
                 tbVersionCodeCh2.Visible = true;
                 tbVersionCodeReNewCh2.Visible = true;
-                lRssiCh2_0.Visible = true;
-                lRssiCh2_1.Visible = true;
-                lRssiCh2_2.Visible = true;
-                lRssiCh2_3.Visible = true;
-                tbRssiCh2_0.Visible = true;
-                tbRssiCh2_1.Visible = true;
-                tbRssiCh2_2.Visible = true;
-                tbRssiCh2_3.Visible = true;
+                lRxPowerCh2_0.Visible = true;
+                lRxPowerCh2_1.Visible = true;
+                lRxPowerCh2_2.Visible = true;
+                lRxPowerCh2_3.Visible = true;
+                tbRxPowerCh2_0.Visible = true;
+                tbRxPowerCh2_1.Visible = true;
+                tbRxPowerCh2_2.Visible = true;
+                tbRxPowerCh2_3.Visible = true;
 
                 if (lMode.Text == "MP") {
                     tbOrignalSNCh2.Visible = true;
@@ -1378,42 +1378,66 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _LoadXmlFileLite(string fileName)
+        private void _DirectDriveToLoadXmlFile()
         {
             MainFormPaths lastPath = _LoadLastPathsAndSetup();
             tbLogFilePath.Text = lastPath.LogFilePath;
             tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+            string inspectionFolder = Path.Combine(Application.StartupPath, "InspectionFiles");
+            string inspectionFile = GetUniqueZipFile(inspectionFolder);
+            if (inspectionFile != null) 
+                //MessageBox.Show($"ZIP file found: {inspectionFile}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             if (!string.IsNullOrEmpty(lastPath.RssiCriteria))
                 tbRssiCriteria.Text = lastPath.RssiCriteria;
             else
                 tbRssiCriteria.Text = "200";
-
-
-            string xmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
-            string extension = Path.GetExtension(xmlPath).ToLower();
-
-            if (extension == ".zip") {
-                try {
-                    TempFolderPath = ExtractZipToTemporaryFolder(xmlPath);
+            
+            try {
+                if (inspectionFile != null) {
+                    TempFolderPath = ExtractZipToTemporaryFolder(inspectionFile);
                     SetHiddenAttribute(TempFolderPath);
                     string xmlFilePath = Path.Combine(TempFolderPath, "Cfg.xml");
 
                     if (File.Exists(xmlFilePath)) {
                         _ParserXmlForProjectInformation(xmlFilePath);
-                        tbFilePath.Text = xmlPath;
+                        tbFilePath.Text = inspectionFile;
                     }
                     else {
                         MessageBox.Show("Cfg.xml not found in the zip file.");
                     }
                 }
-                catch (Exception ex) {
-                    MessageBox.Show("Failed to extract zip file: " + ex.Message);
-                }
+            }
+            catch (UnauthorizedAccessException uaEx) {
+                MessageBox.Show("Access denied to the specified path: " + uaEx.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) {
+                MessageBox.Show("Failed to extract zip file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             tbFilePath.SelectionStart = tbFilePath.Text.Length;
             _ResetSequence();
+        }
+
+        private string GetUniqueZipFile(string folderPath)
+        {
+            if (!Directory.Exists(folderPath)) {
+                MessageBox.Show("The inspectionFiles folder does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+
+            string[] zipFiles = Directory.GetFiles(folderPath, "*.zip");
+
+            if (zipFiles.Length == 0) {
+                MessageBox.Show("No ZIP files found in the specified folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return null;
+            }
+            else if (zipFiles.Length > 1) {
+                MessageBox.Show("Multiple ZIP files found. Please ensure only one ZIP file exists.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return null;
+            }
+
+            return zipFiles[0];
         }
 
         private string ExtractZipToTemporaryFolder(string zipFilePath)
@@ -1716,8 +1740,8 @@ namespace IntegratedGuiV2
         {
             System.Windows.Forms.TextBox[] textBoxes = new[]
             {
-                tbRssiCh1_0, tbRssiCh1_1, tbRssiCh1_2, tbRssiCh1_3,
-                tbRssiCh2_0, tbRssiCh2_1, tbRssiCh2_2, tbRssiCh2_3
+                tbRxPowerCh1_0, tbRxPowerCh1_1, tbRxPowerCh1_2, tbRxPowerCh1_3,
+                tbRxPowerCh2_0, tbRxPowerCh2_1, tbRxPowerCh2_2, tbRxPowerCh2_3
             };
 
             foreach (var textBox in textBoxes) {
@@ -1733,13 +1757,13 @@ namespace IntegratedGuiV2
             int ErrorCount = 0;
 
             System.Windows.Forms.TextBox[] textBoxes = (channel == 1) ?
-                new[] { tbRssiCh1_0, tbRssiCh1_1, tbRssiCh1_2, tbRssiCh1_3 } :
-                new[] { tbRssiCh2_0, tbRssiCh2_1, tbRssiCh2_2, tbRssiCh2_3 };
+                new[] { tbRxPowerCh1_0, tbRxPowerCh1_1, tbRxPowerCh1_2, tbRxPowerCh1_3 } :
+                new[] { tbRxPowerCh2_0, tbRxPowerCh2_1, tbRxPowerCh2_2, tbRxPowerCh2_3 };
 
             for (int i = 0; i < rxPowers.Length; i++) {
                 if (rxPowers[i] < rssiCriteria) {
                     textBoxes[i].BackColor = Color.HotPink;
-                    if (cbNgInterrupt.Checked) ErrorCount++;
+                    if (cbRxPowerNgInterrupt.Checked) ErrorCount++;
                 }
 
                 textBoxes[i].Text = rxPowers[i].ToString();
@@ -1802,7 +1826,7 @@ namespace IntegratedGuiV2
             tbLogFilePath.Enabled = false;
             tbVenderSn.Enabled = true;
             tbRssiCriteria.Enabled = false;
-            cbNgInterrupt.Enabled = false;
+            cbRxPowerNgInterrupt.Enabled = false;
             bCheckSerialNumber.Enabled = false;
             bCurrentRegister.Enabled = false;
             bOpenLogFileFolder.Enabled = false;
@@ -1824,7 +1848,7 @@ namespace IntegratedGuiV2
             cbI2cConnect.Enabled = true;
             cbRegisterMapView.Enabled = true;
             tbRssiCriteria.Enabled = true;
-            cbNgInterrupt.Enabled = true;
+            cbRxPowerNgInterrupt.Enabled = true;
             bCheckSerialNumber.Enabled = true;
             bCurrentRegister.Enabled = true;
             bOpenLogFileFolder.Enabled = true;
@@ -1878,6 +1902,7 @@ namespace IntegratedGuiV2
             cbCfgCheckAfterFw.Enabled = true;
             bCurrentRegister.Enabled = true;
             bOpenLogFileFolder.Enabled = true;
+            tbLogFilePath.Enabled = true;
             //loadingForm.Close();
             this.BringToFront();
             this.Activate();
@@ -2208,6 +2233,8 @@ namespace IntegratedGuiV2
                 _EnableButtons();
 
             loadingForm.Close();
+            this.BringToFront();
+            this.Activate();
             return 0;
         }
 
@@ -2375,7 +2402,7 @@ namespace IntegratedGuiV2
             }
 
             if (DoubleSideMode) {
-               if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0)// return to ch1
+               if (mainForm.ChannelSwitchApi() < 0)// return to ch1
                     return _CloseLoadingFormAndReturn(-1);
             }
 
@@ -2383,13 +2410,13 @@ namespace IntegratedGuiV2
             SerialNumber++;
             _SetDomainUpDownValue("dudSsss", SerialNumber);
             _UpdateSerialNumberTextBox();
-            this.BringToFront();
-            this.Activate();
             
             if(!cbBarcodeMode.Checked)
                 _EnableButtons();
 
             loadingForm.Close();
+            this.BringToFront();
+            this.Activate();
             return 0;
         }
 
@@ -2582,7 +2609,7 @@ namespace IntegratedGuiV2
             }
 
             if (DoubleSideMode)
-                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) 
+                if (mainForm.ChannelSwitchApi() < 0) 
                     return _CloseLoadingFormAndReturn(-1);
 
             
@@ -2701,7 +2728,7 @@ namespace IntegratedGuiV2
 
         exit:
             if (DoubleSideMode) 
-                if (mainForm.ChannelSwitchApi(false, ProcessingChannel) < 0) 
+                if (mainForm.ChannelSwitchApi() < 0) 
                     return _CloseLoadingFormAndReturn(-1);
 
             if (!continuousMode) {
@@ -3356,12 +3383,6 @@ namespace IntegratedGuiV2
             _EnableButtons();
         }
 
-        private void cbReWriteTLSN_CheckChanged(object sender, EventArgs e)
-        {
-            
-        }
-
-
         private void _ReadRssiForBothSide()
         {
             mainForm.ChannelSetApi(0);
@@ -3415,6 +3436,8 @@ namespace IntegratedGuiV2
             ForceConnectWithoutInvoke = false;
             //_EnableButtons();
             loadingForm.Close();
+            this.BringToFront();
+            this.Activate();
         }
 
         private void cbRelinkCheck_CheckedChanged(object sender, EventArgs e)

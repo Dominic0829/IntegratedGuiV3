@@ -134,6 +134,7 @@ namespace IntegratedGuiV2
             this.tabPage13 = new System.Windows.Forms.TabPage();
             this.ucMemoryDump = new QsfpDigitalDiagnosticMonitoring.UCMemoryDump();
             this.tcMain = new System.Windows.Forms.TabControl();
+            this.cbBothSupplyMode = new ComponentFactory.Krypton.Toolkit.KryptonCheckBox();
             this.gbChannelSwitcher.SuspendLayout();
             this.gbGlobalControl.SuspendLayout();
             this.gbPermissions.SuspendLayout();
@@ -1435,12 +1436,25 @@ namespace IntegratedGuiV2
             this.tcMain.Size = new System.Drawing.Size(1000, 800);
             this.tcMain.TabIndex = 0;
             // 
+            // cbBothSupplyMode
+            // 
+            this.cbBothSupplyMode.Location = new System.Drawing.Point(1010, 31);
+            this.cbBothSupplyMode.Margin = new System.Windows.Forms.Padding(2);
+            this.cbBothSupplyMode.Name = "cbBothSupplyMode";
+            this.cbBothSupplyMode.Size = new System.Drawing.Size(146, 22);
+            this.cbBothSupplyMode.StateCommon.ShortText.Color1 = System.Drawing.SystemColors.ControlText;
+            this.cbBothSupplyMode.StateCommon.ShortText.Font = new System.Drawing.Font("Times New Roman", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbBothSupplyMode.TabIndex = 1042;
+            this.cbBothSupplyMode.Values.Text = "Both supply mode";
+            this.cbBothSupplyMode.CheckedChanged += new System.EventHandler(this.cbBothSupplyMode_CheckedChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(250)))), ((int)(((byte)(252)))), ((int)(((byte)(252)))));
             this.ClientSize = new System.Drawing.Size(1184, 845);
+            this.Controls.Add(this.cbBothSupplyMode);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.bSas3Passwrod);
             this.Controls.Add(this.cbCh2);
@@ -1613,6 +1627,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.TabPage tabPage13;
         private QsfpDigitalDiagnosticMonitoring.UCMemoryDump ucMemoryDump;
         private System.Windows.Forms.TabControl tcMain;
+        private ComponentFactory.Krypton.Toolkit.KryptonCheckBox cbBothSupplyMode;
     }
 }
 

@@ -55,6 +55,7 @@ namespace IntegratedGuiV2
         private string lastUsedDirectory;
         private bool SetQsfpMode = false;
         private bool TwoByteMode = false;
+        internal bool BothSupplyMode = false;
 
         public bool InformationReadState { get; private set; }
         public bool DdmReadState { get; private set; }
@@ -590,10 +591,8 @@ namespace IntegratedGuiV2
 
             if (ch == 1)
                 ProcessingChannel = 1;
-            else if (ch == 2)
-                ProcessingChannel = 2;
             else
-                ProcessingChannel = 1;
+                ProcessingChannel = 2;
 
             cbConnect.Checked = true;
             I2cConnected = true;
@@ -617,34 +616,35 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _ChannelSwitch(bool customerMode, int processingChannel)
+        private int _ChannelSwitch()
         {
-            int newChannel;
-           
-            if (customerMode) {
-                newChannel = processingChannel == 1 ? 2 : 1;
-            }
-            else {
-                if (processingChannel == 1)
-                    newChannel = 23;
-                else if (processingChannel == 2)
-                    newChannel = 13;
-                else
-                    newChannel = processingChannel == 1 ? 2 : 1;
-            }
-
+            _ChannelSet(GetChannelControl(ProcessingChannel == 1 ? 2 : 1));
             ProcessingChannel = ProcessingChannel == 1 ? 2 : 1;
-            _ChannelSet(newChannel);
             _UpdateButtonState();
 
-            return processingChannel;
+            return ProcessingChannel;
+        }
+
+        private int GetChannelControl(int processingChannel)
+        {
+            if (BothSupplyMode) {
+                if (processingChannel == 1)
+                    return 13;
+                else if (processingChannel == 2)
+                    return 23;
+                else
+                    return 0;
+            }
+            else {
+                return processingChannel;
+            }
         }
 
         private int _ChannelSet(int ch)
         {
             if (!I2cConnected)
             {
-                if (_I2cMasterConnect(ch) < 0) // 必須ch, 不能指定為ProcessChannel.
+                if (_I2cMasterConnect(ch) < 0) //不可指定為ProcessChannel.
                     return -1;
 
                 I2cConnected = true;
@@ -677,14 +677,14 @@ namespace IntegratedGuiV2
             return result;
         }
 
-        public int ChannelSwitchApi(bool customerMode, int processingChannel)
+        public int ChannelSwitchApi()
         {
             int result = -1;
 
             if (this.InvokeRequired)
-                this.Invoke(new Action(() => result = _ChannelSwitch(customerMode, processingChannel)));
+                this.Invoke(new Action(() => result = _ChannelSwitch()));
             else
-                result = _ChannelSwitch(customerMode, processingChannel);
+                result = _ChannelSwitch();
 
             return result;
         }
@@ -1059,65 +1059,7 @@ namespace IntegratedGuiV2
 
             return;
         }
-        /*
-        private void AppendRxRegisterContents(string exportFilePath)
-        {
-            string IcRegisterContent;
-            string ChipId;
-                
-            ChipId = "37044_";
-            ChipId += ucMata37044cConfig.GetChipId();
-
-            if (ErrorState >= 0) {
-                IcRegisterContent = ucMata37044cConfig.ReadAllRegisterApi();
-                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
-                File.AppendAllText(exportFilePath, IcRegisterContent);
-                ErrorState = 0;
-                return;
-            }
-
-            ErrorState = 0;
-            ChipId = "RT145_";
-            ChipId += ucRt145Config.GetChipId();
-
-            if (ErrorState >= 0) {
-                IcRegisterContent = ucRt145Config.ReadAllRegisterApi();
-                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
-                File.AppendAllText(exportFilePath, IcRegisterContent);
-                ErrorState = 0;
-                return;
-            }
-        }
         
-        private void AppendTxRegisterContents(string exportFilePath)
-        {
-            string vendorInfo;
-            string ChipId;
-
-            ChipId = "37045_";
-            ChipId += ucMald37045cConfig.GetChipId();
-
-            if (ErrorState >= 0) {
-                vendorInfo = ucMald37045cConfig.ReadAllRegisterApi();
-                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
-                File.AppendAllText(exportFilePath, vendorInfo);
-                ErrorState = 0;
-                return;
-            }
-
-            ErrorState = 0;
-            ChipId = "RT146_";
-            ChipId += ucRt146Config.GetChipId();
-
-            if (ErrorState >= 0) {
-                vendorInfo = ucRt146Config.ReadAllRegisterApi();
-                //File.AppendAllText(exportFilePath, ChipId + Environment.NewLine);
-                File.AppendAllText(exportFilePath, vendorInfo);
-                ErrorState = 0;
-                return;
-            }
-        }
-        */
         private int _WriteRegisterPage (string targetPage, int delayTime, string registerFilePath)
         {
             switch (targetPage) {
@@ -2698,22 +2640,20 @@ namespace IntegratedGuiV2
         {
             if (bOutterSwitch.Enabled == true)
                 bOutterSwitch.Enabled = false;
-                //_DisableButtons(); //為了避免切換期間，限制其他可能狀態
 
-            _ChannelSwitch(true, ProcessingChannel);
+            ChannelSwitchApi();
             bGlobalRead.Select();
 
             if (bOutterSwitch.Enabled == false)
                 bOutterSwitch.Enabled = true;
-                //_EnableButtons(); //為了避免切換期間，限制其他可能狀態
         }
 
         private void bInnerSwitch_Click(object sender, EventArgs e)
         {
             if (bInnerSwitch.Enabled == true)
                 bInnerSwitch.Enabled = false;
-               
-            _ChannelSwitch(true, ProcessingChannel);
+
+            ChannelSwitchApi();
 
             if (bInnerSwitch.Enabled == false)
                 bInnerSwitch.Enabled = true;
@@ -3102,51 +3042,7 @@ namespace IntegratedGuiV2
                 }
             }
         }
-        /*
-        private bool _LoadFilesPathForBin2(string fileType)
-        {
-            //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
-
-            using (OpenFileDialog openFileDialog = new OpenFileDialog())
-            {
-                openFileDialog.Title = "Files path";
-                openFileDialog.Filter = "Binary Files (*.bin)|*.bin";
-                //openFileDialog.InitialDirectory = initialDirectory;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    string sourceFileName = Path.GetFileName(openFileDialog.FileName);
-                    lastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-                    //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory );
-
-                    if (fileType == "APROM")
-                    {
-                        APROMPath = lastUsedDirectory + "\\" + sourceFileName;
-                        cbAPPath.Checked = true;
-                        //MessageBox.Show("APROMPath: \n" + APROMPath);
-                    }
-
-                    if (fileType == "DATAROM")
-                    {
-                        DATAROMPath = lastUsedDirectory + "\\" + sourceFileName;
-                        cbDAPath.Checked = true;
-                    }
-
-                    return true;
-                }
-                else
-                {
-                    if (fileType == "APROM")
-                        cbAPPath.Checked = false;
-
-                    if (fileType == "DATAROM")
-                        cbDAPath.Checked = false;
-
-                    return false;  
-                }
-            }
-        }
-        */
+        
         private bool _LoadFilesPathForText(string fileType)
         {
             //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -4624,6 +4520,12 @@ namespace IntegratedGuiV2
         private void bMini58Password_Click(object sender, EventArgs e)
         {
             tbPassword.Text = "3234";
+        }
+
+        private void cbBothSupplyMode_CheckedChanged(object sender, EventArgs e)
+        {
+            BothSupplyMode = cbBothSupplyMode.Checked;
+            _ChannelSet(GetChannelControl(ProcessingChannel));
         }
 
         private void cbCh1_CheckedChanged(object sender, EventArgs e)
