@@ -585,7 +585,7 @@ namespace IntegratedGuiV2
 
         private int _I2cMasterConnect(int ch)
         {
-            if (i2cMaster.ConnectApi(100) < 0)
+            if (i2cMaster.ConnectApi(400) < 0)
                 return -1;
 
             if (ch == 1)
@@ -1264,7 +1264,7 @@ namespace IntegratedGuiV2
                     folderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
                 }
                 else {
-                    LastBinPaths lastPath = _LoadLastPaths();
+                    MainFormPaths lastPath = _LoadLastPaths();
                     folderPath = lastPath.LogFilePath;
 
                     if (string.IsNullOrEmpty(folderPath))
@@ -1347,7 +1347,7 @@ namespace IntegratedGuiV2
                 StateUpdated("Read State:\nPreparing resources...", 3);
 
             if (logFileMode) {
-                LastBinPaths lastPath = _LoadLastPaths();
+                MainFormPaths lastPath = _LoadLastPaths();
                 folderPath = lastPath.LogFilePath;
 
                 if (string.IsNullOrEmpty(folderPath))
@@ -2365,8 +2365,9 @@ namespace IntegratedGuiV2
             }
             else if (modelType == "PCIe4.0") {
                 TiaChipId = ucRt145Config.GetChipId();
-                LddChipId = ucRt146Config.GetChipId();
-                if ((TiaChipId == "0x58") && (LddChipId == "0xFF"))
+                //LddChipId = ucRt146Config.GetChipId();
+                //if ((TiaChipId == "0x58") && (LddChipId == "0xFF"))
+                if (TiaChipId == "0x58")
                     return true;
             }
             /*
@@ -2581,7 +2582,7 @@ namespace IntegratedGuiV2
             }
         }
 
-        private LastBinPaths _LoadLastPaths()
+        private MainFormPaths _LoadLastPaths()
         {
             string folderPath = Application.StartupPath;
             string combinedPath = Path.Combine(folderPath, "XmlFolder");
@@ -2591,20 +2592,20 @@ namespace IntegratedGuiV2
             try {
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.Load(xmlFilePath);
-                XmlNode zipPathNode = xmlDoc.SelectSingleNode("//ZipPath");
+                XmlNode zipPathNode = xmlDoc.SelectSingleNode("//ZipFolderPath");
                 XmlNode logFilePathNode = xmlDoc.SelectSingleNode("//LogFilePath");
 
                 string zipPath = zipPathNode?.InnerText;
                 string logFilePath = logFilePathNode?.InnerText;
 
-                return new LastBinPaths {
-                    ZipPath = zipPath,
+                return new MainFormPaths {
+                    ZipFolderPath = zipPath,
                     LogFilePath = logFilePath
                 };
             }
             catch (Exception) {
-                return new LastBinPaths {
-                    ZipPath = null,
+                return new MainFormPaths {
+                    ZipFolderPath = null,
                     LogFilePath = null
                 };
             }
@@ -3213,7 +3214,7 @@ namespace IntegratedGuiV2
 
         internal int _GlobalWriteFromRegisterFile(bool CustomerMode, string CfgFilePath, int processingChannel)
         {
-            LastBinPaths lastPath = _LoadLastPaths();
+            MainFormPaths lastPath = _LoadLastPaths();
             string DirectoryPath = Application.StartupPath;
             string BackupRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\ModuleRegisterFile.csv");
             

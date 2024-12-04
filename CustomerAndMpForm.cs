@@ -616,7 +616,7 @@ namespace IntegratedGuiV2
                 () => _OpenEngineerForm(2), // QSFP28
                 () => _DisplayRelinkControlUi(),
                 () => _DisplayMpMode(),
-                () => _EnableCheckBox(),
+                () => _EnableHiddenEngineerMode(),
             };
 
             int[] sequenceIndices = {   SequenceIndexA, SequenceIndexB, 
@@ -652,18 +652,35 @@ namespace IntegratedGuiV2
             ForceControl3 = sequenceIndices[9];
         }
 
-        private void _EnableCheckBox()
+        private void _EnableHiddenEngineerMode()
         {
-            cbReWriteTLSN.Enabled = true;
-            cbExportLogfileOnly.Enabled = true;
-            cbReWriteTLSN.Visible = true;
-            cbExportLogfileOnly.Visible = true;
+
+            _ExtendFormForEngineerMode();
+        }
+
+        private void _ExtendFormForEngineerMode()
+        {
+            cbBarcodeMode_CheckedChanged(null, null);
+
+            cbBarcodeMode.Checked = true;
+            cbRegisterMapView.Checked = true;
+            rbFullMode.Visible = false;
+            rbOnlySN.Visible = false;
+            rbLogFileMode.Visible = false;
+            _AdjustGuiSizeAndCenter(700, 550);
+
+            tbVenderSn.Enabled = false;
+            cbAutoWirte.Checked = true;
+            bWriteTruelightSn.Enabled = false;
+            tbCustomerSn.Enabled = true;
+            tbTruelightSn.Enabled = false;
+            tbCustomerSn.Select();
         }
 
         private void TbCustomerSn_KeyDown(object sender, KeyEventArgs e)
         {
             int errorCode = 0;
-            cbEngineerMode.Checked = true;
+            cbRegisterMapView.Checked = true;
 
             if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length == 12 &&
                    tbCustomerSn.Focused && !cbDeepCheck.Checked) {
@@ -872,7 +889,7 @@ namespace IntegratedGuiV2
                 }
             }
 
-            I2cConnected = !(mainForm.ChannelSetApi(13) < 0);
+            I2cConnected = !(mainForm.ChannelSetApi(1) < 0);
             _ResetSequence();
         }
 
@@ -1129,10 +1146,13 @@ namespace IntegratedGuiV2
             }
         }
 
-        private void _SaveLastPathsAndSetup(string zipPath, string logFilePath, string rssiCriteria)
+        private void _StoreConfigurationPaths(string zipPath, string logFilePath, string rssiCriteria)
         {
             string exeFolderPath = Application.StartupPath;
             string combinedPath = Path.Combine(exeFolderPath, "XmlFolder");
+            bool cfgFileCheckState = cbCfgCheckAfterFw.Checked;
+            bool logFileCheckState = cbLogCheckAfterSn.Checked;
+            bool registerMapViewState = cbRegisterMapView.Checked;
 
             if (!Directory.Exists(combinedPath))
                 Directory.CreateDirectory(combinedPath);
@@ -1153,18 +1173,42 @@ namespace IntegratedGuiV2
             XmlNode rootElement = xmlDoc.DocumentElement;
 
             if (!string.IsNullOrEmpty(zipPath)) {
-                XmlElement zipPathElement = rootElement.SelectSingleNode("FormPaths/ZipPath") as XmlElement;
-                if (zipPathElement == null) {
+                XmlElement zipFolderPathElement = rootElement.SelectSingleNode("FormPaths/ZipFolderPath") as XmlElement;
+                if (zipFolderPathElement == null) {
                     XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
                     if (formPaths == null) {
                         formPaths = xmlDoc.CreateElement("FormPaths");
                         rootElement.AppendChild(formPaths);
                     }
 
-                    zipPathElement = xmlDoc.CreateElement("ZipPath");
-                    formPaths.AppendChild(zipPathElement);
+                    zipFolderPathElement = xmlDoc.CreateElement("ZipFolderPath");
+                    formPaths.AppendChild(zipFolderPathElement);
                 }
-                zipPathElement.InnerText = Path.GetDirectoryName(zipPath);
+                zipFolderPathElement.InnerText = Path.GetDirectoryName(zipPath);
+                XmlElement zipFilePathElement = rootElement.SelectSingleNode("FormPaths/ZipFilePath") as XmlElement;
+                if (zipFilePathElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    zipFilePathElement = xmlDoc.CreateElement("ZipFilePath");
+                    formPaths.AppendChild(zipFilePathElement);
+                }
+                zipFilePathElement.InnerText = zipPath;
+                XmlElement cfgFileCheckStateElement = rootElement.SelectSingleNode("FormPaths/CfgFileCheckState") as XmlElement;
+                if (cfgFileCheckStateElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    cfgFileCheckStateElement = xmlDoc.CreateElement("CfgFileCheckState");
+                    formPaths.AppendChild(cfgFileCheckStateElement);
+                }
+                cfgFileCheckStateElement.InnerText = cfgFileCheckState.ToString();
             }
 
             if (!string.IsNullOrEmpty(logFilePath)) {
@@ -1180,6 +1224,7 @@ namespace IntegratedGuiV2
                     formPaths.AppendChild(logFilePathElement);
                 }
                 logFilePathElement.InnerText = logFilePath;
+                
             }
 
             if (!string.IsNullOrEmpty(rssiCriteria)) {
@@ -1195,12 +1240,37 @@ namespace IntegratedGuiV2
                     formPaths.AppendChild(rssiRriteriaElement);
                 }
                 rssiRriteriaElement.InnerText = rssiCriteria;
+                XmlElement logFileCheckStateElement = rootElement.SelectSingleNode("FormPaths/LogFileCheckState") as XmlElement;
+                if (logFileCheckStateElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    logFileCheckStateElement = xmlDoc.CreateElement("LogFileCheckState");
+                    formPaths.AppendChild(logFileCheckStateElement);
+                }
+                logFileCheckStateElement.InnerText = logFileCheckState.ToString();
             }
+            
+            XmlElement registerMapViewStateElement = rootElement.SelectSingleNode("FormPaths/RegisterMapViewState") as XmlElement;
+            if (registerMapViewStateElement == null) {
+                XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                if (formPaths == null) {
+                    formPaths = xmlDoc.CreateElement("FormPaths");
+                    rootElement.AppendChild(formPaths);
+                }
+
+                registerMapViewStateElement = xmlDoc.CreateElement("RegisterMapViewState");
+                formPaths.AppendChild(registerMapViewStateElement);
+            }
+            registerMapViewStateElement.InnerText = registerMapViewState.ToString();
 
             xmlDoc.Save(xmlFilePath);
         }
 
-        private LastBinPaths _LoadLastPathsAndSetup()
+        private MainFormPaths _LoadLastPathsAndSetup()
         {
             string folderPath = Application.StartupPath;
             string combinedPath = Path.Combine(folderPath, "XmlFolder");
@@ -1210,34 +1280,55 @@ namespace IntegratedGuiV2
             try {
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.Load(xmlFilePath);
-                XmlNode zipPathNode = xmlDoc.SelectSingleNode("//ZipPath");
-                XmlNode logFilePathNode = xmlDoc.SelectSingleNode("//LogFilePath");
-                XmlNode rssiCriteriaNode = xmlDoc.SelectSingleNode("//RssiCriteria");
+                XmlNode zipFolderPathElement = xmlDoc.SelectSingleNode("//ZipFolderPath");
+                XmlNode zipFilePathElement = xmlDoc.SelectSingleNode("//ZipFilePath");
+                XmlNode logFilePathElement = xmlDoc.SelectSingleNode("//LogFilePath");
+                XmlNode rssiRriteriaElement = xmlDoc.SelectSingleNode("//RssiCriteria");
+                XmlNode cfgFileCheckStateElement = xmlDoc.SelectSingleNode("//CfgFileCheckState");
+                XmlNode logFileCheckStateElement = xmlDoc.SelectSingleNode("//LogFileCheckState");
+                XmlNode registerMapViewStateElement = xmlDoc.SelectSingleNode("//RegisterMapViewState");
 
-                string zipPath = zipPathNode?.InnerText;
-                string logFilePath = logFilePathNode?.InnerText;
-                string rssiCriteria = rssiCriteriaNode?.InnerText;
+                string zipFolderPath = zipFolderPathElement?.InnerText;
+                string zipFilePath = zipFilePathElement?.InnerText;
+                string logFilePath = logFilePathElement?.InnerText;
+                string rssiCriteria = rssiRriteriaElement?.InnerText;
+                bool cfgFileCheckState = cfgFileCheckStateElement != null && Convert.ToBoolean(cfgFileCheckStateElement.InnerText);
+                bool logFileCheckState = logFileCheckStateElement != null && Convert.ToBoolean(logFileCheckStateElement.InnerText);
+                bool registerMapViewState = registerMapViewStateElement != null && Convert.ToBoolean(registerMapViewStateElement.InnerText);
 
-                return new LastBinPaths {
-                    ZipPath = zipPath,
+                return new MainFormPaths {
+                    ZipFolderPath = zipFolderPath,
+                    ZipFilePath = zipFilePath,
                     LogFilePath = logFilePath,
-                    RssiCriteria = rssiCriteria
+                    RssiCriteria = rssiCriteria,
+                    CfgFileCheckState = cfgFileCheckState,
+                    LogFileCheckState = logFileCheckState,
+                    RegisterMapViewState = registerMapViewState
                 };
             }
             catch (Exception) {
-                return new LastBinPaths {
-                    ZipPath = null,
+                return new MainFormPaths {
+                    ZipFolderPath = null,
+                    ZipFilePath= null,
                     LogFilePath = null,
-                    RssiCriteria = null
+                    RssiCriteria = null,
+                    CfgFileCheckState = false,
+                    LogFileCheckState = false,
+                    RegisterMapViewState = false
                 };
             }
         }
 
         private void _LoadXmlFile()
         {
-            LastBinPaths lastPath = _LoadLastPathsAndSetup();
-            string initialDirectory = lastPath.ZipPath;
+            MainFormPaths lastPath = _LoadLastPathsAndSetup();
+            string initialDirectory = lastPath.ZipFolderPath;
+            string initialZipFile = lastPath.ZipFilePath;
             string logFilePath = lastPath.LogFilePath;
+            string rssiCriteria = lastPath.RssiCriteria;
+            cbCfgCheckAfterFw.Checked = lastPath.CfgFileCheckState;
+            cbLogCheckAfterSn.Checked = lastPath.LogFileCheckState;
+            cbRegisterMapView.Checked = lastPath.RegisterMapViewState;
 
             if (string.IsNullOrEmpty(logFilePath))
                 _EnterDefaultLogfilePath();
@@ -1246,8 +1337,8 @@ namespace IntegratedGuiV2
                 tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
             }
 
-            if (!string.IsNullOrEmpty(lastPath.RssiCriteria))
-                tbRssiCriteria.Text = lastPath.RssiCriteria;
+            if (!string.IsNullOrEmpty(rssiCriteria))
+                tbRssiCriteria.Text = rssiCriteria;
             else
                 tbRssiCriteria.Text = "200";
 
@@ -1289,7 +1380,7 @@ namespace IntegratedGuiV2
 
         private void _LoadXmlFileLite(string fileName)
         {
-            LastBinPaths lastPath = _LoadLastPathsAndSetup();
+            MainFormPaths lastPath = _LoadLastPathsAndSetup();
             tbLogFilePath.Text = lastPath.LogFilePath;
             tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
 
@@ -1356,7 +1447,7 @@ namespace IntegratedGuiV2
                     tbLogFilePath.Text = folderBrowserDialog.SelectedPath;
                     tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
                     logFileFolderPath = folderBrowserDialog.SelectedPath;
-                    _SaveLastPathsAndSetup(null, logFileFolderPath, null);
+                    _StoreConfigurationPaths(null, logFileFolderPath, null);
                 }
             }
         }
@@ -1521,7 +1612,6 @@ namespace IntegratedGuiV2
         private void _ConfigFilePathChanges()
         {
             bool customerMode = lMode.Text == "Customer";
-            //int channelNumber = customerMode ? 1 : 13;
             int channelNumber = 1;
 
             if (tbFilePath.Text == "Please click here, to import the Config file...") {
@@ -1602,7 +1692,7 @@ namespace IntegratedGuiV2
                 MessageBox.Show("Please enter a valid integer value for the RSSI criteria.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return -1;
             }
-            _SaveLastPathsAndSetup(null, null, tbRssiCriteria.Text);
+            _StoreConfigurationPaths(null, null, tbRssiCriteria.Text);
 
             if (mainForm.RxPowerReadApiFromDdmApi() < 0) {
                 MessageBox.Show("Please check the module plugin status");
@@ -1732,7 +1822,7 @@ namespace IntegratedGuiV2
             rbBoth.Enabled = true;
             cbSecurityLock.Enabled = true;
             cbI2cConnect.Enabled = true;
-            cbEngineerMode.Enabled = true;
+            cbRegisterMapView.Enabled = true;
             tbRssiCriteria.Enabled = true;
             cbNgInterrupt.Enabled = true;
             bCheckSerialNumber.Enabled = true;
@@ -1751,7 +1841,7 @@ namespace IntegratedGuiV2
             cbSecurityLock.Enabled = false;
             cbI2cConnect.Enabled = false;
             //cbBypassW.Enabled = false;
-            cbEngineerMode.Enabled = false;
+            cbRegisterMapView.Enabled = false;
             //gbOperatorMode.Enabled = false;
             bWriteFromFile.Enabled = false;
             bWriteSnDateCone.Enabled = false;
@@ -1775,7 +1865,7 @@ namespace IntegratedGuiV2
             cbSecurityLock.Enabled = true;
             cbI2cConnect.Enabled = true;
             //cbBypassW.Enabled = true;
-            cbEngineerMode.Enabled = true;
+            cbRegisterMapView.Enabled = true;
             //gbOperatorMode.Enabled = true;
             bWriteFromFile.Enabled = true;
             bWriteSnDateCone.Enabled = true;
@@ -1874,11 +1964,6 @@ namespace IntegratedGuiV2
 
                 if (!string.IsNullOrEmpty(tbIntervalTime.Text) && int.TryParse(tbIntervalTime.Text, out int parsedIntervalTime))
                     intervalTime = parsedIntervalTime;
-
-                if (cbExportLogfileOnly.Checked) {
-                    _InitialUi();
-                    return -2;
-                }
 
                 mainForm.ForceConnectApi(false, relinkCount, startTime, intervalTime); // Link DUT and EraseAPROM
                 //mainForm.ForceConnectApi(false,0,0,0); // Link DUT and EraseAPROM
@@ -2070,11 +2155,10 @@ namespace IntegratedGuiV2
             int tmp;
 
             _DisableButtons();
-            //int channelNumber = customerMode ? 1 : 13;
             int channelNumber;
             loadingForm.Show(this);
             _InitialUi();
-            _SaveLastPathsAndSetup(tbFilePath.Text, null, null);
+            _StoreConfigurationPaths(tbFilePath.Text, null, null);
             I2cConnected = (mainForm.I2cMasterDisconnectApi() < 0);
             //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
 
@@ -2450,13 +2534,7 @@ namespace IntegratedGuiV2
 
         private void bWriteSnDateCode_Click(object sender, EventArgs e)
         {
-            try {
-                this.Enabled = false;
-                WriteSnDateCodeFlow();
-            }
-            finally {
-                this.Enabled = true;
-            }
+            WriteSnDateCodeFlow();
         }
 
         private void bCfgFileComparison_Click(object sender, EventArgs e)
@@ -2482,20 +2560,15 @@ namespace IntegratedGuiV2
             FirstRound = true;
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
-                if (ProcessingChannel == 1)
-                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
-                else
-                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
-
-                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+                I2cConnected = !(mainForm.ChannelSetApi(ProcessingChannel) < 0);
                 Thread.Sleep(200);
 
                 if (Sas3Module) {
                     mainForm._KeyForSas3();
-                    comparisonResults = mainForm.ComparisonRegisterForSas3Api(registerFilePath, true, "CfgFile", cbEngineerMode.Checked, ProcessingChannel);
+                    comparisonResults = mainForm.ComparisonRegisterForSas3Api(registerFilePath, true, "CfgFile", cbRegisterMapView.Checked, ProcessingChannel);
                 }
                 else {
-                    comparisonResults = mainForm.ComparisonRegisterApi(modelType, registerFilePath, true, "CfgFile", cbEngineerMode.Checked);
+                    comparisonResults = mainForm.ComparisonRegisterApi(modelType, registerFilePath, true, "CfgFile", cbRegisterMapView.Checked);
                 }
                 
                 if (comparisonResults < 0) 
@@ -2606,20 +2679,15 @@ namespace IntegratedGuiV2
                     goto exit;
                 }
 
-                if (ProcessingChannel == 1) 
-                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 1 : 13;
-                else 
-                    channelNumber = (lMode.Text == "Customer" || lMode.Text == "") ? 2 : 23;
-
-                I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
+                I2cConnected = !(mainForm.ChannelSetApi(ProcessingChannel) < 0);
                 Thread.Sleep(300);
 
                 if (Sas3Module) {
                     mainForm._KeyForSas3();
-                    comparisonResults = mainForm.ComparisonRegisterForSas3Api(registerFilePath, true, "LogFile", cbEngineerMode.Checked, ProcessingChannel);
+                    comparisonResults = mainForm.ComparisonRegisterForSas3Api(registerFilePath, true, "LogFile", cbRegisterMapView.Checked, ProcessingChannel);
                 }
                 else {
-                    comparisonResults = mainForm.ComparisonRegisterApi(modelType, registerFilePath, true, "LogFile", cbEngineerMode.Checked);
+                    comparisonResults = mainForm.ComparisonRegisterApi(modelType, registerFilePath, true, "LogFile", cbRegisterMapView.Checked);
                 }
 
                 if (comparisonResults < 0) return -1;
@@ -3267,11 +3335,15 @@ namespace IntegratedGuiV2
             string modelType = lProduct.Text;
             _DisableButtons();
 
-            if (modelType != "SAS4.0")
-                MessageBox.Show("Crruent module is: " + modelType + "\nThe function only supports SAS4.0");
-            else
+            if (modelType == "SAS4.0" || modelType == "PCIe4.0") {
                 mainForm.HardwareIdentificationValidationApi(modelType, false);
                 mainForm.CurrentRegistersApi(modelType);
+            }
+            else {
+                MessageBox.Show("Crruent module is: " + modelType + "\nThe function only supports SAS4.0 or PCIe4.0");
+                _EnableButtons();
+                return;
+            }
 
             _EnableButtons();
         }
@@ -3286,34 +3358,9 @@ namespace IntegratedGuiV2
 
         private void cbReWriteTLSN_CheckChanged(object sender, EventArgs e)
         {
-            cbBarcodeMode_CheckedChanged(null, null);
-
-            if (cbReWriteTLSN.Checked) {
-                cbBarcodeMode.Checked = true;
-                cbEngineerMode.Checked = true;
-                rbFullMode.Visible = false;
-                rbOnlySN.Visible = false;
-                rbLogFileMode.Visible = false;
-                _AdjustGuiSizeAndCenter(700, 550);
-            }
-            else {
-                cbBarcodeMode.Checked = false;
-                cbEngineerMode.Checked = false;
-                rbFullMode.Visible = true;
-                rbOnlySN.Visible = true;
-                rbLogFileMode.Visible = true;
-                cbReParameter.Checked = false;
-                cbDeepCheck.Checked = false;
-                _AdjustGuiSizeAndCenter(550, 550);
-            }
             
-            tbVenderSn.Enabled = false;
-            cbAutoWirte.Checked = true;
-            bWriteTruelightSn.Enabled = false;
-            tbCustomerSn.Enabled = true;
-            tbTruelightSn.Enabled = false;
-            tbCustomerSn.Select();
         }
+
 
         private void _ReadRssiForBothSide()
         {
@@ -3388,11 +3435,15 @@ namespace IntegratedGuiV2
 
     }
 
-    public class LastBinPaths
+    public class MainFormPaths
     {
-        public string ZipPath { get; set; }
+        public string ZipFolderPath { get; set; }
+        public string ZipFilePath { get; set; }
         public string LogFilePath { get; set; }
         public string RssiCriteria { get; set; }
+        public bool CfgFileCheckState { get; set; }
+        public bool LogFileCheckState { get; set; }
+        public bool RegisterMapViewState { get; set; }
     }
 
 }

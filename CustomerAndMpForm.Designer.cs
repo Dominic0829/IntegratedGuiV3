@@ -55,6 +55,7 @@ namespace IntegratedGuiV2
             this.cbBypassW = new System.Windows.Forms.CheckBox();
             this.cbI2cConnect = new System.Windows.Forms.CheckBox();
             this.gbOperatorMode = new System.Windows.Forms.GroupBox();
+            this.bOpenLogFileFolder = new System.Windows.Forms.Button();
             this.cbLogCheckAfterSn = new System.Windows.Forms.CheckBox();
             this.cbNgInterrupt = new System.Windows.Forms.CheckBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -107,13 +108,11 @@ namespace IntegratedGuiV2
             this.lRssiCh1_0 = new System.Windows.Forms.Label();
             this.lDateCode = new System.Windows.Forms.Label();
             this.tbDateCode = new System.Windows.Forms.TextBox();
-            this.cbReWriteTLSN = new System.Windows.Forms.CheckBox();
-            this.cbExportLogfileOnly = new System.Windows.Forms.CheckBox();
             this.cbRelinkCheck = new System.Windows.Forms.CheckBox();
             this.rbLogFileMode = new System.Windows.Forms.RadioButton();
             this.rbOnlySN = new System.Windows.Forms.RadioButton();
             this.rbFullMode = new System.Windows.Forms.RadioButton();
-            this.cbEngineerMode = new System.Windows.Forms.CheckBox();
+            this.cbRegisterMapView = new System.Windows.Forms.CheckBox();
             this.cbBarcodeMode = new System.Windows.Forms.CheckBox();
             this.bRelinkTest = new System.Windows.Forms.Button();
             this.tbRelinkCount = new System.Windows.Forms.TextBox();
@@ -169,7 +168,6 @@ namespace IntegratedGuiV2
             this.cbCfgCheckAfterFw = new System.Windows.Forms.CheckBox();
             this.bHardwareValidation = new System.Windows.Forms.Button();
             this.bCurrentRegister = new System.Windows.Forms.Button();
-            this.bOpenLogFileFolder = new System.Windows.Forms.Button();
             this.gbOperatorMode.SuspendLayout();
             this.gbCodeEditor.SuspendLayout();
             this.flowLayoutPanel2.SuspendLayout();
@@ -526,6 +524,20 @@ namespace IntegratedGuiV2
             this.gbOperatorMode.TabStop = false;
             this.gbOperatorMode.Text = "Serial number information";
             this.gbOperatorMode.Visible = false;
+            // 
+            // bOpenLogFileFolder
+            // 
+            this.bOpenLogFileFolder.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
+            this.bOpenLogFileFolder.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.bOpenLogFileFolder.FlatAppearance.BorderSize = 0;
+            this.bOpenLogFileFolder.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.bOpenLogFileFolder.ForeColor = System.Drawing.Color.White;
+            this.bOpenLogFileFolder.Location = new System.Drawing.Point(223, 149);
+            this.bOpenLogFileFolder.Name = "bOpenLogFileFolder";
+            this.bOpenLogFileFolder.Size = new System.Drawing.Size(15, 20);
+            this.bOpenLogFileFolder.TabIndex = 124;
+            this.bOpenLogFileFolder.UseVisualStyleBackColor = false;
+            this.bOpenLogFileFolder.Click += new System.EventHandler(this.bOpenLogFileFolder_Click);
             // 
             // cbLogCheckAfterSn
             // 
@@ -1086,34 +1098,6 @@ namespace IntegratedGuiV2
             this.tbDateCode.TabIndex = 67;
             this.tbDateCode.Text = "YYMMDD";
             // 
-            // cbReWriteTLSN
-            // 
-            this.cbReWriteTLSN.AutoSize = true;
-            this.cbReWriteTLSN.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
-            this.cbReWriteTLSN.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbReWriteTLSN.Location = new System.Drawing.Point(8, 70);
-            this.cbReWriteTLSN.Name = "cbReWriteTLSN";
-            this.cbReWriteTLSN.Size = new System.Drawing.Size(74, 15);
-            this.cbReWriteTLSN.TabIndex = 112;
-            this.cbReWriteTLSN.Text = "ReWrite TLSN";
-            this.cbReWriteTLSN.UseVisualStyleBackColor = true;
-            this.cbReWriteTLSN.Visible = false;
-            this.cbReWriteTLSN.CheckedChanged += new System.EventHandler(this.cbReWriteTLSN_CheckChanged);
-            this.cbReWriteTLSN.Click += new System.EventHandler(this.cbReWriteTLSN_CheckChanged);
-            // 
-            // cbExportLogfileOnly
-            // 
-            this.cbExportLogfileOnly.AutoSize = true;
-            this.cbExportLogfileOnly.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
-            this.cbExportLogfileOnly.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbExportLogfileOnly.Location = new System.Drawing.Point(8, 52);
-            this.cbExportLogfileOnly.Name = "cbExportLogfileOnly";
-            this.cbExportLogfileOnly.Size = new System.Drawing.Size(91, 15);
-            this.cbExportLogfileOnly.TabIndex = 111;
-            this.cbExportLogfileOnly.Text = "Export logfile only";
-            this.cbExportLogfileOnly.UseVisualStyleBackColor = true;
-            this.cbExportLogfileOnly.Visible = false;
-            // 
             // cbRelinkCheck
             // 
             this.cbRelinkCheck.AutoSize = true;
@@ -1172,18 +1156,18 @@ namespace IntegratedGuiV2
             this.rbFullMode.Visible = false;
             this.rbFullMode.CheckedChanged += new System.EventHandler(this.BarcodeMode_CheckedChanged);
             // 
-            // cbEngineerMode
+            // cbRegisterMapView
             // 
-            this.cbEngineerMode.AutoSize = true;
-            this.cbEngineerMode.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
-            this.cbEngineerMode.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.cbEngineerMode.Location = new System.Drawing.Point(8, 33);
-            this.cbEngineerMode.Name = "cbEngineerMode";
-            this.cbEngineerMode.Size = new System.Drawing.Size(90, 15);
-            this.cbEngineerMode.TabIndex = 95;
-            this.cbEngineerMode.Text = "Register map view";
-            this.cbEngineerMode.UseVisualStyleBackColor = true;
-            this.cbEngineerMode.CheckedChanged += new System.EventHandler(this.BarcodeMode_CheckedChanged);
+            this.cbRegisterMapView.AutoSize = true;
+            this.cbRegisterMapView.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
+            this.cbRegisterMapView.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
+            this.cbRegisterMapView.Location = new System.Drawing.Point(8, 33);
+            this.cbRegisterMapView.Name = "cbRegisterMapView";
+            this.cbRegisterMapView.Size = new System.Drawing.Size(90, 15);
+            this.cbRegisterMapView.TabIndex = 95;
+            this.cbRegisterMapView.Text = "Register map view";
+            this.cbRegisterMapView.UseVisualStyleBackColor = true;
+            this.cbRegisterMapView.CheckedChanged += new System.EventHandler(this.BarcodeMode_CheckedChanged);
             // 
             // cbBarcodeMode
             // 
@@ -1817,11 +1801,9 @@ namespace IntegratedGuiV2
             // gbOptionsControl
             // 
             this.gbOptionsControl.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
-            this.gbOptionsControl.Controls.Add(this.cbReWriteTLSN);
             this.gbOptionsControl.Controls.Add(this.cbRelinkCheck);
             this.gbOptionsControl.Controls.Add(this.cbBarcodeMode);
-            this.gbOptionsControl.Controls.Add(this.cbExportLogfileOnly);
-            this.gbOptionsControl.Controls.Add(this.cbEngineerMode);
+            this.gbOptionsControl.Controls.Add(this.cbRegisterMapView);
             this.gbOptionsControl.Controls.Add(this.rbFullMode);
             this.gbOptionsControl.Controls.Add(this.rbOnlySN);
             this.gbOptionsControl.Controls.Add(this.rbLogFileMode);
@@ -1892,20 +1874,6 @@ namespace IntegratedGuiV2
             this.bCurrentRegister.Text = "Current register";
             this.bCurrentRegister.UseVisualStyleBackColor = false;
             this.bCurrentRegister.Click += new System.EventHandler(this.bCurrentRegister_Click);
-            // 
-            // bOpenLogFileFolder
-            // 
-            this.bOpenLogFileFolder.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(70)))), ((int)(((byte)(115)))), ((int)(((byte)(138)))));
-            this.bOpenLogFileFolder.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.bOpenLogFileFolder.FlatAppearance.BorderSize = 0;
-            this.bOpenLogFileFolder.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.bOpenLogFileFolder.ForeColor = System.Drawing.Color.White;
-            this.bOpenLogFileFolder.Location = new System.Drawing.Point(223, 149);
-            this.bOpenLogFileFolder.Name = "bOpenLogFileFolder";
-            this.bOpenLogFileFolder.Size = new System.Drawing.Size(15, 20);
-            this.bOpenLogFileFolder.TabIndex = 124;
-            this.bOpenLogFileFolder.UseVisualStyleBackColor = false;
-            this.bOpenLogFileFolder.Click += new System.EventHandler(this.bOpenLogFileFolder_Click);
             // 
             // CustomerAndMpForm
             // 
@@ -2066,7 +2034,7 @@ namespace IntegratedGuiV2
         private System.Windows.Forms.GroupBox gbCodeEditor;
         private System.Windows.Forms.CheckBox cbBarcodeMode;
         private System.Windows.Forms.Button bRenewRssi;
-        private System.Windows.Forms.CheckBox cbEngineerMode;
+        private System.Windows.Forms.CheckBox cbRegisterMapView;
         private System.Windows.Forms.Button bLogFileComparison;
         private System.Windows.Forms.TextBox tbIntervalTime;
         private System.Windows.Forms.RadioButton rbOnlySN;
@@ -2112,14 +2080,12 @@ namespace IntegratedGuiV2
         private Label lOriginalTLSN;
         private TextBox tbReNewTLSN;
         private TextBox tbOrignalTLSN;
-        private CheckBox cbExportLogfileOnly;
         private GroupBox gbReWriteSn;
         private Label lTruelightSn;
         private Label lCustomerSn;
         private TextBox tbTruelightSn;
         private CheckBox cbAutoWirte;
         private Button bWriteTruelightSn;
-        private CheckBox cbReWriteTLSN;
         private Button bCheckSerialNumber;
         private Button bSearchNumber;
         private CheckBox cbReParameter;
