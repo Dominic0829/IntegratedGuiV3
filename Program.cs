@@ -21,7 +21,7 @@ namespace IntegratedGuiV2
                 Application.SetCompatibleTextRenderingDefault(false);
                 //Application.Run(new MainForm(true));
                 //Application.Run(new LoginForm());
-                Application.Run(new CustomerAndMpForm());
+                Application.Run(new MainForm());
             }
             catch ( Exception ex) {
                 File.WriteAllText("error_log.txt", ex.ToString());

@@ -37,7 +37,7 @@ namespace IntegratedGuiV2
             dbCommand.Parameters.AddWithValue("@dbId", tbId.Text);
             dbCommand.Parameters.AddWithValue("@dbPassword", tbPassword.Text);
             OleDbDataReader dbReader = dbCommand.ExecuteReader();
-            MainForm mainForm = new MainForm(true);
+            EngineerForm mainForm = new EngineerForm(true);
 
             if (dbReader.Read())
             {

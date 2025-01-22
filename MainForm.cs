@@ -1,2530 +1,1284 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using I2cMasterInterface;
-using System.Xml;
-
-using ComponentFactory.Krypton.Toolkit;
-using QsfpDigitalDiagnosticMonitoring;
-using System.Threading;
-using System.Runtime.Remoting.Channels;
-using System.Web.UI.Design;
-using System.Security.Policy;
-using System.Security.Cryptography.X509Certificates;
-using System.IO;
-using System.Threading.Tasks;
-using NuvotonIcpTool;
-using System.Reflection;
-using Ionic.Zip;
-using System.Runtime.Remoting.Messaging;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
-using System.Globalization;
 using System.Diagnostics;
-using System.Web.Configuration;
-using System.Diagnostics.Eventing.Reader;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using System.Runtime.Remoting.Channels;
+using System.Runtime.Remoting.Messaging;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web.UI;
+using System.Windows.Forms;
+using System.Xml;
+using ComponentFactory.Krypton.Toolkit;
+using Ionic.Zip;
+using NuvotonIcpTool;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace IntegratedGuiV2
 {
-    public partial class MainForm : KryptonForm
+    
+    public partial class MainForm: KryptonForm
     {
-        private I2cMaster i2cMaster = new I2cMaster();
-        private DataTable dtWriteConfig = new DataTable();
-        private WaitFormFunc loadingForm = new WaitFormFunc();
-
-        private short iBitrate = 400; //kbps
-        private short TriggerDelay = 100; //ms
+        private EngineerForm engineerForm; // Assist processing for i2c communication
+        private System.Windows.Forms.Timer timer;
+        private int SequenceIndexA = 0, SequenceIndexB = 0;
+        private int SequenceIndexDirectionA = 0, SequenceIndexDirectionB = 0;
+        private int ForceOpenSas4 = 0, ForceOpenPcie4 = 0, ForceOpenQsfp28 = 0;
+        private int ForceControl1 = 0, ForceControl2 = 0, ForceControl3 = 0;
+        private bool DoubleSideMode = false;
         private int ProcessingChannel = 1;
-        private bool FirstRead = false;
-        private bool AutoSelectIcConfig = false;
-        private string sAcConfig;
-        private string APROMPath, DATAROMPath;
-        private string ASidePath, BSidePath;
-        private bool writeToFile = false;
-        private string fileName = "3234.cfg";
+        private int SerialNumber = 1;
+        private int MinSerialNumber = 1;
+        private int MaxSerialNumber = 9999;
+        private bool DemoMode = false;
         private bool DebugMode = false;
-        private bool I2cConnected = false;
-        private bool BypassWriteIcConfig = false;
         private bool FirstRound = true;
-        private bool FlagFwUpdated = false;
-        private string userRole = "";
-        private string lastUsedDirectory;
-        private bool SetQsfpMode = false;
-        private bool TwoByteMode = false;
-        internal bool BothSupplyMode = false;
+        private bool RxPowerUpdate = false;
+        private bool I2cConnected = false;
+        private bool ForceConnectWithoutInvoke = false;
+        private bool Sas3Module = false;
+        private bool IsListeningForHideKeys = false;
+        private bool IsSwitching = false;
+        private string CurrentDate = DateTime.Now.ToString("yyMMdd");
+        private int Revision = 1;
+        private string TempFolderPath = string.Empty;
+        private CancellationTokenSource cancellationTokenSource;
 
-        public bool InformationReadState { get; private set; }
-        public bool DdmReadState { get; private set; }
-        public bool MemDumpReadState { get; private set; }
-        public bool CorrectorReadState { get; private set; }
-        public string FwVersionCode, FwVersionCodeCheck;
+        private Thread RxPowerUpdateThread;
+        private bool ContinueRxPowerUpdate = true;
+        private WaitFormFunc loadingForm = new WaitFormFunc();
+        private List<NamingRuleModel> namingRules;
+        private Dictionary<string, DomainUpDown> fieldControls;
+        private Dictionary<string, Label> lables;
 
-        public event EventHandler<string> ReadStateUpdated;
-        public event EventHandler<int> ProgressValue;
-        public event EventHandler<MessageEventArgs> MainMessageUpdated;
-        public event EventHandler<TextBoxTextEventArgs> TextBoxTextChanged;
-        public event Action<bool> OnPluginWaiting;
-        public event Action<bool> OnPluginDetected;
-        private DataTable dtMemory = new DataTable();
-
-
-        protected virtual void StateUpdated(string message, int? value)
+        public class NamingRuleModel
         {
-            ReadStateUpdated?.Invoke(this, message);
+            public string RuleName { get; set; }
+            public List<string> Fields { get; set; }
+        }
 
-            if (value != null)
-                ProgressValue?.Invoke(this, value.Value);
+        private void InitializeNamingRules()
+        {
+            namingRules = new List<NamingRuleModel>
+            {
+                new NamingRuleModel
+                {
+                    RuleName = "Rule 1: YYMMDDRRSSSS",
+                    Fields = new List<string> { "YY", "MM", "DD", "RR", "SSSS" }
+                },
+                new NamingRuleModel
+                {
+                    RuleName = "Rule 2: YYWWDLSSSS",
+                    Fields = new List<string> { "YY", "WW", "D", "L", "SSSS" }
+                },
+                new NamingRuleModel
+                {
+                    RuleName = "Rule 3: YYMMDDSSSS",
+                    Fields = new List<string> { "YY", "MM", "DD", "SSSS" }
+                }
+            };
+        }
+
+        private int GetCurrentWeekOfYear()
+        {
+            DateTime currentDate = DateTime.Now;
+
+            System.Globalization.CultureInfo culture = System.Globalization.CultureInfo.CurrentCulture;
+
+            int weekOfYear = culture.Calendar.GetWeekOfYear(
+                currentDate,
+                System.Globalization.CalendarWeekRule.FirstFourDayWeek,
+                DayOfWeek.Monday);
+
+            return weekOfYear;
+        }
+
+        private int GetCurrentWorkDay()
+        {
+            DayOfWeek dayOfWeek = DateTime.Now.DayOfWeek;
+
+            if (dayOfWeek >= DayOfWeek.Monday && dayOfWeek <= DayOfWeek.Friday)
+                return (int)dayOfWeek;
+            else
+                return 1;
+        }
+
+        private void BindNamingRulesToComboBox()
+        {
+            foreach (var rule in namingRules) {
+                cbSnNamingRule.Items.Add(rule.RuleName);
+            }
+            cbSnNamingRule.SelectedIndex = 0;
+        }
+
+        private void GenerateDynamicComponents(NamingRuleModel rule)
+        {
+            flowLayoutPanel1.Controls.Clear();
+            flowLayoutPanel2.Controls.Clear();
+
+            foreach (var field in rule.Fields) {
+                var label = new Label {
+                    Name = $"l{field}",
+                    Text = field,
+                };
+
+                var domainUpDown = new DomainUpDown {
+                    Name = $"dud{field}",
+                    Tag = field,
+                };
+
+                domainUpDown.TextChanged += domainUpDown_TextChanged;
+                InitializeDynamicItems(label, domainUpDown, field);
+                flowLayoutPanel1.Controls.Add(label);
+                flowLayoutPanel2.Controls.Add(domainUpDown);
+            }
+        }
+
+        
+        private void InitializeDynamicItems(Label label, DomainUpDown domainUpDown, string field)
+        {
+            switch (field) {
+                case "YY":
+                    label.Text = "YY";
+                    label.Width = 40;
+                    for (int i = 30; i >= 15; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = DateTime.Now.ToString("yy");
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "MM":
+                    label.Text = "MM";
+                    label.Width = 40;
+                    for (int i = 12; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = DateTime.Now.ToString("MM");
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "DD":
+                    label.Text = "DD";
+                    label.Width = 40;
+                    for (int i = 31; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = DateTime.Now.ToString("dd");
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "RR":
+                    label.Text = "RR";
+                    label.Width = 40;
+                    for (int i = 99; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    domainUpDown.SelectedItem = "01";
+                    domainUpDown.Width = 40;
+                    break;
+
+                case "SSSS":
+                    label.Text = "SSSS";
+                    label.Width = 55;
+                    for (int i = 9999; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D4"));
+                    domainUpDown.SelectedItem = "0001";
+                    domainUpDown.Width = 55;
+                    break;
+
+                case "WW":
+                    label.Text = "WW";
+                    label.Width = 40;
+                    for (int i = 52; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString("D2"));
+                    int currentWeek = GetCurrentWeekOfYear();
+                    if (domainUpDown.Items.Contains(currentWeek.ToString("D2")))
+                        domainUpDown.SelectedItem = currentWeek.ToString("D2");
+                    else
+                        MessageBox.Show($"Current week {currentWeek} not found in DomainUpDown.");
+
+                    domainUpDown.Width = 40;
+
+                    for (int i = 12; i >= 1; i--)
+                        dudMm2.Items.Add(i.ToString("D2"));
+                    dudMm2.SelectedItem = DateTime.Now.ToString("MM");
+
+                    for (int i = 31; i >= 1; i--)
+                        dudDd2.Items.Add(i.ToString("D2"));
+                    dudDd2.SelectedItem = DateTime.Now.ToString("dd");
+
+                    break;
+
+                case "D":
+                    label.Text = "D";
+                    label.Width = 30;
+                    for (int i = 5; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString());
+                    int currentDay = GetCurrentWorkDay();
+                    domainUpDown.SelectedItem = currentDay.ToString();
+                    domainUpDown.Width = 30;
+                    break;
+
+                case "L":
+                    label.Text = "L";
+                    label.Width = 30;
+                    for (int i = 4; i >= 1; i--)
+                        domainUpDown.Items.Add(i.ToString());
+                    domainUpDown.SelectedItem = "1";
+                    domainUpDown.Width = 30;
+                    break;
+            }
+        }
+
+        private void cbSnNamingRule_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            gbCodeEditor.Select();
+
+            if (cbSnNamingRule.SelectedIndex >= 0 && namingRules != null) {
+                var selectedRule = namingRules[cbSnNamingRule.SelectedIndex];
+                GenerateDynamicComponents(selectedRule);
+            }
+            else {
+                MessageBox.Show("Please select a valid naming convention.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            _UpdateSerialNumberTextBox();
+        }
+
+        private string GenerateSerialNumber()
+        {
+            StringBuilder serialNumber = new StringBuilder();
+
+            var domainUpDowns = flowLayoutPanel2.Controls.OfType<DomainUpDown>();
+
+            foreach (var dud in domainUpDowns) {
+                serialNumber.Append(dud.Text);
+            }
+
+            return serialNumber.ToString();
+        }
+
+        private void MainForm_MainMessageUpdated(object sender, MessageEventArgs e)
+        {
+            if (ProcessingChannel == 1) {
+                BeginInvoke(new Action(() =>
+                {
+                    lCh1Message.Text = e.Message;
+                    cProgressBar1.Value = e.ProgressValue;
+                    cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
+                }));
+            }
+            else if (ProcessingChannel == 2) {
+                BeginInvoke(new Action(() =>
+                {
+                    lCh2Message.Text = e.Message;
+                    cProgressBar2.Value = e.ProgressValue;
+                    cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
+                }));
+            }
+        }
+
+        private void domainUpDown_TextChanged(object sender, EventArgs e)
+        {
+            _SerialNumberRule2Control();
+            _UpdateSerialNumberTextBox();
+        }
+
+        private void _UpdateSerialNumberTextBox()
+        {
+            string yy = _GetDomainUpDownValue("dudYy");
+            string mm = _GetDomainUpDownValue("dudMm");
+            string mm2 = !string.IsNullOrEmpty(dudMm2.Text) ? dudMm2.Text : DateTime.Now.ToString("MM");
+            string dd = _GetDomainUpDownValue("dudDd");
+            string dd2 = !string.IsNullOrEmpty(dudDd2.Text) ? dudDd2.Text : DateTime.Now.ToString("dd");
+            string rr = _GetDomainUpDownValue("dudRr");
+            string ssss = _GetDomainUpDownValue("dudSsss");
+            string ww = _GetDomainUpDownValue("dudWw");
+            string d = _GetDomainUpDownValue("dudD");
+            string l = _GetDomainUpDownValue("dudL");
+
+            int selectedRuleIndex = cbSnNamingRule.SelectedIndex;
+
+            if (selectedRuleIndex == 0) {
+                tbVenderSn.Text = yy + mm + dd + rr + ssss;
+                tbDateCode.Text = yy + mm + dd;
+            }
+            else if (selectedRuleIndex == 1) {
+                tbVenderSn.Text = yy + ww + d + l + ssss;
+                tbDateCode.Text = yy + mm2 + dd2;
+            }
+            else if (selectedRuleIndex == 2) {
+                tbVenderSn.Text = yy + mm + dd + ssss;
+                tbDateCode.Text = yy + mm + dd;
+            }
+        }
+
+        private void _SerialNumberRule2Control()
+        {
+            if (cbSnNamingRule.SelectedIndex == 1) {
+                lMm2.Visible = true;
+                lDd2.Visible = true;
+                dudMm2.Visible = true;
+                dudDd2.Visible = true;
+            }
+            else {
+                lMm2.Visible = false;
+                lDd2.Visible = false;
+                dudMm2.Visible = false;
+                dudDd2.Visible = false;
+            }
+        }
+
+        private string _GetDomainUpDownValue(string name)
+        {
+            var control = flowLayoutPanel2.Controls.Find(name, true).FirstOrDefault()
+                 ?? this.Controls.Find(name, true).FirstOrDefault(); // 如果找不到則從主表單尋找
+
+            return control?.Text ?? string.Empty;
+        }
+
+        private void _SetDomainUpDownValue(string name, int value)
+        {
+            var control = flowLayoutPanel2.Controls.Find(name, true).FirstOrDefault()
+                         ?? this.Controls.Find(name, true).FirstOrDefault(); // 如果找不到則從主表單尋找
+
+            if (control is DomainUpDown domainUpDown) {
+                if (value > 9999) {
+                    value %= 9999;
+                    MessageBox.Show($"Value exceeded 9999. Adjusted to: {value}",
+                                    "Value Adjusted", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                domainUpDown.Text = value.ToString("D4");
+            }
+            else {
+                MessageBox.Show($"Control with name '{name}' not found or is not a DomainUpDown.",
+                                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BindEvents()
+        {
+            //dudYy.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudMm.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudMm2.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudDd.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            dudDd2.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudRr.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudSsss.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudWw.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudD.TextChanged += new EventHandler(domainUpDown_TextChanged);
+            //dudL.TextChanged += new EventHandler(domainUpDown_TextChanged);
+        }
+        
+        private void HandlePluginWaiting(bool isWaiting)
+        {
+            if (isWaiting )
+                if (!ForceConnectWithoutInvoke)
+                    loadingForm.OnPluginWaiting();
+        }
+                
+        private void HandlePluginDetected(bool isDetected)
+        {
+            if (isDetected) {
+                if (!ForceConnectWithoutInvoke)
+                    loadingForm.PluginDetected();
+                else
+                    MessageBox.Show("Get it!");
+            }
+        }
+
+        public MainForm()
+        {
+            InitializeComponent();
+            InitializeNamingRules();
+            BindNamingRulesToComboBox();
+            BindEvents();
+            _UpdateSerialNumberTextBox();
+            engineerForm = new EngineerForm(true);
+            this.FormClosing += new FormClosingEventHandler(_FormClosing);
+            _AdjustGuiSizeAndCenter(550, 280);
+            this.Text = "OptiSync Manager";
+            cProgressBar1.Value = 0;
+            cProgressBar2.Value = 0;
+            this.Load += MainForm_Load;
+            this.KeyPreview = true;
+            this.KeyDown += _HideKeys_KeyDown;
+            this.tbVenderSn.KeyDown += TbVenderSn_KeyDown;
+            this.tbCustomerSn.KeyDown += TbCustomerSn_KeyDown;
+            engineerForm.OnPluginWaiting += HandlePluginWaiting;
+            engineerForm.OnPluginDetected += HandlePluginDetected;
+            tbHideKey.Enter += tbHideKey_MouseEnter;
+            tbHideKey.Leave += tbHideKey_MouseLeave;
+
+            if (!(engineerForm.ChannelSetApi(1) < 0)) // (bool setMode, bool setPassword)
+                I2cConnected = true;
+            else {
+                MessageBox.Show("I2c master connection failed.\nPlease check if the hardware configuration or UI is activated.",
+                                "I2c master connection failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                this.FormClosing -= _FormClosing;
+                this.Close();
+                Application.ExitThread();
+                Environment.Exit(0);
+            }
+
+            engineerForm.ReadStateUpdated += MainForm_ReadStateUpdated;
+            engineerForm.ProgressValue += MainForm_ProgressUpdated;
+            engineerForm.MainMessageUpdated += MainForm_MainMessageUpdated;
+
+            //ucMainForm initial...
+            if (DebugMode) {
+                bool beforeTestMode = engineerForm.GetVarBoolStateFromNuvotonIcpApi("TestMode");
+                engineerForm.SetVarBoolStateToNuvotonIcpApi("TestMode", true);
+                MessageBox.Show("Icp TestMode state...\n\nBefore: " + beforeTestMode
+                                + "\n\nAfter: " + engineerForm.GetVarBoolStateFromNuvotonIcpApi("TestMode")
+                                );
+                //mainForm?.SelectProduct("SAS4.0"); Force switch
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbInfomation", false);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", false);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
+
+                var checkBoxStates = engineerForm.GetCheckBoxStates();
+                var items = String.Join(", ", engineerForm.GetComboBoxItems());
+                string selectedProduct = engineerForm.GetSelectedProduct();
+
+
+                var BeforecbInformation = checkBoxStates["cbInfomation"];
+                var BeforecbTxIcConfig = checkBoxStates["cbTxIcConfig"];
+                var BeforecbRxIcConfig = checkBoxStates["cbRxIcConfig"];
+                var BeforeItems = items;
+                var BeforeSelectedProducts = selectedProduct;
+
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
+
+                checkBoxStates = engineerForm.GetCheckBoxStates();
+                MessageBox.Show("CheckBox state...\n\nBefore: "
+                                + "\n   cbInfomation state: " + BeforecbInformation
+                                + "\n   cbTxIcConfig state: " + BeforecbTxIcConfig
+                                + "\n   cbRxIcConfig state: " + BeforecbRxIcConfig
+                                + "\n   cbProductSelect items: " + BeforeItems
+                                + "\n   cbProductSelect state: " + BeforeSelectedProducts
+                                + "\n\nAfter:\n   cbInfomation state: " + checkBoxStates["cbInfomation"]
+                                + "\n   cbTxIcConfig state: " + checkBoxStates["cbTxIcConfig"]
+                                + "\n   cbRxIcConfig state: " + checkBoxStates["cbRxIcConfig"]
+                                + "\n   cbProductSelect state: " + selectedProduct
+                                );
+            }
+            else {
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbMemDump", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", true);
+            }
+
+            //ucNuvotonICP initial...
+            if (DebugMode) {
+                MessageBox.Show("ReLink and Erase APROM...Done");
+                bool beforeSecurityLock = engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbSecurityLock");
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false);
+                engineerForm.UpdateSecurityLockStateFromNuvotonIcpApi();
+                MessageBox.Show("SecurityLock state...\n\nBefore: " + beforeSecurityLock
+                                + "\n\nAfter: " + engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbSecurityLock")
+                                );
+
+                var BeforecbLDROM = engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbLDROM");
+                var BeforecbAPROM = engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbAPROM");
+                var BeforecbDATAROM = engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbDataFlash");
+                string pathLDROM = engineerForm.GetTextBoxTextFromNuvotonIcpApi("tbLDROM");
+                string pathAPROM = engineerForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM");
+                string pathDATAROM = engineerForm.GetTextBoxTextFromNuvotonIcpApi("tbDataFlash");
+
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
+
+                MessageBox.Show("Flashing checkBox state...\n\nBefore: "
+                                + "\n   cbLDROM: " + BeforecbLDROM
+                                + "\n   cbAPROM: " + BeforecbAPROM
+                                + "\n   cbDataFlash: " + BeforecbDATAROM
+                                + "\n   tbLDROM: " + pathLDROM
+                                + "\n   tbAPROM: " + pathAPROM
+                                + "\n   tbcbDataFlash: " + pathDATAROM
+                                + "\n\nAfter:\n   cbLDROM: " + engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbLDROM")
+                                + "\n   cbAPROM: " + engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbAPROM")
+                                + "\n   cbDataFlash: " + engineerForm.GetCheckBoxStateFromNuvotonIcpApi("cbDataFlash")
+                                );
+            }
+            else {
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true);
+            }
+
+            engineerForm.UpdateSecurityLockStateFromNuvotonIcpApi();
+        }
+
+        private void TbHideKey_Leave(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            this.Activate();
+            this.BringToFront();
+            tbHideKey.Select();
+        }
+
+        private void _InitialUi()
+        {
+            lCh1EC.Text = "...";
+            lCh2EC.Text = "...";
+            lCh1Message.Text = "...";
+            lCh2Message.Text = "...";
+            cProgressBar1.Text = "A";
+            cProgressBar1.ForeColor = Color.FromArgb(85,213,219);
+            cProgressBar2.Text = "B";
+            cProgressBar2.ForeColor = Color.FromArgb(85, 213, 219);
+            cProgressBar1.Value = 0;
+            cProgressBar2.Value = 0;
+            tbVersionCodeCh1.Text = "";
+            tbVersionCodeCh2.Text = "";
+            tbVersionCodeReNewCh1.Text = "";
+            tbVersionCodeReNewCh2.Text = "";
+            tbOrignalSNCh1.Text = "";
+            tbOrignalSNCh2.Text = "";
+            tbReNewSNCh1.Text = "";
+            tbReNewSNCh2.Text = "";
+
+            tbOrignalTLSN.Text = "";
+            tbReNewTLSN.Text = "";
+            lStatus.TextAlign = ContentAlignment.MiddleCenter;
+
+            tbVersionCodeCh1.BackColor = Color.White;
+            tbVersionCodeCh2.BackColor = Color.White;
+            tbVersionCodeReNewCh1.BackColor = Color.White;
+            tbVersionCodeReNewCh2.BackColor = Color.White;
+            tbOrignalSNCh1.BackColor = Color.LightBlue;
+            tbOrignalSNCh2.BackColor = Color.LightBlue;
+            tbReNewSNCh1.BackColor = Color.LightBlue;
+            tbReNewSNCh2.BackColor = Color.LightBlue;
+            tbOrignalSNCh1.ForeColor = Color.Black;
+            tbOrignalSNCh2.ForeColor = Color.Black;
+            tbReNewSNCh1.ForeColor = Color.Black;
+            tbReNewSNCh2.ForeColor = Color.Black;
+            lCh1Message.ForeColor = Color.White;
+            lCh2Message.ForeColor = Color.White;
+            tbCustomerSn.BackColor = Color.White;
+            tbTruelightSn.BackColor = Color.White;
+            tbOrignalTLSN.BackColor = Color.White;
+            tbReNewTLSN.BackColor = Color.White;
+
+            bStart.Select();
+            _InitialRssiTextBox();
+            _InitializeUIForgbPrompt();
+            /*
+            if (!FirstRound) {
+                for (int i = 100; i > -1; i -= 5)// For ProgressBar renew
+                {
+                    cProgressBar1.Value = i;
+                    cProgressBar1.Text = "" + i + "%";
+                    cProgressBar2.Value = i;
+                    cProgressBar2.Text = "" + i + "%";
+                    Thread.Sleep(1);
+                }
+            }
+            */
+            Application.DoEvents();
+        }
+
+        private void _InitializeUIForgbPrompt()
+        {
+            //gbPrompt.Visible = true;
+            gbPrompt.BackColor = Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(145)))), ((int)(((byte)(168)))));
+            lStatus.Visible = true;
+            lStatus.Text = "...";
+            tbOrignalTLSN.BackColor = Color.White;
+            tbOrignalTLSN.Text = "";
+            tbReNewTLSN.BackColor = Color.White;
+            tbReNewTLSN.Text = "";
 
             Application.DoEvents();
         }
 
-        private void SetupControlEvents()
+        private void _HideKeys_KeyDown(object sender, KeyEventArgs e)
         {
-            ucNuvotonIcpTool.LinkTextUpdated += new UcNuvotonIcpTool.LinkTextUpdatedEventHandler(ucNuvotonIcp_LinkTextUpdated);
-        }
+            if (!IsListeningForHideKeys)
+                return;
 
-        private void ucNuvotonIcp_LinkTextUpdated(string text)
-        {
-            
-            if (this.bIcpConnect.InvokeRequired)// 檢查是否需要跨執行緒調用
-                this.bIcpConnect.Invoke(new Action(() => this.bIcpConnect.Text = text));
-            else
-                this.bIcpConnect.Text = text;
-        }
+            Keys[][] expectedKeys = {
+                new Keys[] { Keys.D, Keys.NumPad4, Keys.NumPad4, Keys.NumPad6, Keys.NumPad6 },
+                new Keys[] { Keys.D, Keys.NumPad8, Keys.NumPad8, Keys.NumPad2, Keys.NumPad2 },
+                new Keys[] { Keys.C, Keys.O, Keys.N, Keys.N, Keys.P, Keys.R, Keys.O },
+                new Keys[] { Keys.C, Keys.NumPad2, Keys.NumPad3, Keys.NumPad6, Keys.NumPad8 },
+                new Keys[] { Keys.D,Keys.NumPad1, Keys.NumPad1, Keys.NumPad1, Keys.Down},
+                new Keys[] { Keys.D,Keys.NumPad2, Keys.NumPad2, Keys.NumPad2, Keys.Down},
+                new Keys[] { Keys.D,Keys.NumPad3, Keys.NumPad3, Keys.NumPad3, Keys.Down},
+                new Keys[] { Keys.T, Keys.I, Keys.M, Keys.E},
+                new Keys[] { Keys.D, Keys.NumPad3, Keys.NumPad2, Keys.NumPad3, Keys.NumPad4},
+                new Keys[] { Keys.D, Keys.NumPad0, Keys.NumPad0, Keys.NumPad8, Keys.NumPad0}
+                };
 
-        public string GetValueFromUcRt146Config(string comboBoxId)
-        {
-            return ucRt146Config.GetComboBoxSelectedValue(comboBoxId);
-        }
-
-        public string GetValueFromUcRt145Config(string comboBoxId)
-        {
-            return ucRt145Config.GetComboBoxSelectedValue(comboBoxId);
-        }
-
-        public string GetFirmwareVersionCodeApi()
-        {
-            return _GetFirmwareVersionCode();
-        }
-
-        public List<string> GetComboBoxItems()
-        {
-            List<string> items = new List<string>();
-
-            foreach (var item in cbProductSelect.Items)
-            {
-                items.Add(item.ToString());
-            }
-
-            return items;
-        }
-
-        public string GetSelectedProduct()
-        {
-            if (cbProductSelect.InvokeRequired)
-                return (string)cbProductSelect.Invoke(new Func<string>(() => (string)cbProductSelect.SelectedItem));
-            else
-                return (string)cbProductSelect.SelectedItem;
-        }
-
-        public bool HardwareIdentificationValidationApi(string modelType, bool messageMode)
-        {
-            if (this.InvokeRequired)
-                return (bool)this.Invoke(new Action(() => HardwareIdentificationValidation(modelType, messageMode)));
-            else
-                return (HardwareIdentificationValidation(modelType, messageMode));
-        }
-
-        public Dictionary<string, bool> GetCheckBoxStates()
-        {
-            return new Dictionary<string, bool>
-            {
-                { "cbInfomation", cbInfomation.Checked },
-                { "cbDdm", cbDdm.Checked },
-                { "cbMemDump", cbMemDump.Checked },
-                { "cbCorrector", cbCorrector.Checked },
-                { "cbTxIcConfig", cbTxIcConfig.Checked },
-                { "cbRxIcConfig", cbRxIcConfig.Checked }
+            Action[] actions = {
+                () => _OpenLoginForm(),
+                () => _OpenAdminAuthenticationForm(),
+                () => _OpenLoginForm(),
+                () => _OpenAdminAuthenticationForm(),
+                () => _SelectModelBeforeActivateEngineerMode(0), // SAS4
+                () => _SelectModelBeforeActivateEngineerMode(1), // PCIe4
+                () => _SelectModelBeforeActivateEngineerMode(2), // QSFP28
+                () => _DisplayRelinkControlUi(),
+                () => _DirectDriveMpMode(),
+                () => _EnableHiddenEngineerMode(),
             };
-        }
 
-        public void SelectProductApi(string selectedProduct)
-        {
-            if (cbProductSelect.InvokeRequired)
-                cbProductSelect.Invoke(new Action(() => CheckAndSelectProduct(selectedProduct)));
-            else
-                CheckAndSelectProduct(selectedProduct);
-        }
+            int[] sequenceIndices = {   SequenceIndexA, SequenceIndexB, 
+                                        SequenceIndexDirectionA, SequenceIndexDirectionB,
+                                        ForceOpenSas4, ForceOpenPcie4, ForceOpenQsfp28,
+                                        ForceControl1, ForceControl2 ,ForceControl3};
 
-        private void CheckAndSelectProduct(string selectedProduct)
-        {
-            if (cbProductSelect.Items.Contains(selectedProduct))
-                cbProductSelect.SelectedItem = selectedProduct;
-            else
-                MessageBox.Show("Product not found in the ComboBox.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        }
+            for (int i = 0; i < expectedKeys.Length; i++) {
+                if (sequenceIndices[i] < expectedKeys[i].Length &&
+                    e.KeyCode == expectedKeys[i][sequenceIndices[i]]) {
+                    sequenceIndices[i]++;
 
-        public void SetCheckboxCheckedApi(CheckBox checkbox, bool value)
-        {
-            if (checkbox.InvokeRequired)
-                checkbox.Invoke(new Action(() => checkbox.Checked = value));
-            else
-                checkbox.Checked = value;
-        }
-
-        public void SetCheckBoxCheckedByNameApi(string checkBoxName, bool value)
-        {
-            CheckBox checkBox = GetCheckBoxByName(checkBoxName);
-            if (checkBox != null)
-                SetCheckboxCheckedApi(checkBox, value);
-        }
-
-        public bool GetVarBoolStateApi(string varName)
-        {
-            Type type = this.GetType();
-
-            FieldInfo field = type.GetField(varName, BindingFlags.NonPublic | BindingFlags.Instance);
-
-            if (field != null && field.FieldType == typeof(bool))
-            {
-                return (bool)field.GetValue(this);
-            }
-            else
-            {
-                throw new ArgumentException("Invalid Var Name or Var is not a bool type");
-            }
-        }
-
-        
-        public bool GetChipIdApi(string modelType)
-        {
-            if (this.InvokeRequired)
-                return (bool)this.Invoke(new Action(() => _GetChipId(modelType)));
-            else
-                return (_GetChipId(modelType));
-        }
-
-        public string GetSerialNumberApi()
-        {
-            if (this.InvokeRequired)
-                return (string)this.Invoke(new Action(() => ucMemoryDump.GetSerialNumberApi()));
-            else
-                return (ucMemoryDump.GetSerialNumberApi());
-        }
-
-        public string GetHiddenPasswordApi()
-        {
-            if (this.InvokeRequired)
-                return (string)this.Invoke(new Action(() => ucMemoryDump.GetHiddenPasswordApi()));
-            else
-                return (ucMemoryDump.GetHiddenPasswordApi());
-        }
-
-        public int SetSerialNumberApi(string serialNumber)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _SetSerialNumber(serialNumber)));
-            else
-                return _SetSerialNumber(serialNumber);
-        }
-
-        public void SetVarBoolStateToMainFormApi(string varName, bool value)
-        {
-            Type type = this.GetType();
-            FieldInfo field = type.GetField(varName, BindingFlags.NonPublic | BindingFlags.Instance);
-
-            if (field != null && field.FieldType == typeof(bool))
-            {
-                field.SetValue(this, value);
-            }
-            else
-            {
-                throw new ArgumentException("Invalid Var Name or Var is not a bool type");
-            }
-        }
-        public int ComparisonRegisterApi(string modelType, string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ComparisonRegister(modelType, filePath, onlyVerifyMode, comparisonObject, engineerMode)));
-            else
-                return _ComparisonRegister(modelType, filePath, onlyVerifyMode, comparisonObject, engineerMode);
-        }
-
-        public int ComparisonRegisterForSas3Api(string filePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode, int ch)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ComparisonRegisterForSas3(filePath, onlyVerifyMode, comparisonObject, engineerMode, ch)));
-            else
-                return _ComparisonRegisterForSas3(filePath, onlyVerifyMode, comparisonObject, engineerMode, ch);
-        }
-
-        public int ComparisonRegisterForFinalCheckApi(string modelType, string filePath, string comparisonObject, bool engineerMode)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ComparisonRegisterForFinalCheck(modelType, filePath, comparisonObject, engineerMode)));
-            else
-                return _ComparisonRegisterForFinalCheck(modelType, filePath, comparisonObject, engineerMode);
-        }
-
-        public int ExportLogfileApi(string modelType, string fileName, bool logFileMode, bool writeSnMode)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ExportLogfile(modelType, fileName, logFileMode, writeSnMode)));
-            else
-                return _ExportLogfile(modelType, fileName, logFileMode, writeSnMode);
-        }
-
-        public int ExportLogfileForSas3Api(string fileName, bool logFileMode, bool writeSnMode, int processingChannel)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ExportLogfileForSas3(fileName, logFileMode, writeSnMode, processingChannel)));
-            else
-                return _ExportLogfileForSas3(fileName, logFileMode, writeSnMode, processingChannel);
-        }
-
-        public int ForceConnectApi(bool relinkTestMode, int relinkCount, int startTime, int intervalTime) // Used for MpForm
-        {
-            if (relinkCount != 0)
-                ucNuvotonIcpTool.RelinkCount = relinkCount;
-
-            if (intervalTime != 0)
-                ucNuvotonIcpTool.RelinkStartTime = startTime;
-
-            if (intervalTime != 0)
-                ucNuvotonIcpTool.RelinkIntervalTime = intervalTime;
-
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucNuvotonIcpTool.ForceConnectApi(relinkTestMode)));
-            else
-                ucNuvotonIcpTool.ForceConnectApi(relinkTestMode);
-
-            return ucNuvotonIcpTool.ReturnSleepTime;
-        }
-
-        public void CurrentRegistersApi(string modelType)
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => _CurrentRegisters(modelType)));
-            else
-                _CurrentRegisters(modelType);
-        }
-
-        public void StartFlashingApi() // Used for MpForm
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => ucNuvotonIcpTool.StartFlashingApi()));
-            else
-                ucNuvotonIcpTool.StartFlashingApi();
-        }
-
-        public int StoreIntoFlashApi()
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucInformation.StoreIntoFlashApi()));
-            else
-                return ucInformation.StoreIntoFlashApi();
-        }
-
-        public int InformationWriteApi() // Used for MpForm
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucInformation.WriteAllApi()));
-            else
-                return ucInformation.WriteAllApi();
-        }
-        
-        public int WriteVendorSerialNumberApi(string vendorSn, string dataCode)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucInformation.WriteVendorSerialNumberApi(vendorSn, dataCode)));
-            else
-                return ucInformation.WriteVendorSerialNumberApi(vendorSn, dataCode);
-        }
-        
-        public int InformationReadApi() // Used for MpForm
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucInformation.ReadAllApi()));
-            else
-                return ucInformation.ReadAllApi();
-        }
-
-        public string GetVenderPnApi() // Used for MpForm
-        {
-            if (this.InvokeRequired)
-                return (string)this.Invoke(new Action(() => ucInformation.GetVenderPnApi()));
-            else
-                return ucInformation.GetVenderPnApi();
-        }
-
-        public void SetToChannle2Api(bool mode)
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => _SetToChannel2(mode)));
-            else
-                _SetToChannel2(mode);
-        }
-
-        public void SetAutoReconnectApi(bool Mode)
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => _SetAutoReconnectControl(Mode)));
-            else
-                _SetAutoReconnectControl(Mode);
-        }
-
-        public void SetBypassEraseAllCheckModeApi(bool Mode)
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => _SetBypassEraseAllControl(Mode)));
-            else
-                _SetBypassEraseAllControl(Mode);
-        }
-
-        public bool GetAutoReconnectApi()
-        {
-            if (this.InvokeRequired)
-                return (bool)this.Invoke(new Action(()  => _GetAutoReconnectControl()));
-            else
-                return _GetAutoReconnectControl();
-        }
-
-        public bool GetBypassEraseAllCheckModeApi()
-        {
-            if (this.InvokeRequired)
-                return (bool)this.Invoke(new Action(() => _GetBypassEraseAllControl()));
-            else
-                return _GetBypassEraseAllControl();
-        }
-
-        public int WriteRegisterPageApi(string targetPage, int delayTime, string registerFilePath)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _WriteRegisterPage(targetPage, delayTime, registerFilePath)));
-            else
-                return _WriteRegisterPage(targetPage, delayTime, registerFilePath);
-        }
-
-        public int WriteRegisterPageForSas3Api(string targetPage, int delayTime, string registerFilePath, int processingChannel)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel)));
-            else
-                return _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel);
-        }
-
-        public void SetVarBoolStateToNuvotonIcpApi(string varName, bool value)
-        {
-            ucNuvotonIcpTool.SetVarBoolState(varName, value);
-        }
-        
-        public void SetVarIntStateToNuvotonIcpApi(string varName, int value)
-        {
-            ucNuvotonIcpTool.SetVarIntState(varName, value);
-        }
-
-        public void SetCheckBoxStateToNuvotonIcpApi(string checkBoxId, bool state)
-        {
-            ucNuvotonIcpTool.SetCheckBoxState(checkBoxId, state);
-        }
-
-        public bool GetVarBoolStateFromNuvotonIcpApi(string varName)
-        {
-            return ucNuvotonIcpTool.GetVarBoolState(varName);
-        }
-
-        public int GetVarIntStateFromNuvotonIcpApi(string varName)
-        {
-            return ucNuvotonIcpTool.GetVarIntState(varName);
-        }
-
-        public bool GetCheckBoxStateFromNuvotonIcpApi(string checkBoxId)
-        {
-            return ucNuvotonIcpTool.GetCheckBoxState(checkBoxId);
-        }
-
-        public void SetTextBoxTextToNuvotonIcpApi(string textBoxId, string newText)
-        {
-            ucNuvotonIcpTool.SetTextBoxText(textBoxId, newText);
-        }
-
-        public string GetTextBoxTextFromNuvotonIcpApi(string checkBoxId)
-        {
-            return ucNuvotonIcpTool.GetTextBoxText(checkBoxId);
-        }
-
-        public string GetTextBoxTextFromDdmiApi(string checkBoxId)
-        {
-            return ucInformation.GetTextBoxText(checkBoxId);
-        }
-
-        public string GetTextBoxTextFromCorrectorApi(string checkBoxId)
-        {
-            return (checkBoxId);
-        }
-
-        public void SetVendorSnToDdmiApi(string text)
-        {
-            ucInformation.SetVendorSnApi(text);
-        }
-
-        public void SetDataCodeToDdmiApi(string text)
-        {
-            ucInformation.SetDateCodeApi(text);
-        }
-
-        public string GetVendorSnFromDdmiApi()
-        {
-            return ucInformation.GetVendorSnApi();
-        }
-
-        public string GetDateCodeFromDdmiApi()
-        {
-            return ucInformation.GetDateCodeApi();
-        }
-
-        public void SetVarBoolStateToDdmApi(string varName, bool value)
-        {
-            ucDigitalDiagnosticsMonitoring.SetVarBoolState(varName, value);
-        }
-
-        public bool GetVarBoolStateFromDdmApi(string varName)
-        {
-            return ucDigitalDiagnosticsMonitoring.GetVarBoolState(varName);
-        }
-
-        public string GetTextBoxTextFromDdmApi(string textBoxId)
-        {
-            return ucDigitalDiagnosticsMonitoring.GetTextBoxText(textBoxId);
-        }
-
-        public int RxPowerReadApiFromDdmApi()
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => ucDigitalDiagnosticsMonitoring.RxPowerReadApi()));
-            else
-                return ucDigitalDiagnosticsMonitoring.RxPowerReadApi();
-        }
-
-        public void UpdateSecurityLockStateFromNuvotonIcpApi()
-        {
-            if (this.InvokeRequired)
-                this.Invoke(new Action(ucNuvotonIcpTool.UpdateSecurityLockStateApi));
-            else
-                ucNuvotonIcpTool.UpdateSecurityLockStateApi();
-        }
-
-        private CheckBox GetCheckBoxByName(string name)
-        {
-            switch (name)
-            {
-                case "cbInfomation":
-                    return cbInfomation;
-                case "cbDdm":
-                    return cbDdm;
-                case "cbMemDump":
-                    return cbMemDump;
-                case "cbCorrector":
-                    return cbCorrector;
-                case "cbTxIcConfig":
-                    return cbTxIcConfig;
-                case "cbRxIcConfig":
-                    return cbRxIcConfig;
-
-                default:
-                    return null;
-            }
-        }
-
-        private int _AppendWriteToFile(string sAction)
-        {
-            if (!File.Exists(fileName)||
-                string.IsNullOrEmpty(File.ReadAllText(fileName)))
-            { 
-                sAcConfig = "//Write,DevAddr,RegAddr,Value\n" + "//Read,DevAddr,RegAddr,Value\n";
-            }
-            else
-            {
-                sAcConfig = "";
+                    if (CheckSequenceComplete(sequenceIndices[i], expectedKeys[i])) {
+                        I2cConnected = (engineerForm.I2cMasterDisconnectApi() < 0);
+                        actions[i]();
+                        _ResetSequence();
+                    }
+                }
+                else {
+                    _ResetSequence();
+                }
             }
 
-            sAcConfig += sAction + "\n";
-
-            File.AppendAllText(fileName, sAcConfig);
-            return 0;
+            SequenceIndexA = sequenceIndices[0];
+            SequenceIndexB = sequenceIndices[1];
+            SequenceIndexDirectionA = sequenceIndices[2];
+            SequenceIndexDirectionB = sequenceIndices[3];
+            ForceOpenSas4 = sequenceIndices[4];
+            ForceOpenPcie4 = sequenceIndices[5];
+            ForceOpenQsfp28 = sequenceIndices[6];
+            ForceControl1 = sequenceIndices[7];
+            ForceControl2 = sequenceIndices[8];
+            ForceControl3 = sequenceIndices[9];
         }
 
-        private int _SetQsfpMode(byte mode)
+        private void _ResetSequence()
         {
-            byte[] data = new byte[] { 0xaa };
-
-            if (writeToFile == false)
-            {
-
-                if (i2cMaster.WriteApi(80, 127, 1, data) < 0)
-                    return -1;
-
-                data[0] = mode;
-
-                if (i2cMaster.WriteApi(80, 164, 1, data) < 0)
-                    return -1;
-            }
-            else
-            {
-                _AppendWriteToFile("Write,0x50,0x7F,0xAA");
-                _AppendWriteToFile($"Write,0x50,0x7F,0x{mode:X2}");
-            }
-
-            //MessageBox.Show("SetQsfpMode!!");
-
-            return 0;
+            SequenceIndexA = 0;
+            SequenceIndexB = 0;
+            SequenceIndexDirectionA = 0;
+            SequenceIndexDirectionB = 0;
+            ForceOpenSas4 = 0;
+            ForceOpenPcie4 = 0;
+            ForceOpenQsfp28 = 0;
+            ForceControl1 = 0;
+            ForceControl2 = 0;
+            ForceControl3 = 0;
         }
 
-        private int _I2cMasterConnect(int ch)
+        private bool CheckSequenceComplete(int currentIndex, Keys[] expectedKeys)
         {
-            if (i2cMaster.ConnectApi(400) < 0)
-                return -1;
-
-            if (ch == 1)
-                ProcessingChannel = 1;
-            else
-                ProcessingChannel = 2;
-
-            cbConnect.Checked = true;
-            I2cConnected = true;
-            if (_WriteModulePassword() < 0)
-                return -1;
-
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
-
-            return 0;
+            return currentIndex == expectedKeys.Length;
         }
 
-        private int _I2cMasterDisconnect()
+        private void _EnableHiddenEngineerMode()
         {
-            if (i2cMaster.DisconnectApi() < 0)
-                return -1;
-
-            cbConnect.Checked = false;
-            I2cConnected = false;
-
-            return 0;
+            _DirectDriveMpMode();
+            _ExtendFormForEngineerMode();
         }
 
-        private int _ChannelSwitch()
+        private void _ExtendFormForEngineerMode()
         {
-            _ChannelSet(GetChannelControl(ProcessingChannel == 1 ? 2 : 1));
-            ProcessingChannel = ProcessingChannel == 1 ? 2 : 1;
-            _UpdateButtonState();
+            cbBarcodeMode_CheckedChanged(null, null);
 
-            return ProcessingChannel;
+            cbBarcodeMode.Checked = true;
+            cbRegisterMapView.Checked = true;
+            rbFullMode.Visible = false;
+            rbOnlySN.Visible = false;
+            rbLogFileMode.Visible = false;
+            _AdjustGuiSizeAndCenter(700, 550);
+
+            tbVenderSn.Enabled = false;
+            cbAutoWirte.Checked = true;
+            bWriteTruelightSn.Enabled = false;
+            tbCustomerSn.Enabled = true;
+            tbTruelightSn.Enabled = false;
+            tbCustomerSn.Select();
         }
 
-        private int GetChannelControl(int processingChannel)
+        private void TbCustomerSn_KeyDown(object sender, KeyEventArgs e)
         {
-            if (BothSupplyMode) {
-                if (processingChannel == 1)
-                    return 13;
-                else if (processingChannel == 2)
-                    return 23;
+            int errorCode = 0;
+            cbRegisterMapView.Checked = true;
+
+            if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length == 12 &&
+                   tbCustomerSn.Focused && !cbDeepCheck.Checked) {
+                
+                _DisableButtons();
+                tbVenderSn.Text = "";
+                _UIActionForReWriteSerialNumber(true);
+                _InitialUi();
+
+                if (cbAutoWirte.Checked)
+                    tbCustomerSn.Enabled = false;
+
+                _GetTruelightSn(true, 1);
+                tbVenderSn.Text = tbCustomerSn.Text;
+                tbDateCode.Text = tbVenderSn.Text.Substring(0, 6);
+
+                if (_SerialNumberSerach() < 0) {
+                    _PromptError(false, ProcessingChannel);
+                    tbTruelightSn.Text = "Search failed";
+                    _InitialReWriteSnForFinish();
+                    return;
+                }
+
+                if (cbReParameter.Checked) {
+                    errorCode = _SetParameterFromPage8081();
+                    if (errorCode < 0) {
+                        _PromptError(false, ProcessingChannel);
+                        MessageBox.Show("ErrorCode: " + errorCode);
+                        return;
+                    }
+                }
+
+                errorCode = _WriteTruelightSn(tbTruelightSn.Text);
+                if (errorCode < 0) {
+                    _PromptError(false, ProcessingChannel);
+                    MessageBox.Show("ErrorCode: " + errorCode);
+                    return;
+                }
                 else
-                    return 0;
+                    _PromptCompleted(ProcessingChannel, false); //ToDo
+
+                if (cbReParameter.Checked && _WriteSnDateCodeFlow() < 0)
+                    _PromptError(false, ProcessingChannel);
+                else
+                    _PromptCompleted(ProcessingChannel, true); //ToDo
+
+                _GetTruelightSn(false, 1);
+                _InitialReWriteSnForFinish();
             }
-            else {
-                return processingChannel;
+            else if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length == 12 &&
+                        tbCustomerSn.Focused && cbDeepCheck.Checked) {
+                _InformationCheck(true);
             }
+            else if (e.KeyCode == Keys.Enter && tbCustomerSn.Text.Length != 12 && tbCustomerSn.Focused) {
+                MessageBox.Show("Please enter 12 characters.");
+                //tbCustomerSn.Text = "";
+            }
+
+        exit:
+            _EnableButtons();
+            tbCustomerSn.Select();
         }
 
-        private int _ChannelSet(int ch)
+        private void _InitialReWriteSnForFinish()
         {
-            if (!I2cConnected)
-            {
-                if (_I2cMasterConnect(ch) < 0) //不可指定為ProcessChannel.
-                    return -1;
-
-                I2cConnected = true;
-            }
-
-            Thread.Sleep(10);
-            if (i2cMaster.ChannelSetApi(ch) < 0)
-                return -1; 
-
-            if (ch == 0){
-                if (i2cMaster.DisconnectApi() < 0)
-                    return -1;
-
-                cbConnect.Checked = false;
-                I2cConnected = false;
-            }
-
-            return 0;
+            tbCustomerSn.Text = "";
+            tbCustomerSn.Enabled = true;
+            _UIActionForReWriteSerialNumber(false);
+            tbCustomerSn.Select();
         }
 
-        public int I2cMasterDisconnectApi()
+        private void TbVenderSn_KeyDown(object sender, KeyEventArgs e)
         {
-            int result = -1;
+            if (e.KeyCode == Keys.Enter && cbBarcodeMode.Checked && tbVenderSn.Focused) {
+                tbVenderSn.Enabled = false;
+                _DisableButtons();
+                _InitialUi();
 
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => result = _I2cMasterDisconnect()));
-            else
-                result = _I2cMasterDisconnect();
-
-            return result;
-        }
-
-        public int ChannelSwitchApi()
-        {
-            int result = -1;
-
-            if (this.InvokeRequired)
-                this.Invoke(new Action(() => result = _ChannelSwitch()));
-            else
-                result = _ChannelSwitch();
-
-            return result;
-        }
-
-        public int ChannelSetApi(int ch)
-        {
-            if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _ChannelSet(ch)));
-            else
-                return _ChannelSet(ch);
-        }
-        /*
-        private int _I2cReadForAll(byte devAddr, byte regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-            if (i2cMaster.connected == false) {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (SetQsfpMode && _SetQsfpMode(0x4D) < 0)
-                return -1;
-
-            if (writeToFile == false) {
-                rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
-
-                if (rv < 0) {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-                else if (rv != length) {
-                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
-                    MessageBox.Show("Please confirm the module plug-in status");
-                }
-
-                return rv;
-            }
-            else {
-                for (i = 0; i < length; i++) {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-        */
-        private int _I2cReadIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-            if (i2cMaster.connected == false) {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-           
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
-
-            if (writeToFile == false) {
-                rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
-                if (rv < 0) {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-                else if (rv != length) {
-                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
-                    MessageBox.Show("Please confirm the module plug-in status\n_I2cReadIcConfig");
-                    return -1;
-                }
-
-                return rv;
-            }
-            else {
-                for (i = 0; i < length; i++) {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-
-        private int _I2cRead(byte devAddr, byte regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-            if (i2cMaster.connected == false) {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (writeToFile == false) {
-                rv = i2cMaster.ReadApi(devAddr, regAddr, length, data);
-                if (rv < 0) {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-                else if (rv != length) {
-                    MessageBox.Show("Please confirm the module plug-in status\n_I2cRead");
-                    return -1;
-                }
-
-                return rv;
-            }
-            else {
-                for (i = 0; i < length; i++) {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-        
-        private int _I2cRead16(byte devAddr, byte[] regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-            if (i2cMaster.connected == false) {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
-
-            if (writeToFile == false) {
-                rv = i2cMaster.Read16Api(devAddr, regAddr, length, data);
-                if (rv < 0) {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-                else if (rv != length) {
-                    //MessageBox.Show("Only read " + rv + " not " + length + " byte Error!!");
-                    MessageBox.Show("Please confirm the module plug-in status\n_I2cRead16");
-                    return -1;
-                }
-
-                return rv;
-            }
-            else {
-                for (i = 0; i<length; i++) {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-        /*
-        private int _I2cWriteForAll(byte devAddr, byte regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-
-            if (i2cMaster.connected == false) {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (SetQsfpMode && _SetQsfpMode(0x4D) < 0)
-                return -1;
-
-            if (writeToFile == false) {
-                rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
-                
-                if (rv < 0) {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-
-                return rv;
-            }
-            else {
-                for (i = 0; i < length; i++) {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-        */
-        private int _I2cWriteIcConfig(byte devAddr, byte regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-
-            if (i2cMaster.connected == false)
-            {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
-
-            if (writeToFile == false)
-            {
-                rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
-                if (rv < 0)
-                {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-
-                return rv;
-            }
-            else
-            {
-                for (i = 0; i < length; i++)
-                {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-
-        private int _I2cWrite(byte devAddr, byte regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-
-            if (i2cMaster.connected == false)
-            {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (writeToFile == false)
-            {
-                rv = i2cMaster.WriteApi(devAddr, regAddr, length, data);
-                if (rv < 0)
-                {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-
-                return rv;
-            }
-            else
-            {
-                for (i = 0; i < length; i++)
-                {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        }
-        
-        private int _I2cWrite16(byte devAddr, byte[] regAddr, byte length, byte[] data)
-        {
-            int i, rv;
-
-            if (i2cMaster.connected == false)
-            {
-                if (_I2cMasterConnect(ProcessingChannel) < 0)
-                    return -1;
-            }
-
-            if (_SetQsfpMode(0x4D) < 0)
-                return -1;
-
-            if (writeToFile == false)
-            {
-                rv = i2cMaster.Write16Api(devAddr, regAddr, length, data);
-                if (rv < 0)
-                {
-                    MessageBox.Show("TRx module no response!!");
-                    _I2cMasterDisconnect();
-                }
-
-                return rv;
-            }
-            else
-            {
-                for (i = 0; i < length; i++)
-                {
-                    if (_AppendWriteToFile($"Write,0x{devAddr:X2},0x{regAddr:X2},0x{data[i]:X2}") < 0)
-                        MessageBox.Show("_AppendWriteToFile() Error!!");
-                }
-
-                return 0;
-            }
-        } 
-        private int _WriteModulePassword()
-        {
-            byte[] data;
-            string dataS;
-
-            data = Encoding.Default.GetBytes(tbPassword.Text);
-            dataS = Encoding.Default.GetString(data);
-            //MessageBox.Show ("_WirteModulePassword parse： " + dataS);
-
-            if (i2cMaster.WriteApi(80, 123, 4, data) < 0)
-                return -1;
-
-            return 0;
-        }
-        
-        private int _SetSerialNumber(string serialNumber)
-        {
-            int tmp;
-
-            ucInformation.SetPasswordApi();
-            _SetQsfpMode(0x4D);
-            tmp = ucMemoryDump.SetSerialNumberApi(serialNumber);
-            StoreIntoFlashApi();
-
-            return tmp;
-        }
-
-        private int _GetPassword(int length, byte[] data)
-        {
-            string dataS;
-
-            if (length < 4)
-                return -1;
-
-            if (data == null)
-                return -1;
-
-            if (tbPassword.Text.Length != 4)
-            {
-                MessageBox.Show("Please inpurt password before operate!!");
-                return -1;
-            }
-
-            data[0] = (byte)tbPassword.Text[0];
-            data[1] = (byte)tbPassword.Text[1];
-            data[2] = (byte)tbPassword.Text[2];
-            data[3] = (byte)tbPassword.Text[3];
-            dataS = Encoding.Default.GetString(data);
-            //MessageBox.Show("_GetPassword parse： " + dataS);
-
-            return 4;
-        }
-
-        private void AppendRxRegisterContents(string modelType, string exportFilePath)
-        {
-            string IcRegisterContent;
-
-            switch (modelType) {
-                case "SAS4.0":
-                    IcRegisterContent = ucMata37044cConfig.ReadAllRegisterApi();
-                    File.AppendAllText(exportFilePath, IcRegisterContent);
-                    break;
-
-                case "PCIe4.0":
-                    IcRegisterContent = ucRt145Config.ReadAllRegisterApi();
-                    File.AppendAllText(exportFilePath, IcRegisterContent);
-                    break;
-            }
-               
-            return;
-        }
-
-        private void AppendTxRegisterContents(string modelType, string exportFilePath)
-        {
-            string vendorInfo;
-
-            switch (modelType) {
-                case "SAS4.0":
-                    vendorInfo = ucMald37045cConfig.ReadAllRegisterApi();
-                    File.AppendAllText(exportFilePath, vendorInfo);
-                    break;
-
-                case "PCIe4.0":
-                    vendorInfo = ucRt146Config.ReadAllRegisterApi();
-                    File.AppendAllText(exportFilePath, vendorInfo);
-                    break;
-            }
-
-            return;
-        }
-        
-        private int _WriteRegisterPage (string targetPage, int delayTime, string registerFilePath)
-        {
-            switch (targetPage) {
-                case "Up 00h":
-                case "Up 03h":
-                case "80h":
-                case "81h":
-               
-                    if (ucMemoryDump.WriteRegisterPageApi(targetPage, delayTime, registerFilePath) < 0)
-                        return -1;
+                if (ValidateVenderSn() >= 0) {
+                    tbDateCode.Text = tbVenderSn.Text.Substring(0, 6);
                     
-                    break;
+                    if (rbFullMode.Checked) { //Handle CfgFile
+                        bool isCustomerMode = lMode.Text == "Customer";
 
-                case "Low Page":
-                    if (ucMemoryDump.WriteLowPagePartRegisterApi(delayTime, registerFilePath) < 0)
-                        return -1;
-                    break;
+                        if ((isCustomerMode || lMode.Text == "MP") && 
+                            _Processor(isCustomerMode) < 0) {
+                            //MessageBox.Show("There are some problems", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                            tbVenderSn.Text = "";
+                            tbVenderSn.Enabled = true;
+                            tbVenderSn.Select();
+                            _CloseLoadingFormAndReturn(-1);
+                        }
 
-                case "Tx":
-                    if (ucMald37045cConfig.WriteAllRegisterApi("Tx", delayTime, registerFilePath) < 0)
-                        return -1;
-                    
-                    break;
+                        if (cbBarcodeMode.Checked && _WriteSnDateCodeFlow() < 0)
+                            _PromptError(false, ProcessingChannel);
+                        else
+                            _PromptCompleted(ProcessingChannel, true);
+                    }
 
-                case "Rx":
-                    if (ucMata37044cConfig.WriteAllRegisterApi("Rx", delayTime, registerFilePath) < 0)
-                        return -1;
-                    
-                    break;
+                    else if (rbOnlySN.Checked) {
+                        if (cbBarcodeMode.Checked && _WriteSnDateCodeFlow() < 0)
+                            _PromptError(false, ProcessingChannel);
+                        else
+                            _PromptCompleted(ProcessingChannel, true);
+                    }
 
-                default:
-                    break;
+                    else if (rbLogFileMode.Checked) {
+                        if (cbBarcodeMode.Checked)
+                         _LogFileComparison();
+                    }
+                }
+
+                if (!cbBarcodeMode.Checked)
+                    _EnableButtons();
+
+                tbVenderSn.Text = "";
+                tbVenderSn.Enabled = true;
+                loadingForm.Close();
+                this.BringToFront();
+                this.Activate();
+                tbVenderSn.Select();
             }
-            return 0;
         }
 
-        private int _WriteRegisterPageForSas3(string targetPage, int delayTime, string registerFilePath, int processingChannel)
+        private void _UpdateButtonState()
         {
-            switch (targetPage) {
-                
-                case "Page 00":
-                case "Page 03":
-                case "Page 3A":
-                case "Page 5D":
-                case "Page 6C":
-                case "Page 70":
-                case "Page 73":
-                    if (processingChannel == 2)
-                        targetPage = "B_" + targetPage;
-                    else
-                        targetPage = "A_" + targetPage;
-
-                    if (ucMemoryDump.WriteRegisterPageForSas3Api(targetPage, delayTime, registerFilePath) < 0)
-                        return -1;
-
-                    break;
-
-                default:
-                    MessageBox.Show("Exceeds page range!!");
-                    break;
-            }
-            return 0;
+            if (I2cConnected)
+                cbI2cConnect.Checked = true;
+            else if (!I2cConnected)
+                cbI2cConnect.Checked = false;
         }
 
-        private int _ExportModuleCfg(string modelType, string fileName, string comparisonObject)
+        private void _DirectDriveMpMode()
         {
-            string executableFileFolderPath = Application.StartupPath;
-            string exportFilePath;
-            string folderPath;
-            string tempUcMemoryFile;
+            if (tbFilePath.Text == "Please click here, to import the Config file...") {
+                tbFilePath.Text = "";
+                tbFilePath.ForeColor = Color.MidnightBlue;
+            }
 
-            fileName = fileName.Replace(" ", "") + ".csv";
-            folderPath = Path.Combine(executableFileFolderPath, "RegisterFiles");
-            exportFilePath = Path.Combine(folderPath, fileName);
+            _CleanTempFolder(); // Before change zip file, Clean the tempFolder
+            _DirectDriveToLoadXmlFile();
 
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
+            if (lMode.Text == "Customer") {
+                _AdjustGuiSizeAndCenter(550, 280);
+                // rbSingle.Enabled = true;
+                //rbBoth.Enabled = true;
+                cbSecurityLock.Visible = false;
+                gbOperatorMode.Visible = false;
+                bWriteSnDateCone.Visible = false;
+                tbOrignalSNCh1.Visible = false;
+                tbOrignalSNCh2.Visible = false;
+                tbReNewSNCh1.Visible = false;
+                tbReNewSNCh2.Visible = false;
+                lOriginalSN.Visible = false;
+                lReNewSn.Visible = false;
+                bCfgFileComparison.Visible = false;
+                bLogFileComparison.Visible = false;
+                bRenewRssi.Visible = false;
+                cbCfgCheckAfterFw.Visible = false;
+            }
 
-            if (File.Exists(exportFilePath))
-                File.Delete(exportFilePath);
+            else if (lMode.Text == "MP") {
+                _AdjustGuiSizeAndCenter(550, 550);
+                rbSingle.Select();
+                //rbSingle.Enabled = false;
+                //rbBoth.Enabled = false;
+                cbSecurityLock.Visible = true;
+                gbOperatorMode.Visible = true;
+                bWriteSnDateCone.Visible = true;
+                tbOrignalSNCh1.Visible = true;
+                tbOrignalSNCh2.Visible = true;
+                tbReNewSNCh1.Visible = true;
+                tbReNewSNCh2.Visible = true;
+                lOriginalSN.Visible = true;
+                lReNewSn.Visible = true;
+                bCfgFileComparison.Visible = true;
+                bLogFileComparison.Visible = true;
+                bRenewRssi.Visible = true;
+                cbCfgCheckAfterFw.Visible = true;
 
-            tempUcMemoryFile = Path.Combine(folderPath, "temp_" + fileName);
+                if (rbBoth.Checked) {
+                    tbOrignalSNCh2.Visible = true;
+                    tbReNewSNCh2.Visible = true;
+                }
+                else {
+                    tbOrignalSNCh2.Visible = false;
+                    tbReNewSNCh2.Visible = false;
+                }
+            }
 
-            if (ucMemoryDump.ExportAllPagesDataApi(tempUcMemoryFile) < 0)
-                return -1;
+            I2cConnected = !(engineerForm.ChannelSetApi(1) < 0);
+            _ResetSequence();
+        }
 
-            AppendFileContentToAnother(tempUcMemoryFile, exportFilePath);
+        private void _SelectModelBeforeActivateEngineerMode(int productType) // 0_SAS4, 1_PCIe4,
+        {
+            EngineerForm mainForm = new EngineerForm(true);
+            loadingForm.Show(this);
+            mainForm.SetPermissions("Administrator");
             
-            if (comparisonObject == "LogFile") {
-                AppendRxRegisterContents(modelType, exportFilePath);
-                AppendTxRegisterContents(modelType, exportFilePath);
+            switch (productType) {
+                case 0:
+                    mainForm.SetProduct("SAS4.0");
+                    break;
+                case 1:
+                    mainForm.SetProduct("PCIe4.0");
+                    break;
+                case 2:
+                    mainForm.SetProduct("QSFP28");
+                    break;
             }
-
-            if (File.Exists(tempUcMemoryFile))
-                File.Delete(tempUcMemoryFile);
-
-            return 0;
-        }
-
-        private int _ExportModuleCfgForSas3(string fileName, string comparisonObject, int ch)
-        {
-            string executableFileFolderPath = Application.StartupPath;
-            string exportFilePath;
-            string folderPath;
-            string tempUcMemoryFile;
-
-            fileName = fileName.Replace(" ", "") + ".csv";
-            folderPath = Path.Combine(executableFileFolderPath, "RegisterFiles");
-            exportFilePath = Path.Combine(folderPath, fileName);
-
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
-
-            if (File.Exists(exportFilePath))
-                File.Delete(exportFilePath);
-
-            tempUcMemoryFile = Path.Combine(folderPath, "temp_" + fileName);
-
-            if (ucMemoryDump.ExportAllPagesDataForSas3Api(tempUcMemoryFile, ch) < 0)
-                return -1;
-
-            AppendFileContentToAnother(tempUcMemoryFile, exportFilePath);
-
-            if (File.Exists(tempUcMemoryFile))
-                File.Delete(tempUcMemoryFile);
-
-            return 0;
-        }
-
-        private int _ExportLogfile(string modelType, string fileName, bool logFileMode, bool writeSnMode)
-        {
-            string folderPath;
-            string exportFilePath;
-            string tempExportFilePath;
-
-            if (!writeSnMode)
-                StateUpdated("Read State:\nPreparing resources...", 3);
-
-            if (logFileMode) {
-                if (fileName == "ModuleRegisterFile") {
-                    folderPath = Path.Combine(Application.StartupPath, "LogFolder");
-                }
-                else if (fileName == "ReWriteRegister") {
-                    folderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-                }
-                else {
-                    MainFormPaths lastPath = _LoadLastPaths();
-                    folderPath = lastPath.LogFilePath;
-
-                    if (string.IsNullOrEmpty(folderPath))
-                        folderPath = Path.Combine(Application.StartupPath, "LogFolder");
-                }
-            }
-            else {
-                folderPath = lastUsedDirectory;
-            }
-
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
-
-            fileName = fileName.Replace(" ", "") + ".csv";
-            exportFilePath = Path.Combine(folderPath, fileName);
-            tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
-
-            if (File.Exists(exportFilePath)) {
-                if (fileName == "ModuleRegisterFile.csv") {
-                    File.Delete(exportFilePath);
-                }
-                else {
-                    DialogResult result = MessageBox.Show($"File {fileName} already exists." +
-                                                      $"\nDo you want to overwrite it?","File Exists", 
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
-
-                    if (result == DialogResult.Yes) {
-                        File.Delete(exportFilePath);
-                    }
-                    else {
-                        MessageBox.Show("Operation cancelled.", "Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return -1;
-                    }
-                }
-            }
-
-            //MessageBox.Show("1: \n" + ucInformation.GetVendorInfo() +
-            //                "exportFilePath: \n" + exportFilePath);
-
-            AppendVendorInfo(exportFilePath);
-            AppendMoreInfo(exportFilePath);
-
-            if (!writeSnMode)
-                StateUpdated("Read State:\nInformation...Done", 5);
-
-            if (ucMemoryDump.ExportAllPagesDataApi(tempExportFilePath) < 0)
-                return -1;
-
-            AppendFileContentToAnother(tempExportFilePath, exportFilePath);
-
-            if (!writeSnMode)
-                StateUpdated("Read State:\nUpPage 00h/03h...Done", 10);
-           
-            AppendRxRegisterContents(modelType, exportFilePath);
-
-            if (!writeSnMode)
-                StateUpdated("Read State:\nRxIcConfig...Done", 20);
             
-            AppendTxRegisterContents(modelType, exportFilePath);
-
-            if (!writeSnMode)
-                StateUpdated("Read State:\nTxIcConfig...Done", 30);
-           
-            if (File.Exists(tempExportFilePath))
-                File.Delete(tempExportFilePath);
-
-            //MessageBox.Show("9: \n" + ucInformation.GetVendorInfo() + 
-            //                "exportFilePath: \n" + exportFilePath);
-
-            return 0;
+            mainForm.Show();
+            loadingForm.Close();
+            this.Hide();
         }
 
-        private int _ExportLogfileForSas3(string fileName, bool logFileMode, bool writeSnMode, int processingChannel)
+        private void _OpenLoginForm()
         {
-            string folderPath;
-            string exportFilePath;
-            string tempExportFilePath;
+            LoginForm formB = new LoginForm();
+            formB.Show();
+            this.Hide();
+        }
 
-            if (!writeSnMode)
-                StateUpdated("Read State:\nPreparing resources...", 3);
+        private void _OpenAdminAuthenticationForm()
+        {
+            AdminAuthentication formC = new AdminAuthentication();
+            formC.Show();
+            this.Hide();
+        }
 
-            if (logFileMode) {
-                MainFormPaths lastPath = _LoadLastPaths();
-                folderPath = lastPath.LogFilePath;
+        private void _DisplayRelinkControlUi()
+        {
+            gbRelinkTest.Visible = true;
+            _ResetSequence();
+        }
 
-                if (string.IsNullOrEmpty(folderPath))
-                    folderPath = Path.Combine(Application.StartupPath, "LogFolder");
+        private void MainForm_ReadStateUpdated(object sender, string e)
+        {
+            if (ProcessingChannel == 1) {
+                if (lCh1Message.InvokeRequired) {
+                    Invoke(new Action(() =>
+                    {
+                        lCh1Message.Text = e; // MainForm 送出 ReadStateUpdated event，update to Label.text
+                    }));
+                }
+                else
+                    lCh1Message.Text = e;
             }
-            else {
-                
-                folderPath = lastUsedDirectory;
+            else if (ProcessingChannel == 2) {
+                if (lCh2Message.InvokeRequired) {
+                    Invoke(new Action(() =>
+                    {
+                        lCh2Message.Text = e;
+                    }));
+                }
+                else
+                    lCh2Message.Text = e;
             }
 
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
+        }
 
-            fileName = fileName.Replace(" ", "") + ".csv";
-            exportFilePath = Path.Combine(folderPath, fileName);
-            tempExportFilePath = Path.Combine(folderPath, "temp_" + fileName);
+        private void MainForm_ProgressUpdated(object sender, int e)
+        {
 
-            if (File.Exists(exportFilePath)) {
-                if (fileName == "ModuleRegisterFile.csv") {
-                    File.Delete(exportFilePath);
+            if (ProcessingChannel == 1) {
+                if (cProgressBar1.InvokeRequired) {
+                    Invoke(new Action(() =>
+                    {
+                        cProgressBar1.Value = e;
+                        cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
+                    }));
                 }
                 else {
-                    DialogResult result = MessageBox.Show($"File {fileName} already exists." +
-                                                      $"\nDo you want to overwrite it?","File Exists",
-                    MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
-
-                    if (result == DialogResult.Yes) {
-                        File.Delete(exportFilePath);
-                    }
-                    else {
-                        MessageBox.Show("Operation cancelled.", "Cancelled", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        return -1;
-                    }
+                    cProgressBar1.Value = e;
+                    cProgressBar1.Text = cProgressBar1.Value.ToString() + "%";
                 }
             }
-
-            //MessageBox.Show("1: \n" + ucInformation.GetVendorInfo() +
-            //                "exportFilePath: \n" + exportFilePath);
-
-            AppendVendorInfo(exportFilePath);
-            AppendMoreInfo(exportFilePath);
-
-            if (!writeSnMode)
-                StateUpdated("Read State:\nInformation...Done", 5);
-
-            //輸出 DUT Register map from MCU all page
-            if (ucMemoryDump.ExportAllPagesDataForSas3Api(tempExportFilePath, processingChannel) < 0)
-                return -1;
-
-            AppendFileContentToAnother(tempExportFilePath, exportFilePath);
-
-            if (!writeSnMode)
-                StateUpdated("Read State:\nAllPage 00h,03h~7F...Done", 10);
-                        
-
-            if (File.Exists(tempExportFilePath))
-                File.Delete(tempExportFilePath);
-
-            //MessageBox.Show("9: \n" + ucInformation.GetVendorInfo() + 
-            //                "exportFilePath: \n" + exportFilePath);
-
-            return 0;
+            else if (ProcessingChannel == 2) {
+                if (cProgressBar2.InvokeRequired) {
+                    Invoke(new Action(() =>
+                    {
+                        cProgressBar2.Value = e;
+                        cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
+                    }));
+                }
+                else {
+                    cProgressBar2.Value = e;
+                    cProgressBar2.Text = cProgressBar2.Value.ToString() + "%";
+                }
+            }
         }
 
-        //_FormatChangeFromTextToCsv
-        private int _FormatChangeFromTextToCsv(string exportFilePath, string ASideFilePath, string BSideFilePath)
+        private int _RemoteInitial(bool cutomerMode) // True: Customer Mode, Flase: MP mode
         {
-            DataTable dtAllPages = new DataTable();
-            string[] pages = new string[]
-            {
-                "Lower", "Page 00", "Page 03", "Page 3A", "Page 5D", "Page 6C",
-                "Page 70", "Page 73", "Page 7B", "Page 7E", "Page 7F"
-            };
+            string apromPath, dataromPath;
+            string directoryPath;
 
-            // 初始化 DataTable 欄位（Page, Row 和 16個byte對應的欄位）
-            dtAllPages.Columns.Add("Page", typeof(string));
-            dtAllPages.Columns.Add("Row", typeof(string));
-            for (int col = 0; col < 16; col++) {
-                dtAllPages.Columns.Add(col.ToString("X2"), typeof(string));
+            /*
+            if (cbBypassW.Checked)
+                mainForm.SetVarBoolStateToMainFormApi("BypassWriteIcConfig", true);
+            */
+
+            if ((string.IsNullOrEmpty(lProduct.Text))) {
+                MessageBox.Show("The configuration file format is incorrect.");
+                return -1;
             }
 
-            if (!string.IsNullOrEmpty(ASideFilePath) && _ReadAndProcessFile(ASideFilePath, pages, dtAllPages, "A") < 0)
-                return -1;
+            else {
+                string selectedProduct = lProduct.Text;
+                engineerForm?.SelectProductApi(selectedProduct);
+            }
 
-            if (!string.IsNullOrEmpty(BSideFilePath) && _ReadAndProcessFile(BSideFilePath, pages, dtAllPages, "B") < 0)
-                return -1;
+            if (cutomerMode) // Customer Mode
+            {
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbMemDump", false);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", false);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", false);
+            }
+            else // Mp Mode
+            {
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbInfomation", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbDdm", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbMemDump", false);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbCorrector", true);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbTxIcConfig", false);
+                engineerForm?.SetCheckBoxCheckedByNameApi("cbRxIcConfig", false);
+            }
 
-            ExportDataTableToCsv(dtAllPages, exportFilePath);
-            return 0;
-        }
-
-        // Read and process the data, then add the data to dtAllPages.
-        private int _ReadAndProcessFile(string filePath, string[] pages, DataTable dtAllPages, string sideLabel)
-        {
-            foreach (string page in pages) {
-                if (_ReadFromTextFile(page, filePath) < 0)
+            if (!Sas3Module) { 
+                if (!(string.IsNullOrEmpty(lApName.Text) || lApName.Text == "_")) {
+                    engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbAPROM", true);
+                    directoryPath = TempFolderPath;
+                    apromPath = Path.Combine(directoryPath, lApName.Text);
+                    engineerForm.SetTextBoxTextToNuvotonIcpApi("tbAPROM", apromPath);
+                    if (DebugMode) {
+                        MessageBox.Show("TempFolderPath: \n" + TempFolderPath +
+                                    "\n\nAPROM path: \n" + engineerForm.GetTextBoxTextFromNuvotonIcpApi("tbAPROM"));
+                    }
+                }
+                else {
+                    MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Error!!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return -1;
-
-                DataTable dtCurrentPage = dtMemory.Copy(); 
-
-                for (int rowIdx = 0; rowIdx < 8; rowIdx++) // 8 rows by page
-                {
-                    DataRow newRow = dtAllPages.NewRow();
-                    newRow["Page"] = $"{sideLabel}_{page}"; // Marker A or B side
-                    newRow["Row"] = (rowIdx * 16).ToString("X2"); // Row number
-
-                    for (int colIdx = 0; colIdx < 16; colIdx++) {
-                        newRow[colIdx.ToString("X2")] = dtCurrentPage.Rows[rowIdx][colIdx].ToString(); // Fill in the corresponding byte data
-                    }
-                    dtAllPages.Rows.Add(newRow);
                 }
-            }
-            return 0;
-        }
 
-        // 假設 _ReadFromTextFile() 會讀取一個頁面的資料並將其儲存到 dtMemory
-        private int _ReadFromTextFile(string page, string filePath)
-        {
-            try {
-                using (StreamReader sr = new StreamReader(filePath)) {
-                    string line;
-                    bool isPageFound = false;
-                    dtMemory = new DataTable();
-
-                    // 初始化 dtMemory 的欄位
-                    for (int col = 0; col < 16; col++) {
-                        dtMemory.Columns.Add(col.ToString("X2"), typeof(string));
-                    }
-
-                    while ((line = sr.ReadLine()) != null) {
-                        // 偵測到頁面標籤
-                        if (line.StartsWith(page)) {
-                            isPageFound = true;
-                            continue;
-                        }
-
-                        // 當找到頁面後，開始讀取資料行
-                        if (isPageFound && !string.IsNullOrWhiteSpace(line)) {
-                            string[] data = line.Split(' ');
-
-                            // 檢查資料是否有16個byte
-                            if (data.Length != 16) {
-                                throw new Exception($"Expected 16 bytes, but found {data.Length} bytes in the line.");
-                            }
-
-                            // 新增資料行至 dtMemory
-                            DataRow newRow = dtMemory.NewRow();
-                            for (int i = 0; i < 16; i++) {
-                                newRow[i.ToString("X2")] = data[i];
-                            }
-                            dtMemory.Rows.Add(newRow);
-
-                            // 讀滿8行資料後結束
-                            if (dtMemory.Rows.Count == 8) {
-                                break;
-                            }
-                        }
-                    }
+                if (!(string.IsNullOrEmpty(lDataName.Text) || lDataName.Text == "_")) {
+                    engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", true);
+                    directoryPath = TempFolderPath;
+                    dataromPath = Path.Combine(directoryPath, lDataName.Text);
+                    engineerForm.SetTextBoxTextToNuvotonIcpApi("tbDataFlash", dataromPath);
+                    //MessageBox.Show("DATAROM path: \n" + mainForm.GetTextBoxTextFromNuvotonIcpApi("tbDataFlash"));
                 }
-                return 0;
-            }
-            catch (Exception ex) {
-                MessageBox.Show($"Error reading file: {ex.Message}");
-                return -1;
-            }
-        }
+                else
+                    engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbDataFlash", false);
 
-        private void ExportDataTableToCsv(DataTable dt, string filePath)
-        {
-            StringBuilder sb = new StringBuilder();
-            string directoryPath = Path.GetDirectoryName(filePath);
+                engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbLDROM", false);
 
-            // 欄位名稱加入CSV
-            IEnumerable<string> columnNames = dt.Columns.Cast<DataColumn>().Select(column => column.ColumnName);
-            sb.AppendLine(string.Join(",", columnNames.ToArray()));
-
-            // 每一行資料加入CSV
-            foreach (DataRow row in dt.Rows) {
-                IEnumerable<string> fields = row.ItemArray.Select(field => "\"" + field.ToString().Replace("\"", "\"\"") + "\"");
-                sb.AppendLine(string.Join(",", fields.ToArray()));
-            }
-
-            File.WriteAllText(filePath, sb.ToString());
-        }
-
-
-        private void AppendVendorInfo(string exportFilePath)
-        {
-            string vendorInfo = ucInformation.GetVendorInfo();
-            File.AppendAllText(exportFilePath, vendorInfo);
-        }
-
-        private void AppendMoreInfo(string exportFilePath)
-        {
-            string additionalVendorInfo = ucDigitalDiagnosticsMonitoring.GetMoreInfo();
-            File.AppendAllText(exportFilePath, additionalVendorInfo + Environment.NewLine);
-        }
-
-        private void AppendFileContentToAnother(string sourceFilePath, string destinationFilePath)
-        {
-            var lines = File.ReadAllLines(sourceFilePath);
-            File.AppendAllLines(destinationFilePath, lines);
-        }
-
-        private void _SetToChannel2(bool mode) 
-        {
-            ucNuvotonIcpTool.SetVarBoolState("SetToChannel2", mode);
-        }
-
-        private void _SetAutoReconnectControl(bool ControlState)
-        {
-            ucNuvotonIcpTool.SetVarBoolState("AutoReconnectMode", ControlState);
-            cbAutoReconnect.Checked = ControlState;
-        }
-
-        private bool _GetAutoReconnectControl()
-        {
-            return ucNuvotonIcpTool.GetVarBoolState("AutoReconnectMode");
-        }
-
-        private void _SetBypassEraseAllControl(bool ControlState)
-        {
-            ucNuvotonIcpTool.SetVarBoolState("BypassEraseAllCheckMode", ControlState);
-            cbBypassEraseAllCheck.Checked = ControlState;
-        }
-
-        private bool _GetBypassEraseAllControl()
-        {
-            return ucNuvotonIcpTool.GetVarBoolState("BypassEraseAllCheckMode");
-        }
-
-        private void UcNuvotonIcpControl_RequestI2cOperation(object sender, I2cOperationEventArgs e)
-        {
-            switch (e.OperationType)
-            {
-                case I2cOperationType.Connect:
-                    _I2cMasterConnect(ProcessingChannel);
-                    break;
-                case I2cOperationType.Disconnect:
-                    _I2cMasterDisconnect();
-                    break;
-                case I2cOperationType.SetChannel:
-                    _ChannelSet(e.Channel);
-                    _SetAutoReconnectControl(false);
-                    break;
-            }
-        }
-
-        private void UcNuvotonIcpTool_MessageUpdated(object sender, MessageEventArgs e)
-        {
-            // UC-B data updated，觸發UC-A的MainMessageUpdated event，將Message傳遞給MainForm-UI
-            MainMessageUpdated?.Invoke(this, e);
-        }
-        private void ucDigitalDiagnosticsMonitoring_TextBoxTextChanged(object sender, TextBoxTextEventArgs e)
-        {
-            TextBoxTextChanged?.Invoke(this, e);
-        }
-
-        private void HandlePluginWaiting(bool isWaiting)
-        {
-            OnPluginWaiting?.Invoke(isWaiting);
-        }
-
-        private void HandlePluginDetected(bool isDetected) // 當DUT插入檢測成功時的處理程序
-        {
-            OnPluginDetected?.Invoke(isDetected);
-        }
-
-        public MainForm(bool visible)
-        {
-            InitializeComponent();
-            SetupControlEvents(); // For IcpTool Button.text update
-
-            if (!visible)
-            {
-                this.ShowInTaskbar = false;
-            }
-
-            this.FormClosing += new FormClosingEventHandler(_MainForm_FormClosing);
-            ucNuvotonIcpTool.MessageUpdated += UcNuvotonIcpTool_MessageUpdated;
-            ucNuvotonIcpTool.RequestI2cOperation += UcNuvotonIcpControl_RequestI2cOperation;
-            ucNuvotonIcpTool.OnPluginWaiting += HandlePluginWaiting;
-            ucNuvotonIcpTool.OnPluginDetected += HandlePluginDetected;
-            ucDigitalDiagnosticsMonitoring.TextBoxTextChanged += ucDigitalDiagnosticsMonitoring_TextBoxTextChanged;
-            this.Size = new System.Drawing.Size(1170, 870);
-            _InitialStateBar();
-            //_EnableIcConfig();
-            //_UpdateTabPageVisibility();
-
-            this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            cbProductSelect.SelectedIndex = 0;
-
-            dtWriteConfig.Columns.Add("Command", typeof(String));
-            dtWriteConfig.Columns.Add("DevAddr", typeof(String));
-            dtWriteConfig.Columns.Add("RegAddr", typeof(String));
-            dtWriteConfig.Columns.Add("Value", typeof(String));
-
-
-            /*
-            bool tmp = ucNuvotonIcpTool.GetVarBoolState("PublicVariable");
-            ucNuvotonIcpTool.SetVarBoolState("PublicVariable", true);
-            MessageBox.Show("ucNuvotonIcp_PublicVariable bool: "
-                            + "\nBefore: " + tmp
-                            + "\nAfter: " + ucNuvotonIcpTool.GetVarBoolState("PublicVariable")
-                            );
-            */
-
-            if (ucInformation.SetI2cReadCBApi(_I2cRead) < 0)
-            {
-                MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucInformation.SetI2cWriteCBApi(_I2cWrite) < 0)
-            {
-                MessageBox.Show("ucInformation.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucInformation.SetGetPasswordCBApi(_GetPassword) < 0)
-            {
-                MessageBox.Show("ucInformation.SetGetPasswordCBApi() faile Error!!");
-                return;
-            }
-            if (ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi(_I2cRead) < 0)
-            {
-                MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucDigitalDiagnosticsMonitoring.SetI2cWriteCBApi(_I2cWrite) < 0)
-            {
-                MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi(ucInformation.SetPasswordApi) < 0)
-            {
-                MessageBox.Show("ucDigitalDiagnosticsMonitoring.SetWritePasswordCBApi() faile Error!!");
-                return;
-            }
-            if (ucMemoryDump.SetI2cReadCBApi(_I2cRead) < 0)
-            {
-                MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucMemoryDump.SetI2cWriteCBApi(_I2cWrite) < 0)
-            {
-                MessageBox.Show("ucMemoryDump.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucMemoryDump.SetWritePasswordCBApi(ucInformation.SetPasswordApi) < 0)
-            {
-                MessageBox.Show("ucMemoryDump.SetWritePasswordCBApi() faile Error!!");
-                return;
-            }
-
-            if (ucGn1190Corrector.SetQsfpI2cReadCBApi(_I2cRead) < 0)
-            {
-                MessageBox.Show("ucQsfpCorrector.SetQsfpI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucGn1190Corrector.SetQsfpI2cWriteCBApi(_I2cWrite) < 0)
-            {
-                MessageBox.Show("ucQsfpCorrector.SetQsfpI2cWriteCBApi() faile Error!!");
-                return;
-            }
-
-            if (ucMald37045cConfig.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
-            {
-                MessageBox.Show("ucMald37045cConfig.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucMald37045cConfig.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
-            {
-                MessageBox.Show("ucMald37045cConfig.SetI2cWriteCBApi() faile Error!!");
-                return;
-            }
-            if (ucMata37044cConfig.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
-            {
-                MessageBox.Show("ucMata37044cConfig.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucMata37044cConfig.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
-            {
-                MessageBox.Show("ucMata37044cConfig.SetI2cWriteCBApi() faile Error!!");
-                return;
-            }
-            if (ucRt145Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
-            {
-                MessageBox.Show("ucRt145Config.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucRt145Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
-            {
-                MessageBox.Show("ucRt145Config.SetI2cWriteCBApi() faile Error!!");
-                return;
-            }
-            if (ucRt146Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
-            {
-                MessageBox.Show("ucRt145Config.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucRt146Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
-            {
-                MessageBox.Show("ucRt145Config.SetI2cWriteCBApi() faile Error!!");
-                return;
-            }
-
-            if (ucGn2108Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucGn2108Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
-                return;
-            }
-            if (ucGn2109Config.SetI2cReadCBApi(_I2cReadIcConfig) < 0) {
-                MessageBox.Show("ucGn1190Config.SetI2cReadCBApi() faile Error!!");
-                return;
-            }
-            if (ucGn2109Config.SetI2cWriteCBApi(_I2cWriteIcConfig) < 0) {
-                MessageBox.Show("ucGn1190Config.SetI2cWriteCBApi() faile Error!!");
-                return;
-            }
-
-
-            if (ucGn2108Config.SetI2cRead16CBApi(_I2cRead16) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cRead16CBApi() faile Error!!");
-                return;
-            }
-            if (ucGn2108Config.SetI2cWrite16CBApi(_I2cWrite16) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cWrite16CBApi() faile Error!!");
-                return;
-            }
-
-            if (ucGn2109Config.SetI2cRead16CBApi(_I2cRead16) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cRead16CBApi() faile Error!!");
-                return;
-            }
-            if (ucGn2109Config.SetI2cWrite16CBApi(_I2cWrite16) < 0)
-            {
-                MessageBox.Show("ucGn1190Config.SetI2cWrite16CBApi() faile Error!!");
-                return;
-            }
-        }
-
-        public void SetPermissions(string permissions)
-        {
-            cbPermission.SelectedItem = permissions;
-        }
-
-        public void SetProduct(string product)
-        {
-            cbProductSelect.SelectedItem = product;
-        }
-       
-        private int _SetWriteConfig() // The function could work, but it's too slow
-        {
-            byte[] data = new byte[1];
-            byte devAddr, regAddr;
-            int currentRow = 0;
-
-            progressBar1.Value = 0;
-
-            if (ucDigitalDiagnosticsMonitoring.i2cWriteCB == null)
-            {
-                MessageBox.Show("i2cWriteCB rv: " + ucDigitalDiagnosticsMonitoring.i2cWriteCB);
-                return -1;
-            }
-
-            int totalLines = File.ReadLines(fileName).Count();
-
-            using (StreamReader sr = new StreamReader(fileName))
-            {
-                while (!sr.EndOfStream)
-                {
-                    currentRow++;
-                    double progressPercentage = (double)currentRow / totalLines * 100;
-                    progressBar1.Value = (int)progressPercentage;
-
-                    string line = sr.ReadLine();
-
-                    if (line.StartsWith("//") || line.Trim() == "")
-                        continue;
-
-                    string[] tokens = line.Split(',');
-
-                    
-                    if (tokens.Length < 4)// 檢查 tokens 的數量
-                    {
-                        MessageBox.Show("Invalid line format: " + line);
-                        return -1;
-                    }
-
-                    if (tokens[1].Length >= 2)
-                    {
-                        string devAddrString = tokens[1].Substring(2);
-
-                        if (!byte.TryParse(devAddrString, System.Globalization.NumberStyles.HexNumber, null, out devAddr))
-                        {
-                            MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
-                            return -1;
-                        }
-                    }
-                    else
-                    {
-                        MessageBox.Show("Invalid DevAddr format: " + tokens[1]);
-                        return -1;
-                    }
-
-                    string command = tokens[0];
-                    devAddr = byte.Parse(tokens[1].Substring(2), System.Globalization.NumberStyles.HexNumber);
-                    regAddr = byte.Parse(tokens[2].Substring(2), System.Globalization.NumberStyles.HexNumber);
-                    data[0] = byte.Parse(tokens[3].Substring(2), System.Globalization.NumberStyles.HexNumber);
-
-                    switch (command)
-                    {
-                        case "Write":
-                            ucDigitalDiagnosticsMonitoring.i2cWriteCB(devAddr, regAddr, 1, data);
-                            break;
-
-                        case "Read":
-                            while (ucDigitalDiagnosticsMonitoring.i2cReadCB(devAddr, regAddr, 1, data) != 1)
-                            {
-                                MessageBox.Show("i2cReadCB() fail!!");
-                                Thread.Sleep(100);
-                            }
-                            if (data[0] != byte.Parse(tokens[4].Substring(2), System.Globalization.NumberStyles.HexNumber))
-                            {
-                                MessageBox.Show("DevAddr:0x" + devAddr.ToString("X2") + "RegAddr:0x" + regAddr.ToString("X2") +
-                                    "Value:0x" + data[0].ToString("X2") + " != " + tokens[4]);
-                                return -1;
-                            }
-                            break;
-
-                        default:
-                            MessageBox.Show("Invalid command: " + command);
-                            return -1;
-                    }
-
-                    Application.DoEvents();
+                if (cbSecurityLock.Checked) {
+                    engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", true); // Dominic
                 }
+                else {
+                    engineerForm.SetCheckBoxStateToNuvotonIcpApi("cbSecurityLock", false);
+                }
+
+                engineerForm.SetVarIntStateToNuvotonIcpApi("LinkState", 0);
+                engineerForm.UpdateSecurityLockStateFromNuvotonIcpApi();
+                Thread.Sleep(10);
             }
 
             return 0;
         }
 
-        private void _StoreGlobalWriteCommandtoFile()
+        private void _SwitchOrNot()
         {
-            SaveFileDialog sfdSelectFile = new SaveFileDialog();
-
-            sAcConfig = "//Write,DevAddr,RegAddr,Value\n" + "//Read,DevAddr,RegAddr,Value\n" +
-                "//Delay10mSec,Time\n";
-
-            ucInformation.WriteAllApi();
-            ucDigitalDiagnosticsMonitoring.WriteAllApi();
-            ucMemoryDump.WriteAllApi();
-
-            sfdSelectFile.Filter = "cfg files (*.cfg)|*.cfg";
-            if (sfdSelectFile.ShowDialog() != DialogResult.OK)
-                return;
-
-            System.IO.File.WriteAllText(sfdSelectFile.FileName, sAcConfig);
-        }
-
-        private void _InitialStateBar()
-        {
-            tbInformationReadState.BackColor= Color.White;
-            tbDdmReadState.BackColor = Color.White;
-            tbMemDumpReadState.BackColor = Color.White;
-            tbCorrectorReadState.BackColor = Color.White;
-            tbTxConfigReadState.BackColor = Color.White;
-            tbRxConfigReadState.BackColor = Color.White;
-        }
-
-        private void _InitialForSas3()
-        {
-
-        }
-
-        private void _DisableButtons()
-        {
-            cbConnect.Enabled = false;
-            bGlobalRead.Enabled = false;
-            bInnerSwitch.Enabled = false;
-            bOutterSwitch.Enabled = false;
-            bGlobalWrite.Enabled = false;
-            bStoreIntoFlash.Enabled = false;
-            bIcpConnect.Enabled = false;
-            ucNuvotonIcpTool.SetButtonEnable("bLink" , false);
-            /*
-            tcDdmi.Enabled = false;
-            tcIcConfig.Enabled = false;
-            ucGn1190Corrector.DisableButtonApi();
-            */
-            bLoadAllFromCfgFile.Enabled = false;
-            bGenerateCfg.Enabled = false;
-            //bFunctionTest2.Enabled = false;
-            bSaveAllToCfgFile.Enabled = false;
-            cbInfomation.Enabled = false;
-            cbDdm.Enabled = false;
-            cbMemDump.Enabled = false;
-            cbCorrector.Enabled = false;
-            cbTxIcConfig.Enabled = false;
-            cbRxIcConfig.Enabled = false;
-            cbAPPath.Enabled = false;
-            cbDAPath.Enabled = false;
-            rbCustomerMode.Enabled = false;
-            rbMpMode.Enabled = false;
-            bBackToMainForm.Enabled = false;
-        }
-
-        private void _EnableButtons()
-        {
-            cbConnect.Enabled = true;
-            bGlobalRead.Enabled = true;
-            bInnerSwitch.Enabled = true;
-            bOutterSwitch.Enabled = true;
-            /*
-            tcDdmi.Enabled = true;
-            tcIcConfig.Enabled = true;
-            ucGn1190Corrector.EnableButtonApi();
-            */
-            bIcpConnect.Enabled = true;
-            ucNuvotonIcpTool.SetButtonEnable("bLink", true);
-            bLoadAllFromCfgFile.Enabled = true;
-            //bFunctionTest2.Enabled = true;
-            bSaveAllToCfgFile.Enabled = true;
-            cbInfomation.Enabled = true;
-            cbDdm.Enabled = true;
-            cbMemDump.Enabled = true;
-            cbCorrector.Enabled = true;
-            cbTxIcConfig.Enabled = true;
-            cbRxIcConfig.Enabled = true;
-            cbAPPath.Enabled = true;
-            cbDAPath.Enabled = true;
-            rbCustomerMode.Enabled = true;
-            rbMpMode.Enabled = true;
-            bBackToMainForm.Enabled = true;
-
-            //_GenerateCfgButtonState(1);
-            //_GenerateCfgButtonState(2);
-
-            if (FirstRead)
-            {
-                bGlobalWrite.Enabled = true;
-                bStoreIntoFlash.Enabled = true;
+            if (rbSingle.Checked == true) {
+                cProgressBar1.Visible = true;
+                cProgressBar2.Visible = false;
+                lCh1Message.Visible = true;
+                lCh2Message.Visible = false;
+                //lCh1EC.Visible = true;
+                //lCh2EC.Visible = false;
+                DoubleSideMode = false;
+                tbVersionCodeCh2.Visible = false;
+                tbVersionCodeReNewCh2.Visible = false;
+                tbOrignalSNCh2.Visible = false;
+                tbReNewSNCh2.Visible = false;
+                lRxPowerCh2_0.Visible = false;
+                lRxPowerCh2_1.Visible = false;
+                lRxPowerCh2_2.Visible = false;
+                lRxPowerCh2_3.Visible = false;
+                tbRxPowerCh2_0.Visible = false;
+                tbRxPowerCh2_1.Visible = false;
+                tbRxPowerCh2_2.Visible = false;
+                tbRxPowerCh2_3.Visible = false;
             }
-            else
-            {
-                bGlobalWrite.Enabled = false;
-                bStoreIntoFlash.Enabled = false;
+            else if (rbBoth.Checked == true) {
+                cProgressBar1.Visible = true;
+                cProgressBar2.Visible = true;
+                lCh1Message.Visible = true;
+                lCh2Message.Visible = true;
+                //lCh1EC.Visible = true;
+                //lCh2EC.Visible = true;
+                DoubleSideMode = true;
+                tbVersionCodeCh2.Visible = true;
+                tbVersionCodeReNewCh2.Visible = true;
+                lRxPowerCh2_0.Visible = true;
+                lRxPowerCh2_1.Visible = true;
+                lRxPowerCh2_2.Visible = true;
+                lRxPowerCh2_3.Visible = true;
+                tbRxPowerCh2_0.Visible = true;
+                tbRxPowerCh2_1.Visible = true;
+                tbRxPowerCh2_2.Visible = true;
+                tbRxPowerCh2_3.Visible = true;
+
+                if (lMode.Text == "MP") {
+                    tbOrignalSNCh2.Visible = true;
+                    tbReNewSNCh2.Visible = true;
+                }
+                else {
+                    tbOrignalSNCh2.Visible = false;
+                    tbReNewSNCh2.Visible = false;
+                }
             }
         }
 
-        private void _GenerateXmlFileFromUcComponents()
+        private void _StoreConfigurationPaths(string zipPath, string logFilePath, string rssiCriteria)
         {
-            string folderPath = Application.StartupPath;
-            string combinedPath = Path.Combine(folderPath, "XmlFolder");
-            string xmlFilePath = Path.Combine(combinedPath, "Permission settings file.xml");
+            string exeFolderPath = Application.StartupPath;
+            string combinedPath = Path.Combine(exeFolderPath, "XmlFolder");
+            bool cfgFileCheckState = cbCfgCheckAfterFw.Checked;
+            bool logFileCheckState = cbLogCheckAfterSn.Checked;
+            bool registerMapViewState = cbRegisterMapView.Checked;
+
+            if (!Directory.Exists(combinedPath))
+                Directory.CreateDirectory(combinedPath);
+
+            string xmlFilePath = Path.Combine(combinedPath, "MainFormPaths.xml");
             xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
 
             XmlDocument xmlDoc = new XmlDocument();
-            XmlElement root = xmlDoc.CreateElement("Settings");
-            xmlDoc.AppendChild(root);
-            XmlElement permissionsNode = xmlDoc.CreateElement("Permissions");
-            root.AppendChild(permissionsNode);
-            string[] roles = { "Administrator", "Engineer", "MP Manager" };
 
-            foreach (string role in roles)
-            {
-                XmlElement permissionNode = xmlDoc.CreateElement("Permission");
-                permissionNode.SetAttribute("role", role);
-                permissionsNode.AppendChild(permissionNode);
-                                
-                List<UserControl> userControls = GetAllUserControls(this); // get MainForm all UserControl
-
-                foreach (UserControl userControl in userControls)
-                {
-                    XmlElement userControlNode = xmlDoc.CreateElement("UserControl");
-                    userControlNode.SetAttribute("name", userControl.Name);
-
-                    /*
-                    // 指定 UserControl ...所有 Components enabled = false
-                    if (userControl.Name == "ucMald37045cConfig" ||
-                        userControl.Name == "ucMata37044cConfig" ||
-                        userControl.Name == "ucRt146Config" ||
-                        userControl.Name == "ucRt145Config" ||
-                        userControl.Name == "ucGn2108Config" ||
-                        userControl.Name == "ucGn2109Config")
-                    {
-                        SetAllComponentsEnabled(userControl, false);
-                    }
-                    */
-
-                    permissionNode.AppendChild(userControlNode);
-
-                    // Add MainForm components
-                    XmlElement mainFormNode = xmlDoc.CreateElement("MainForm");
-                    permissionNode.AppendChild(mainFormNode);
-
-                    List<Control> mainFormComponents = GetAllControls(this); // 搜尋 MainForm 所有元件
-                    mainFormComponents.Sort(new ControlComparer());
-
-                    XmlElement mainFormComponentsNode = xmlDoc.CreateElement("Components");
-
-                    foreach (Control control in mainFormComponents) {
-                        XmlElement componentNode = xmlDoc.CreateElement("Component");
-
-                        componentNode.SetAttribute("name", control.Name);
-                        componentNode.SetAttribute("object", control.GetType().Name);
-                        componentNode.SetAttribute("visible", "True");
-
-                        if (control.Name.Contains("Write") || control.Name.Contains("Flash")) {
-                            componentNode.SetAttribute("enabled", "False");
-                        }
-                        else if (control.Name.Contains("tp")) {
-                            componentNode.SetAttribute("enabled", "True");
-                        }
-                        else {
-                            componentNode.SetAttribute("enabled", control.Enabled.ToString());
-                        }
-
-                        if (control is TextBox textBox) {
-                            componentNode.SetAttribute("ReadOnly", textBox.ReadOnly.ToString());
-                        }
-
-                        mainFormComponentsNode.AppendChild(componentNode);
-                    }
-
-                    mainFormNode.AppendChild(mainFormComponentsNode);
-
-                    // Add UserControl components
-                    List<Control> userControlComponents = GetAllControls(userControl); // search all components from UserControl and set xml node
-                    userControlComponents.Sort(new ControlComparer());
-
-                    XmlElement componentsNode = xmlDoc.CreateElement("Components");
-
-                    foreach (Control control in userControlComponents)
-                    {
-                        XmlElement componentNode = xmlDoc.CreateElement("Component");
-                        componentNode.SetAttribute("name", control.Name);
-                        componentNode.SetAttribute("object", control.GetType().Name);
-                        componentNode.SetAttribute("visible", "True");
-                        //componentNode.SetAttribute("enabled", control.Enabled.ToString());
-
-                        if (control.Name.Contains("Write") || control.Name.Contains("Flash"))
-                        {
-                            componentNode.SetAttribute("enabled", "False");
-                        }
-                        // 新增條件：如果 Component name 含有 "tp" 字串，則 enabled 設為 true
-                        else if (control.Name.Contains("tp"))
-                        {
-                            componentNode.SetAttribute("enabled", "True");
-                        }
-                        else
-                        {
-                            componentNode.SetAttribute("enabled", control.Enabled.ToString());
-                        }
-
-
-                        if (control is TextBox textBox)
-                        {
-                            componentNode.SetAttribute("ReadOnly", textBox.ReadOnly.ToString());
-                        }
-
-                        componentsNode.AppendChild(componentNode);
-                    }
-
-                    userControlNode.AppendChild(componentsNode);
-                }
+            if (File.Exists(xmlFilePath)) {
+                xmlDoc.Load(xmlFilePath);
             }
+            else {
+                XmlElement root = xmlDoc.CreateElement("Paths");
+                xmlDoc.AppendChild(root);
+            }
+
+            XmlNode rootElement = xmlDoc.DocumentElement;
+
+            if (!string.IsNullOrEmpty(zipPath)) {
+                XmlElement zipFolderPathElement = rootElement.SelectSingleNode("FormPaths/ZipFolderPath") as XmlElement;
+                if (zipFolderPathElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    zipFolderPathElement = xmlDoc.CreateElement("ZipFolderPath");
+                    formPaths.AppendChild(zipFolderPathElement);
+                }
+                zipFolderPathElement.InnerText = Path.GetDirectoryName(zipPath);
+                XmlElement zipFilePathElement = rootElement.SelectSingleNode("FormPaths/ZipFilePath") as XmlElement;
+                if (zipFilePathElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    zipFilePathElement = xmlDoc.CreateElement("ZipFilePath");
+                    formPaths.AppendChild(zipFilePathElement);
+                }
+                zipFilePathElement.InnerText = zipPath;
+                XmlElement cfgFileCheckStateElement = rootElement.SelectSingleNode("FormPaths/CfgFileCheckState") as XmlElement;
+                if (cfgFileCheckStateElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    cfgFileCheckStateElement = xmlDoc.CreateElement("CfgFileCheckState");
+                    formPaths.AppendChild(cfgFileCheckStateElement);
+                }
+                cfgFileCheckStateElement.InnerText = cfgFileCheckState.ToString();
+            }
+
+            if (!string.IsNullOrEmpty(logFilePath)) {
+                XmlElement logFilePathElement = rootElement.SelectSingleNode("FormPaths/LogFilePath") as XmlElement;
+                if (logFilePathElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    logFilePathElement = xmlDoc.CreateElement("LogFilePath");
+                    formPaths.AppendChild(logFilePathElement);
+                }
+                logFilePathElement.InnerText = logFilePath;
+                
+            }
+
+            if (!string.IsNullOrEmpty(rssiCriteria)) {
+                XmlElement rssiRriteriaElement = rootElement.SelectSingleNode("FormPaths/RssiCriteria") as XmlElement;
+                if (rssiRriteriaElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    rssiRriteriaElement = xmlDoc.CreateElement("RssiCriteria");
+                    formPaths.AppendChild(rssiRriteriaElement);
+                }
+                rssiRriteriaElement.InnerText = rssiCriteria;
+                XmlElement logFileCheckStateElement = rootElement.SelectSingleNode("FormPaths/LogFileCheckState") as XmlElement;
+                if (logFileCheckStateElement == null) {
+                    XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                    if (formPaths == null) {
+                        formPaths = xmlDoc.CreateElement("FormPaths");
+                        rootElement.AppendChild(formPaths);
+                    }
+
+                    logFileCheckStateElement = xmlDoc.CreateElement("LogFileCheckState");
+                    formPaths.AppendChild(logFileCheckStateElement);
+                }
+                logFileCheckStateElement.InnerText = logFileCheckState.ToString();
+            }
+            
+            XmlElement registerMapViewStateElement = rootElement.SelectSingleNode("FormPaths/RegisterMapViewState") as XmlElement;
+            if (registerMapViewStateElement == null) {
+                XmlElement formPaths = rootElement.SelectSingleNode("FormPaths") as XmlElement;
+                if (formPaths == null) {
+                    formPaths = xmlDoc.CreateElement("FormPaths");
+                    rootElement.AppendChild(formPaths);
+                }
+
+                registerMapViewStateElement = xmlDoc.CreateElement("RegisterMapViewState");
+                formPaths.AppendChild(registerMapViewStateElement);
+            }
+            registerMapViewStateElement.InnerText = registerMapViewState.ToString();
 
             xmlDoc.Save(xmlFilePath);
         }
-        
-        private void _GenerateXmlFileForProject()
-        {
-            string modelType = cbProductSelect.Text;
-            string logFileName = "RegisterFile";
-            XmlDocument xmlDoc = new XmlDocument();
-            XmlElement root = xmlDoc.CreateElement("Project");
-            xmlDoc.AppendChild(root);
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Zip Files|*.zip";
-            saveFileDialog.Title = "Save Zip File";
 
-            string targetApromPath = APROMPath;
-            string targetDataromPath = DATAROMPath;
-
-            XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
-
-            if (rbCustomerMode.Checked) {
-                permissionsNode.SetAttribute("role", "Customer");
-            }
-            else if (rbMpMode.Checked) {
-                permissionsNode.SetAttribute("role", "MP");
-            }
-
-            root.AppendChild(permissionsNode);
-
-            // Check product selected
-            if (cbProductSelect.SelectedItem != null) {
-                XmlElement productNode = xmlDoc.CreateElement("Product");
-                productNode.SetAttribute("name", cbProductSelect.SelectedItem.ToString());
-                permissionsNode.AppendChild(productNode);
-            }
-            else {
-                MessageBox.Show("Please select a product.");
-                return;
-            }
-
-            // Check APROM, DATAROM filepath
-            if (!string.IsNullOrWhiteSpace(APROMPath) || !string.IsNullOrWhiteSpace(DATAROMPath)) {
-                XmlElement APROMNode = xmlDoc.CreateElement("APROM");
-                APROMNode.SetAttribute("name", Path.GetFileName(APROMPath));
-                permissionsNode.AppendChild(APROMNode);
-
-                XmlElement DATAROMNode = xmlDoc.CreateElement("DATAROM");
-                DATAROMNode.SetAttribute("name", Path.GetFileName(DATAROMPath));
-                permissionsNode.AppendChild(DATAROMNode);
-            }
-            else {
-                MessageBox.Show("APROM or DATAROM path is not set.");
-                return;
-            }
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK) {
-                loadingForm.Show(this);
-                Application.DoEvents();
-
-                string selectedFileName = saveFileDialog.FileName;
-                string folderName = Path.GetFileNameWithoutExtension(selectedFileName);
-                string folderPath = Path.Combine(Path.GetDirectoryName(selectedFileName), folderName);
-
-                Directory.CreateDirectory(folderPath);
-
-                // Save the XML file as Cfg.xml
-                xmlDoc.Save(Path.Combine(folderPath, "Cfg.xml"));
-
-                lastUsedDirectory = folderPath;
-                _GlobalWriteFromUi(false);
-                _InitialStateBar();
-                _ExportLogfile(modelType, logFileName, false, false); // Export CfgFile to config folder
-
-                if (!string.IsNullOrWhiteSpace(targetApromPath)) {
-                    string destinationFilePath = Path.Combine(folderPath, Path.GetFileName(APROMPath));
-                    File.Copy(targetApromPath, destinationFilePath, true);
-                }
-
-                if (!string.IsNullOrWhiteSpace(targetDataromPath)) {
-                    string destinationFilePath = Path.Combine(folderPath, Path.GetFileName(DATAROMPath));
-                    File.Copy(targetDataromPath, destinationFilePath, true);
-                }
-
-                CompressAndDeleteFolder(folderPath);
-            }
-            loadingForm.Close();
-        }
-        
-        private void _GenerateXmlFileForSas3()
-        {
-            string fileName = "RegisterFile.csv";
-            string folderPath = Path.Combine(Application.StartupPath, "LogFolder");
-            string exportFilePath = Path.Combine(folderPath, fileName);
-            string targetASidePath, targetBSidePath;
-
-            XmlDocument xmlDoc = new XmlDocument();
-            XmlElement root = xmlDoc.CreateElement("Project");
-            xmlDoc.AppendChild(root);
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "Zip Files|*.zip";
-            saveFileDialog.Title = "Save Zip File";
-
-            if (cbASidePath.Checked)
-                targetASidePath = ASidePath;
-            else {
-                MessageBox.Show("Please confirm the parameter file path");
-                return;
-            }
-
-            if (cbBSidePath.Checked)
-                targetBSidePath = BSidePath;
-            else
-                targetBSidePath = ASidePath;
-
-            XmlElement permissionsNode = xmlDoc.CreateElement("Premissions");
-
-            if (rbSas3CustomerMode.Checked) {
-                permissionsNode.SetAttribute("role", "Customer");
-            }
-            else if (rbSas3MpMode.Checked) {
-                permissionsNode.SetAttribute("role", "MP");
-            }
-
-            root.AppendChild(permissionsNode);
-            XmlElement productNode = xmlDoc.CreateElement("Product");
-            productNode.SetAttribute("name", "SAS3.0");
-            permissionsNode.AppendChild(productNode);
-
-            // Check and create filepath
-            if (!string.IsNullOrWhiteSpace(ASidePath) || !string.IsNullOrWhiteSpace(BSidePath)) {
-                XmlElement ASideFileNode = xmlDoc.CreateElement("ASIDE");
-                ASideFileNode.SetAttribute("name", Path.GetFileName(ASidePath));
-                permissionsNode.AppendChild(ASideFileNode);
-
-                if (cbBSidePath.Checked) {
-                    XmlElement BSideFileNode = xmlDoc.CreateElement("BSIDE");
-                    BSideFileNode.SetAttribute("name", Path.GetFileName(BSidePath));
-                    permissionsNode.AppendChild(BSideFileNode);
-                }
-                else {
-                    XmlElement BSideFileNode = xmlDoc.CreateElement("BSIDE");
-                    BSideFileNode.SetAttribute("name", Path.GetFileName(ASidePath));
-                    permissionsNode.AppendChild(BSideFileNode);
-                }
-            }
-            else {
-                MessageBox.Show("ASide or BSide file path is not set.");
-                return;
-            }
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK) {
-                loadingForm.Show(this);
-                Application.DoEvents();
-
-                string selectedFileName = saveFileDialog.FileName;
-                string folderName = Path.GetFileNameWithoutExtension(selectedFileName);
-                string tempFolderPath = Path.Combine(Path.GetDirectoryName(selectedFileName), folderName);
-
-                Directory.CreateDirectory(tempFolderPath);
-                // Save the XML file as Cfg.xml
-                xmlDoc.Save(Path.Combine(tempFolderPath, "Cfg.xml"));                
-                lastUsedDirectory = tempFolderPath;
-                _FormatChangeFromTextToCsv(exportFilePath, targetASidePath, targetBSidePath);
-
-                if (!string.IsNullOrWhiteSpace(exportFilePath)) {
-                    string destinationFilePath = Path.Combine(tempFolderPath, Path.GetFileName(exportFilePath));
-                    File.Copy(exportFilePath, destinationFilePath, true);
-                }
-
-                CompressAndDeleteFolder(tempFolderPath);
-            }
-
-            loadingForm.Close();
-        }
-        /*
-        private void button1_Click(object sender, EventArgs e)
-        {
-            string fileName = "RegisterFile.csv";
-            string folderPath = Path.Combine(Application.StartupPath, "LogFolder");
-            string exportFilePath = Path.Combine(folderPath, fileName);
-            string targetASidePath, targetBSidePath;
-
-
-            if (cbASidePath.Checked)
-                targetASidePath = ASidePath;
-            else {
-                MessageBox.Show("Please confirm the parameter file path");
-                return;
-            }
-
-            if (cbBSidePath.Checked)
-                targetBSidePath = BSidePath;
-            else
-                targetBSidePath = null;
-
-            //MessageBox.Show("ASidePath: " + ASidePath + "\nBSidePath: " + BSidePath);
-            _FormatChangeFromTextToCsv(exportFilePath, targetASidePath, targetBSidePath);
-        }
-        */
-
-        private bool HardwareIdentificationValidation(string modelType, bool messageMode)
-        {
-            bool isVerified = false;
-
-            switch (modelType) {
-                case "SAS3.0":
-                    isVerified = VerifySAS30Module(messageMode);
-                    break;
-
-                case "SAS4.0":
-                case "PCIe4.0":
-                case "QSFP28":
-
-                    isVerified = VerifyMini58Module(messageMode);
-                    break;
-
-                default:
-                    MessageBox.Show("Unknown module type. Please check!", "Error",
-                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    break;
-            }
-
-            if (!isVerified) {
-                //LogError
-            }
-
-            return isVerified;
-        }
-
-        private bool _GetChipId(string modelType)
-        {
-            string LddChipId = "";
-            string TiaChipId = "";
-
-            if (modelType == "SAS4.0") {
-                TiaChipId = ucMata37044cConfig.GetChipId();
-                LddChipId = ucMald37045cConfig.GetChipId();
-                if ((TiaChipId == "0x77") && (LddChipId == "0x79"))
-                    return true;
-                
-            }
-            else if (modelType == "PCIe4.0") {
-                TiaChipId = ucRt145Config.GetChipId();
-                //LddChipId = ucRt146Config.GetChipId();
-                //if ((TiaChipId == "0x58") && (LddChipId == "0xFF"))
-                if (TiaChipId == "0x58")
-                    return true;
-            }
-            /*
-            else if (modelType == "QSFP28") {
-                TiaChipId = ucGn2108Config.GetChipId();
-                LddChipId = ucGn2109Config.GetChipId();
-                if ((TiaChipId == "") && (LddChipId == ""))
-                    return true;
-            }*/
-            else {
-                MessageBox.Show("This product is not in the list\nModel: " + modelType );
-            }
-
-            MessageBox.Show("LDD Chip ID: " + LddChipId +
-                            "\nTIA Chip ID: " + TiaChipId);
-
-            return false;
-        }
-
-        private bool VerifySAS30Module(bool messageMode)
-        {
-            string venderPn = GetVenderPnApi();
-
-            if (messageMode) {
-                if (venderPn.Contains("AP3AD5D5")) {
-                    MessageBox.Show("Verification PASS!!\nVendorPn: " + venderPn, "Pass",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return true;
-                }
-                else {
-                    MessageBox.Show("Please confirm whether the plug-in module is SAS3.0", "Error!!",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-            }
-            else 
-                return venderPn.Contains("AP3AD5D5") ? true : false;
-        }
-
-        private bool VerifyMini58Module(bool messageMode)
-        {
-            string hiddenPassword = GetHiddenPasswordApi();
-
-            if (messageMode) {
-                if (hiddenPassword == "3234") {
-                    MessageBox.Show("Verification PASS!!\nHiddenPassword: " + hiddenPassword, "Hidden password check",
-                        MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    return true;
-                }
-                else {
-                    MessageBox.Show("Please confirm whether the plug-in module is Mini58 MCU", "Error!!",
-                        MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return false;
-                }
-            }
-            else
-                return hiddenPassword == "3234" ? true:false;
-        }
-
-        private void CompressAndDeleteFolder(string folderPath)
-        {
-            string zipFilePath = folderPath + ".zip";
-            string password = "2368";
-
-            using (ZipFile zip = new ZipFile()) {
-                zip.Password = password;
-                zip.AddDirectory(folderPath);
-                zip.Save(zipFilePath);
-            }
-
-            Directory.Delete(folderPath, true);
-        }
-
-        private List<UserControl> GetAllUserControls(Control control) // 遞迴取得 MainForm 中的所有 User Control
-        {
-            List<UserControl> userControls = new List<UserControl>();
-
-            foreach (Control childControl in control.Controls)
-            {
-                if (childControl is UserControl userControl)
-                {
-                    userControls.Add(userControl);
-                }
-
-                userControls.AddRange(GetAllUserControls(childControl));
-            }
-
-            return userControls;
-        }
-
-        private List<Control> GetAllControls(Control control) // 遞迴取得 User Control 中的所有 Control
-        {
-            List<Control> controls = new List<Control>();
-
-            foreach (Control childControl in control.Controls)
-            {
-                controls.Add(childControl);
-
-                if (childControl is UserControl userControl) // If UserControl，遞迴取得其內部的所有元件
-                {
-                    controls.AddRange(GetAllControls(userControl));
-                }
-
-                controls.AddRange(GetAllControls(childControl));
-            }
-
-            return controls;
-        }
-
-        private void SetAllComponentsEnabled(Control control, bool enabled)
-        {
-            List<Control> controls = GetAllControls(control);
-
-            foreach (Control c in controls)
-            {
-                c.Enabled = enabled;
-            }
-        }
-
-        private class ControlComparer : IComparer<Control> //比較器，用於排序
-        {
-            public int Compare(Control x, Control y)
-            {
-                return string.Compare(x.Name, y.Name, StringComparison.Ordinal); // 依components name進行排序
-            }
-        }
-
-        public int ConfigUiByXmlApi(String configXml)
-        {
-            OpenFileDialog ofdSelectFile = new OpenFileDialog();
-            XmlReader xrConfig;
-
-            string folderPath = Application.StartupPath;
-            string combinedPath = Path.Combine(folderPath, "XmlFolder");
-            string xmlFilePath = Path.Combine(combinedPath, configXml);
-            xmlFilePath = xmlFilePath.Replace("\\\\", "\\");
-
-
-            if (xmlFilePath.Length == 0)
-            {
-                ofdSelectFile.Title = "Select config file";
-                ofdSelectFile.Filter = "xml files (*.xml)|*.xml";
-                if (ofdSelectFile.ShowDialog() != DialogResult.OK)
-                    return -1;
-                xrConfig = XmlReader.Create(ofdSelectFile.FileName);
-            }
-            else
-            {
-                xrConfig = XmlReader.Create(xmlFilePath);
-            }
-
-            while (xrConfig.Read())
-            {
-                if (xrConfig.IsStartElement())
-                {
-                    switch (xrConfig.Name)
-                    {
-                        case "Settings":
-                            xrConfig.Read();
-                            _ParseSettingsXml(xrConfig);
-                            break;
-
-                        default:
-                            break;
-                    }
-                }
-            }
-
-            return 0;
-        }
-
-        private void _ParseSettingsXml(XmlReader reader)
-        {
-            while (reader.Read())
-            {
-                if (reader.IsStartElement() && reader.Name == "Permission")
-                {
-                    string role = reader.GetAttribute("role");
-
-                    if (role == cbPermission.SelectedItem.ToString())
-                    {
-                        // The selected permission level matches the current Permission element
-
-                        reader.Read(); // Move to the first UserControl element
-
-                        while (reader.IsStartElement() && reader.Name == "UserControl")
-                        {
-                            string userControlName = reader.GetAttribute("name");
-
-                            reader.Read(); // Move to the Components element within the UserControl
-                            
-                            while (reader.IsStartElement() && reader.Name == "Components")
-                            {
-                                reader.Read(); // Move to the first Component element
-
-                                while (reader.IsStartElement() && reader.Name == "Component")
-                                {
-                                    _ParseComponentXml(reader, userControlName);
-                                }
-
-                                reader.ReadEndElement(); // Move out of the Components element
-                            }
-
-                            reader.ReadEndElement(); // Move out of the UserControl element
-                        }
-                    }
-                    else
-                    {
-                        reader.Skip(); // Skip the elements for other permission levels
-                    }
-                }
-            }
-        }
-
-        private MainFormPaths _LoadLastPaths()
+        private MainFormPaths _LoadLastPathsAndSetup()
         {
             string folderPath = Application.StartupPath;
             string combinedPath = Path.Combine(folderPath, "XmlFolder");
@@ -2534,2033 +1288,2151 @@ namespace IntegratedGuiV2
             try {
                 XmlDocument xmlDoc = new XmlDocument();
                 xmlDoc.Load(xmlFilePath);
-                XmlNode zipPathNode = xmlDoc.SelectSingleNode("//ZipFolderPath");
-                XmlNode logFilePathNode = xmlDoc.SelectSingleNode("//LogFilePath");
+                XmlNode zipFolderPathElement = xmlDoc.SelectSingleNode("//ZipFolderPath");
+                XmlNode zipFilePathElement = xmlDoc.SelectSingleNode("//ZipFilePath");
+                XmlNode logFilePathElement = xmlDoc.SelectSingleNode("//LogFilePath");
+                XmlNode rssiRriteriaElement = xmlDoc.SelectSingleNode("//RssiCriteria");
+                XmlNode cfgFileCheckStateElement = xmlDoc.SelectSingleNode("//CfgFileCheckState");
+                XmlNode logFileCheckStateElement = xmlDoc.SelectSingleNode("//LogFileCheckState");
+                XmlNode registerMapViewStateElement = xmlDoc.SelectSingleNode("//RegisterMapViewState");
 
-                string zipPath = zipPathNode?.InnerText;
-                string logFilePath = logFilePathNode?.InnerText;
+                string zipFolderPath = zipFolderPathElement?.InnerText;
+                string zipFilePath = zipFilePathElement?.InnerText;
+                string logFilePath = logFilePathElement?.InnerText;
+                string rssiCriteria = rssiRriteriaElement?.InnerText;
+                bool cfgFileCheckState = cfgFileCheckStateElement != null && Convert.ToBoolean(cfgFileCheckStateElement.InnerText);
+                bool logFileCheckState = logFileCheckStateElement != null && Convert.ToBoolean(logFileCheckStateElement.InnerText);
+                bool registerMapViewState = registerMapViewStateElement != null && Convert.ToBoolean(registerMapViewStateElement.InnerText);
 
                 return new MainFormPaths {
-                    ZipFolderPath = zipPath,
-                    LogFilePath = logFilePath
+                    ZipFolderPath = zipFolderPath,
+                    ZipFilePath = zipFilePath,
+                    LogFilePath = logFilePath,
+                    RssiCriteria = rssiCriteria,
+                    CfgFileCheckState = cfgFileCheckState,
+                    LogFileCheckState = logFileCheckState,
+                    RegisterMapViewState = registerMapViewState
                 };
             }
             catch (Exception) {
                 return new MainFormPaths {
                     ZipFolderPath = null,
-                    LogFilePath = null
+                    ZipFilePath= null,
+                    LogFilePath = null,
+                    RssiCriteria = null,
+                    CfgFileCheckState = false,
+                    LogFileCheckState = false,
+                    RegisterMapViewState = false
                 };
             }
         }
 
-        private void _ParseComponentXml(XmlReader reader, string userControlName)
+        private void _LoadXmlFile()
         {
-            string componentName = reader.GetAttribute("name");
-            string objectType = reader.GetAttribute("object");
-            string visible = reader.GetAttribute("visible");
-            string enabled = reader.GetAttribute("enabled");
-            string readOnly = reader.GetAttribute("ReadOnly");
+            MainFormPaths lastPath = _LoadLastPathsAndSetup();
+            string initialDirectory = lastPath.ZipFolderPath;
+            string initialZipFile = lastPath.ZipFilePath;
+            string logFilePath = lastPath.LogFilePath;
+            string rssiCriteria = lastPath.RssiCriteria;
+            cbCfgCheckAfterFw.Checked = lastPath.CfgFileCheckState;
+            cbLogCheckAfterSn.Checked = lastPath.LogFileCheckState;
+            cbRegisterMapView.Checked = lastPath.RegisterMapViewState;
 
-            UserControl targetUserControl = (UserControl)Controls.Find(userControlName, true).FirstOrDefault();
-
-            if (targetUserControl != null)
-            {
-                switch (objectType)
-                {
-                    case "TextBox":
-                        TextBox tbTmp = (TextBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
-                        
-                        if (tbTmp != null)
-                        {
-                            if (visible != null) tbTmp.Visible = visible.Equals("True");
-                            if (enabled != null) tbTmp.Enabled = enabled.Equals("True");
-                            if (readOnly != null) tbTmp.ReadOnly = readOnly.Equals("True");
-                        }
-                        break;
-
-                    case "Label":
-                        Label lTmp = (Label)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
-
-                        if (lTmp != null)
-                        {
-                            if (visible != null) lTmp.Visible = visible.Equals("True");
-                            if (enabled != null) lTmp.Enabled = enabled.Equals("True");
-                        }
-                        break;
-
-                    case "Button":
-                        Button bTmp = (Button)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
-
-                        if (bTmp != null)
-                        {
-                            if (visible != null) bTmp.Visible = visible.Equals("True", StringComparison.OrdinalIgnoreCase);
-                            if (enabled != null) bTmp.Enabled = enabled.Equals("True", StringComparison.OrdinalIgnoreCase);
-                        }
-                        break;
-
-                    case "GroupBox":
-                        GroupBox gbTmp = (GroupBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
-
-                        if (gbTmp != null)
-                        {
-                            if (visible != null) gbTmp.Visible = visible.Equals("True");
-                            if (enabled != null) gbTmp.Enabled = enabled.Equals("True");
-                        }
-                        break;
-
-                    case "CheckBox":
-                        CheckBox cbTmp = (CheckBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
-
-                        if (cbTmp != null)
-                        {
-                            if (visible != null) cbTmp.Visible = visible.Equals("True");
-                            if (enabled != null) cbTmp.Enabled = enabled.Equals("True");
-                        }
-                        break;
-
-                    case "ComboBox":
-                        ComboBox cobTmp = (ComboBox)targetUserControl.Controls.Find(componentName, true).FirstOrDefault();
-
-                        if (cobTmp != null)
-                        {
-                            if (visible != null) cobTmp.Visible = visible.Equals("True");
-                            if (enabled != null) cobTmp.Enabled = enabled.Equals("True");
-                        }
-                        break;
-
-                    default:
-                        break;
-                }
+            if (string.IsNullOrEmpty(logFilePath))
+                _EnterDefaultLogfilePath();
+            else {
+                tbLogFilePath.Text = logFilePath;
+                tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
             }
 
-            reader.Read(); // Move to the next Component element
-        }
-
-        private void bOutterSwitch_Click(object sender, EventArgs e)
-        {
-            if (bOutterSwitch.Enabled == true)
-                bOutterSwitch.Enabled = false;
-
-            ChannelSwitchApi();
-            bGlobalRead.Select();
-
-            if (bOutterSwitch.Enabled == false)
-                bOutterSwitch.Enabled = true;
-        }
-
-        private void bInnerSwitch_Click(object sender, EventArgs e)
-        {
-            if (bInnerSwitch.Enabled == true)
-                bInnerSwitch.Enabled = false;
-
-            ChannelSwitchApi();
-
-            if (bInnerSwitch.Enabled == false)
-                bInnerSwitch.Enabled = true;
-                
-            bInnerSwitch.Select();
-        }
-
-        private void _UpdateButtonState()
-        {
-           
-            if ((ProcessingChannel == 1) || (ProcessingChannel == 13))
-            {
-                rbCh1.Checked = true;
-                rbCh2.Checked = false;
-                tbInnerStateCh1.BackColor = Color.YellowGreen;
-                tbInnerStateCh2.BackColor = Color.White;
-            }
-
-            if ((ProcessingChannel == 2) || (ProcessingChannel == 23))
-            {
-                rbCh2.Checked = true;
-                rbCh1.Checked = false;
-                tbInnerStateCh1.BackColor = Color.White;
-                tbInnerStateCh2.BackColor = Color.YellowGreen;
-            }
-
-            Application.DoEvents();
-        }
-       
-        private void _EnableIcConfig()
-        {
-            if (cbProductSelect.SelectedIndex != 0)
-            {
-                cbTxIcConfig.Enabled = true;
-                cbTxIcConfig.Checked = false;
-                cbRxIcConfig.Enabled = true;
-                cbRxIcConfig.Checked = false;
-                tbTxConfigReadState.Enabled = true;
-                tbRxConfigReadState.Enabled = true;
-                AutoSelectIcConfig = true;
-            }
+            if (!string.IsNullOrEmpty(rssiCriteria))
+                tbRssiCriteria.Text = rssiCriteria;
             else
-            {
-                cbTxIcConfig.Enabled = false;
-                cbTxIcConfig.Checked = false;
-                cbRxIcConfig.Enabled = false;
-                cbRxIcConfig.Checked = false;
-                tbTxConfigReadState.Enabled = false;
-                tbRxConfigReadState.Enabled = false;
-                AutoSelectIcConfig = false;
-            }
-        }
+                tbRssiCriteria.Text = "200";
 
-        private void _UpdateTabPageVisibility()
-        {
-            int variable;
-
-            variable = cbProductSelect.SelectedIndex;
-
-            if (variable == 1)
-            {
-                tcIcConfig.TabPages.Remove(tabPage32);
-                tcIcConfig.TabPages.Remove(tabPage33);
-
-                if (!tcIcConfig.TabPages.Contains(tabPage31))
-                {
-                    tcIcConfig.TabPages.Add(tabPage31);
-                }
-            }
-
-            else if (variable == 2)
-            {
-                tcIcConfig.TabPages.Remove(tabPage31);
-                tcIcConfig.TabPages.Remove(tabPage33);
-
-                if (!tcIcConfig.TabPages.Contains(tabPage32))
-                {
-                    tcIcConfig.TabPages.Add(tabPage32);
-                }
-            }
-            else if (variable == 3)
-            {
-                tcIcConfig.TabPages.Remove(tabPage31);
-                tcIcConfig.TabPages.Remove(tabPage32);
-
-                if (!tcIcConfig.TabPages.Contains(tabPage33))
-                {
-                    tcIcConfig.TabPages.Add(tabPage33);
-                }
-            }
-
-            else
-            {
-                if (!tcIcConfig.TabPages.Contains(tabPage31))
-                {
-                    tcIcConfig.TabPages.Add(tabPage31);
-                }
-                if (!tcIcConfig.TabPages.Contains(tabPage32))
-                {
-                    tcIcConfig.TabPages.Add(tabPage32);
-                }
-                if (!tcIcConfig.TabPages.Contains(tabPage33))
-                {
-                    tcIcConfig.TabPages.Add(tabPage33);
-                }
-            }
-        }
-
-        private string _GetFirmwareVersionCode()
-        {
-            byte[] data = new byte[10];
-            byte[] bATmp = new byte[2];
-
-            data[0] = 0xAA;
-            if (_I2cWrite(80, 127, 1, data) < 0)
-                return "-1";
-
-            if (_I2cRead(80, 165, 10, data) < 0)
-                return "-1";
-
-            if ((data[0] == 0) && (data[1] == 0) && (data[2] == 0) && (data[3] == 0) &&
-                (data[4] == 0) && (data[5] == 0) && (data[6] == 0) && (data[7] == 0) &&
-                (data[8] == 0) && (data[9] == 0)) {
-                data[0] = 32;
-                if (_I2cWrite(80, 127, 1, data) < 0)
-                    return "-1";
-
-                if (_I2cRead(80, 165, 10, data) < 0)
-                    return "-1";
-            }
-            
-            bATmp = new byte[8];
-            System.Buffer.BlockCopy(data, 2, bATmp, 0, 8);
-            
-            return Encoding.Default.GetString(bATmp);
-        }
-
-        private void bGlobalRead_Click(object sender, EventArgs e)
-        {
-            loadingForm.Show(this);
-            _DisableButtons();
-            _InitialStateBar();
-            _GlobalRead();
-            FirstRead = true;
-            _EnableButtons();
-            loadingForm.Close();
-        }
-
-        internal int _GlobalRead()
-        {
-            bool readFail = false;
-            int errorCount = 0;
-            int delay = 10;
-            StateUpdated("Read State:\nPreparing resources...", 1);
-
-            if (cbInfomation.Checked)
-            {
-                Thread.Sleep(delay);
-                tbInformationReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucInformation.ReadAllApi() < 0)
-                {
-                    tbInformationReadState.BackColor = Color.Red;
-                    StateUpdated("Read State:\nInformation...Failed", 3);
-                    errorCount++;
-                }
-                else
-                {
-                    tbInformationReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Read State:\nInformation...Done", 3);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbDdm.Checked)
-            {
-                Thread.Sleep(delay);
-                tbDdmReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucDigitalDiagnosticsMonitoring.ReadAllApi() < 0)
-                {
-                    tbDdmReadState.BackColor = Color.Red;
-                    StateUpdated("Read State:\nDdm...Failed", 7);
-                    errorCount++;
-                }
-                else
-                {
-                    tbDdmReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Read State:\nDdm...Done", 7);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbMemDump.Checked)
-            {
-                Thread.Sleep(delay);
-                tbMemDumpReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucMemoryDump.ReadAllApi(null) < 0)
-                {
-                    tbMemDumpReadState.BackColor = Color.Red;
-                    StateUpdated("Read State:\nMemDump...Failed", 10);
-                    errorCount++;
-                }
-                else
-                {
-                    tbMemDumpReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Read State:\nMemDump...Done", 10);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbCorrector.Checked)
-            {
-                Thread.Sleep(delay);
-                tbCorrectorReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucGn1190Corrector.ReadAllApi() < 0)
-                {
-                    tbCorrectorReadState.BackColor = Color.Red;
-                    StateUpdated("Read State:\nCorrector...Failed", 15);
-                    errorCount++;
-                }
-                else
-                {
-                    tbCorrectorReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Read State:\nCorrector...Done", 15);
-                }
-
-                Application.DoEvents();
-            }
-
-            if (cbProductSelect.SelectedIndex != 0)
-            {
-                if (cbTxIcConfig.Checked)
-                {
-                    Thread.Sleep(delay);
-                    tbTxConfigReadState.BackColor = Color.SteelBlue;
-                    Application.DoEvents();
-
-                    switch (cbProductSelect.SelectedIndex)
-                    {
-                        case 1: // SAS4.0
-                            if (ucMald37045cConfig.ReadAllApi() < 0)
-                                readFail = true;
-
-                            break;
-                        case 2: // PCIe4
-                            if (ucRt146Config.ReadAllApi() < 0)
-                                readFail = true;
-
-                            break;
-                        case 3: // QSFP28
-                            if (ucGn2108Config.ReadAllApi() < 0)
-                                readFail = true;
-
-                            break;
-                    }
-
-                    if (readFail)
-                    {
-                        tbTxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Read State:\nTxIcConfig...Failed", 23);
-                        errorCount++;
-                    }
-                    else
-                    {
-                        tbTxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Read State:\nTxIcConfig...Done", 23);
-                    }
-
-                    Application.DoEvents();
-                    readFail = false;
-                }
-
-                if (cbRxIcConfig.Checked)
-                {
-                    Thread.Sleep(delay);
-                    tbRxConfigReadState.BackColor = Color.SteelBlue;
-                    Application.DoEvents();
-
-                    switch (cbProductSelect.SelectedIndex)
-                    {
-                        case 1: // SAS4.0
-                            if (ucMata37044cConfig.ReadAllApi() < 0)
-                                readFail = true;
-
-                            break;
-                        case 2: // PCIe4
-                            if (ucRt145Config.ReadAllApi() < 0)
-                                readFail = true;
-
-                            break;
-                        case 3: // QSFP28
-                            if (ucGn2109Config.ReadAllApi() < 0)
-                                readFail = true;
-
-                            break;
-                    }
-
-                    if (readFail)
-                    {
-                        tbRxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Read State:\nRxIcConfig...Failed", 30);
-                        errorCount++;
-                    }
-                    else
-                    {
-                        tbRxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Read State:\nRxIcConfig...Done", 30);
-                    }
-
-                    Application.DoEvents();
-                }
-            }
-            return errorCount;
-        }
-
-        private bool _LoadFilesPathForBin(string fileType)
-        {
-            string sourceFileName, sourceFilePath;
-            //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            if (string.IsNullOrEmpty(initialDirectory))
+                initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
             using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                openFileDialog.Title = "Files path";
-                openFileDialog.Filter = "Binary Files (*.bin)|*.bin";
-                //openFileDialog.InitialDirectory = initialDirectory;
+                openFileDialog.Title = "Files position";
+                openFileDialog.Filter = "Zip Files (*.zip)|*.zip";
+                openFileDialog.InitialDirectory = initialDirectory;
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                    string originalPath = openFileDialog.FileName;
-                    string originalFileName = Path.GetFileName(originalPath); // Get original filename
-                    lastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-                    //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory );
+                    string selectedFilePath = openFileDialog.FileName;
+                    string extension = Path.GetExtension(selectedFilePath).ToLower();
 
-                    if (originalFileName.Contains(" ")) {
-                        string newFileName = originalFileName.Replace(" ", "_");
-                        string newPath = Path.Combine(lastUsedDirectory, newFileName);
-                        sourceFileName = newFileName;
-
+                    if (extension == ".zip") {
                         try {
-                            File.Move(originalPath, newPath); // 覆蓋原檔
-                            //sourceFilePath = newPath;
-
-                            if (DebugMode)
-                                MessageBox.Show($"已重新命名為: {newFileName}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
-                        catch (IOException ex) {
-                            if (DebugMode)
-                                MessageBox.Show($"無法重新命名: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    }
-                    else {
-                        //sourceFilePath = originalPath;
-                        sourceFileName = originalFileName;
-                    }
-
-                    if (fileType == "APROM") {
-                        APROMPath = Path.Combine(lastUsedDirectory, sourceFileName);
-                        cbAPPath.Checked = true;
-                        MessageBox.Show("APROMPath: \n" + APROMPath);
-                    }
-
-                    if (fileType == "DATAROM") {
-                        DATAROMPath = Path.Combine(lastUsedDirectory, sourceFileName);
-                        cbDAPath.Checked = true;
-                        MessageBox.Show("DATAROMPath: \n" + DATAROMPath);
-                    }
-
-                    return true;
-                }
-                else {
-                    if (fileType == "APROM")
-                        cbAPPath.Checked = false;
-
-                    if (fileType == "DATAROM")
-                        cbDAPath.Checked = false;
-
-                    return false;
-                }
-            }
-        }
-        
-        private bool _LoadFilesPathForText(string fileType)
-        {
-            //string initialDirectory = AppDomain.CurrentDomain.BaseDirectory;
-            using (OpenFileDialog openFileDialog = new OpenFileDialog()) {
-                openFileDialog.Title = "Files path";
-                openFileDialog.Filter = "Text Files (*.txt)|*.txt";
-                //openFileDialog.InitialDirectory = initialDirectory;
-
-                if (openFileDialog.ShowDialog() == DialogResult.OK) {
-                    string sourceFileName = Path.GetFileName(openFileDialog.FileName);
-                    lastUsedDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-                    //MessageBox.Show("lastUsedDirectory: \n" + lastUsedDirectory );
-
-                    if (fileType == "ASide") {
-                        ASidePath = lastUsedDirectory + "\\" + sourceFileName;
-                        cbASidePath.Checked = true;
-                    }
-
-                    if (fileType == "BSide") {
-                        BSidePath = lastUsedDirectory + "\\" + sourceFileName;
-                        cbBSidePath.Checked = true;
-                    }
-
-                    return true;
-                }
-                else {
-                    if (fileType == "ASide")
-                        cbAPPath.Checked = false;
-
-                    if (fileType == "BSide")
-                        cbDAPath.Checked = false;
-
-                    return false;
-                }
-            }
-        }
-
-        private void _GenerateCfgButtonState(int mcuType, bool bSide)
-        {
-            if (mcuType == 1) {
-                if (cbAPPath.Checked)
-                    bGenerateCfg.Enabled = true;
-                else
-                    bGenerateCfg.Enabled = false;
-            }
-            else if (mcuType == 2 && bSide == false) {
-                if ((cbASidePath.Checked) ) {
-                    cbBSidePath.Enabled = true;
-                    bSas3GenerateCfg.Enabled = true;
-                }
-                else {
-                    cbBSidePath.Enabled = false;
-                    bSas3GenerateCfg.Enabled = false;
-                }
-            }
-            else if (mcuType == 2 && bSide == true) {
-                if (cbBSidePath.Checked && (rbSas3CustomerMode.Checked || rbSas3MpMode.Checked)) {
-                    bSas3GenerateCfg.Enabled = true;
-                }
-                else {
-                    bSas3GenerateCfg.Enabled = false;
-                }
-            }
-        }
-
-        internal int _GlobalWriteFromRegisterFile(bool CustomerMode, string CfgFilePath, int processingChannel)
-        {
-            MainFormPaths lastPath = _LoadLastPaths();
-            string DirectoryPath = Application.StartupPath;
-            string BackupRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\ModuleRegisterFile.csv");
-            
-            /*
-            string BackupRegisterFilePath = lastPath.LogFilePath;
-
-            if (string.IsNullOrEmpty(BackupRegisterFilePath))
-                BackupRegisterFilePath = Path.Combine(DirectoryPath, "LogFolder\\ModuleRegisterFile.csv");
-            else
-                BackupRegisterFilePath = Path.Combine(BackupRegisterFilePath, "ModuleRegisterFile.csv");
-            */
-
-            StateUpdated("Write State:\nPreparing resources...", 61);
-
-            if (CustomerMode)
-            {
-                if (WriteRegisterPageApi("Up 00h", 200, BackupRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
-                StateUpdated("Write State:\nUpPage 00h...Done", 64);
-                if (WriteRegisterPageApi("Up 03h", 200, BackupRegisterFilePath) < 0) return -1;
-                StateUpdated("Write State:\nUpPage 03h...Done", 65);
-            }
-            else
-            {
-                if (WriteRegisterPageApi("Low Page", 200, CfgFilePath) < 0) return -1;
-                StateUpdated("Write State:\nLow Page...Done", 63);
-                if (WriteRegisterPageApi("Up 00h", 200, CfgFilePath) < 0) return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nUpPage 00h...Done", 64);
-                if (WriteRegisterPageApi("Up 03h", 200, CfgFilePath) < 0) return -1;
-                StateUpdated("Write State:\nUpPage 03h...Done", 65);
-            }
-
-            if (WriteRegisterPageApi("80h", 200, BackupRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
-            StateUpdated("Write State:\nPage 0x80h...Done", 67);
-            if (WriteRegisterPageApi("81h", 200, BackupRegisterFilePath) < 0) return -1;
-            StateUpdated("Write State:\nPage 0x81h...Done", 70);
-            if (WriteRegisterPageApi("Rx", 1000, BackupRegisterFilePath) < 0) return -1;
-            StateUpdated("Write State:\nRxIcConfig...Done", 80);
-            if (WriteRegisterPageApi("Tx", 1000, BackupRegisterFilePath) < 0) return -1;
-            StateUpdated("Write State:\nTxIcConfig...Done", 90);
-
-            StoreIntoFlashApi();
-            StateUpdated("Write State:\nStore into flash...Done", 95);
-
-            return 0;
-        }
-
-        internal int _WriteFromRegisterFileForSas3(bool CustomerMode, string CfgFilePath, int processingChannel)
-        {
-            StateUpdated("Write State:\nPreparing resources...", 10);
-
-            if (CustomerMode) {
-                //StateUpdated("Write State:\nUpPage 03h...Done", 65);
-            }
-            else {
-                if (WriteRegisterPageForSas3Api("Page 00", 1200, CfgFilePath, processingChannel) < 0)
-                    return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nPage 00...Done", 30);
-                
-                if (WriteRegisterPageForSas3Api("Page 70", 1200, CfgFilePath, processingChannel) < 0)
-                    return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nPage 70...Done", 50);
-
-                if (WriteRegisterPageForSas3Api("Page 73", 1200, CfgFilePath, processingChannel) < 0)
-                    return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nPage 73...Done", 70);
-
-                if (WriteRegisterPageForSas3Api("Page 3A", 1200, CfgFilePath, processingChannel) < 0)
-                    return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nPage 3A...Done", 90);
-
-                /*
-                if (WriteRegisterPageForSas3Api("Page 00", 1000, CfgFilePath, processingChannel, 0x90, 80) < 0)
-                    return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nPage 00...Done", 30);
-
-                
-                if (WriteRegisterPageForSas3Api("Page 00", 100, CfgFilePath, processingChannel, 0xED , 5) < 0)
-                    return -1; //Write from Cfg.RegisterFile
-                StateUpdated("Write State:\nPage 70...Done", 40);
-                */
-            }
-
-            StoreIntoFlashApi();
-            StateUpdated("Write State:\nStore into flash...Done", 95);
-
-            return 0;
-        }
-
-        internal int _KeyForSas3()
-        {
-            if (_WriteModulePassword() < 0)
-                return -1;
-
-            return 0;
-        }
-
-        internal int _GlobalWriteFromUi(bool ExternalMode)
-        {
-            bool writeFail = false;
-            int returnValue = 0;
-            int errorCount = 0;
-            int delay = 10;
-
-            StateUpdated("Write State:\nPreparing resources...", 62);
-            Application.DoEvents();
-
-            if (DebugMode)
-                MessageBox.Show("cbInfomation Check state: " + cbInfomation.CheckState);
-
-            
-            if (cbInfomation.Checked)
-            {
-                Thread.Sleep(delay);
-                tbInformationReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucInformation.WriteAllApi() < 0)
-                {
-                    tbInformationReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nInformation...Failed", 65);
-                    errorCount++;
-                }
-                else
-                {
-                    tbInformationReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nInformation...Done", 65);
-                    if (DebugMode)
-                        MessageBox.Show("Write State: Information...Done");
-                }
-                Application.DoEvents();
-            }
-
-            if (DebugMode)
-                MessageBox.Show("cbDdm Check state: " + cbDdm.CheckState);
-
-            if (cbDdm.Checked)
-            {
-                Thread.Sleep(delay);
-                tbDdmReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucDigitalDiagnosticsMonitoring.WriteAllApi() < 0)
-                {
-                    returnValue = ucDigitalDiagnosticsMonitoring.WriteAllApi();
-                    MessageBox.Show("rv : " + returnValue);
-                    tbDdmReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nDdm...Failed", 68);
-                    errorCount++;
-                }
-
-                else
-                {
-                    tbDdmReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nDdm...Done", 68);
-                    if (DebugMode)
-                        MessageBox.Show("Write State: Ddm...Done");
-                }
-                Application.DoEvents();
-            }
-
-            if (DebugMode)
-                MessageBox.Show("cbMemDump Check state: " + cbMemDump.CheckState);
-
-            if (cbMemDump.Checked)
-            {
-                Thread.Sleep(delay);
-                tbMemDumpReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucMemoryDump.WriteAllApi() < 0)
-                {
-                    tbMemDumpReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nMemoryDump...Failed", 70);
-                    errorCount++;
-                }
-                else
-                {
-                    tbMemDumpReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nMemoryDump...Done", 70);
-                    if (DebugMode)
-                        MessageBox.Show("Write State: MemoryDump...Done");
-                }
-                Application.DoEvents();
-            }
-
-            if (DebugMode)
-                MessageBox.Show("cbCorrector Check state: " + cbCorrector.CheckState);
-
-            if (cbCorrector.Checked)
-            {
-                Thread.Sleep(delay);
-                tbCorrectorReadState.BackColor = Color.SteelBlue;
-                Application.DoEvents();
-
-                if (ucGn1190Corrector.WriteAllApi() < 0)
-                {
-                    tbCorrectorReadState.BackColor = Color.Red;
-                    StateUpdated("Write State:\nCorrector...Failed", 75);
-                    errorCount++;
-                }
-                else
-                {
-                    tbCorrectorReadState.BackColor = Color.YellowGreen;
-                    StateUpdated("Write State:\nCorrector...Done", 75);
-                    if (DebugMode)
-                        MessageBox.Show("Write State: Corrector...Done");
-                }
-                Application.DoEvents();
-            }
-
-            if (DebugMode)
-            {
-                MessageBox.Show("cbTxIcConfig Check state: " + cbTxIcConfig.CheckState
-                                + "\ncbProductSelect state: " + cbProductSelect.Text
-                                );
-            }
-
-            if (cbProductSelect.SelectedIndex != 0)
-            {
-                if (cbTxIcConfig.Checked)
-                {
-                    Thread.Sleep(delay);
-                    tbTxConfigReadState.BackColor = Color.SteelBlue;
-                    Application.DoEvents();
-
-                    if (!BypassWriteIcConfig)
-                    {
-                        switch (cbProductSelect.SelectedIndex)
-                        {
-                            case 1: // SAS4.0
-                                if (ucMald37045cConfig.WriteAllApi() < 0)
-                                    writeFail = true;
-
-                                break;
-                            case 2: // PCIe4
-                                if (ucRt146Config.WriteAllApi() < 0)
-                                    writeFail = true;
-
-                                break;
-                            case 3: // QSFP28
-                                if (ucGn2108Config.WriteAllApi() < 0)
-                                    writeFail = true;
-
-                                break;
-                        }
-                    }
-
-                    if (writeFail)
-                    {
-                        tbTxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Write State:\nTxIcConfig...Failed", 80);
-                        errorCount++;
-                    }
-                    else
-                    {
-                        tbTxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Write State:\nTxIcConfig...Done", 80);
-                        if (DebugMode)
-                            MessageBox.Show("Write State: TxIcConfig...Done");
-                    }
-                    Application.DoEvents();
-                    writeFail = false;
-                }
-
-                if (DebugMode)
-                    MessageBox.Show("cbRxIcConfig Check state: " + cbRxIcConfig.CheckState);
-
-                if (cbRxIcConfig.Checked)
-                {
-                    Thread.Sleep(delay);
-                    tbRxConfigReadState.BackColor = Color.SteelBlue;
-                    Application.DoEvents();
-
-                    if (!BypassWriteIcConfig)
-                    {
-                        switch (cbProductSelect.SelectedIndex)
-                        {
-                            case 1: // SAS4.0
-                                if (ucMata37044cConfig.WriteAllApi() < 0)
-                                    writeFail = true;
-
-                                break;
-                            case 2: // PCIe4
-                                if (ucRt145Config.WriteAllApi() < 0)
-                                    writeFail = true;
-
-                                break;
-                            case 3: // QSFP28
-                                if (ucGn2109Config.WriteAllApi() < 0)
-                                    writeFail = true;
-
-                                break;
-                        }
-                    }
-
-                    if (writeFail)
-                    {
-                        tbRxConfigReadState.BackColor = Color.Red;
-                        StateUpdated("Write State:\nRxIcConfig...Failed", 90);
-                        errorCount++;
-                    }
-                    else
-                    {
-                        tbRxConfigReadState.BackColor = Color.YellowGreen;
-                        StateUpdated("Write State:\nRxIcConfig...Done", 90);
-                        if (DebugMode)
-                            MessageBox.Show("Write State: RxIcConfig...Done");
-                    }
-
-                    Application.DoEvents();
-                }
-            }
-            return errorCount;
-        }
-
-        internal int _CurrentRegisters(string modelType)
-        {
-            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
-            string filePath1;
-            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            var masks = _GetMasks("SAS4", null);
-
-            StateUpdated("Current module:\nPreparing register contents...", null);
-
-            // Export current module register file
-            if (_ExportModuleCfg(modelType, fileName1, "LogFile") < 0)
-                return -1;
-
-            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
-            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath, null);
-            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
-            DataTable dt1 = _ReadCsvToDataTable(filePath1);
-            _RemoveDoubleQuotes(dt1);//Module
-            _ApplyMask(new List<DataTable> { dt1 }, masks);
-            _DisplayCurrentRegister(dt1, masks);
-            
-            if (File.Exists(filePath1))
-                File.Delete(filePath1);
-
-            StateUpdated("Current module:\nThe output is ready", null);
-
-            return 0;
-        }
-
-        internal int _ComparisonRegister(string modelType, string RegisterFilePath, bool onlyVerifyMode,string comparisonObject, bool engineerMode)
-        {
-            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
-            string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
-            string filePath1;
-            string filePath2 = RegisterFilePath; // Reference cfg file
-            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            var masks = _GetMasks("SAS4", comparisonObject);
-
-            if (!onlyVerifyMode) {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile check...", 93);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle check...", 93);
-            }
-            else {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile check...", null);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle check...", null);
-            }
-
-            // Export current module register file
-            if (_ExportModuleCfg(modelType, fileName1, comparisonObject) < 0)
-                    return -1;
-
-            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
-            _ReformatedCsvFile(filePath1, 1, executableFileFolderPath, comparisonObject);
-            _ReformatedCsvFile(filePath2, 2, executableFileFolderPath, comparisonObject);
-            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
-            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
-            DataTable dt1 = _ReadCsvToDataTable(filePath1);
-            DataTable dt2 = _ReadCsvToDataTable(filePath2);
-
-            _RemoveDoubleQuotes(dt1);//Module
-            _RemoveDoubleQuotes(dt2);//Cfg
-            //ApplyMask(dt1, dt2, masks);
-            _ApplyMask(new List<DataTable> { dt1, dt2 }, masks);
-
-
-            // Error alarm, if there are differences
-            if (!_CompareDataTables(dt1, dt2)) {
-                if (engineerMode)
-                    _DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-                else
-                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
-                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                StateUpdated("Verify State:\nVerify failed", null);
-                return 1;
-            }
-
-            // Delete the temp file, if there are no errors
-            if (File.Exists(filePath1))
-                File.Delete(filePath1);
-
-            if (File.Exists(filePath2))
-                File.Delete(filePath2);
-
-            if (!onlyVerifyMode) {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile are matching", 97);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle are matching", 97);
-            }
-            else {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile are matching", null);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle are matching", null);
-            }
-
-            return 0;
-        }
-
-        internal int _ComparisonRegisterForSas3(string RegisterFilePath, bool onlyVerifyMode, string comparisonObject, bool engineerMode, int ch)
-        {
-            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
-            string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
-            string filePath1;
-            string filePath2 = RegisterFilePath; // Reference cfg file
-            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            var masks = _GetMasks("SAS3", comparisonObject);
-
-            if (!onlyVerifyMode) {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile check...", 93);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle check...", 93);
-            }
-            else {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile check...", null);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle check...", null);
-            }
-
-            // Export current module register file
-            if (_ExportModuleCfgForSas3(fileName1, comparisonObject, ch) < 0)
-                return -1;
-
-            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
-            _ReformatedCsvFileForSas3(filePath1, 1, executableFileFolderPath, comparisonObject, ch); //Get part of data from the module for comparison
-            _ReformatedCsvFileForSas3(filePath2, 2, executableFileFolderPath, comparisonObject, ch); //Get part of data from CfgFile for comparison
-            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
-            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
-            DataTable dt1 = _ReadCsvToDataTable(filePath1);
-            DataTable dt2 = _ReadCsvToDataTable(filePath2);
-
-            _RemoveDoubleQuotes(dt1);
-            _RemoveDoubleQuotes(dt2);
-            _ApplyMask(new List<DataTable> { dt1, dt2 }, masks);
-
-
-            // Error alarm, if there are differences
-            if (!_CompareDataTables(dt1, dt2)) {
-                if (engineerMode)
-                    _DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-                else
-                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
-                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                StateUpdated("Verify State:\nVerify failed", null);
-                return 1;
-            }
-
-            if (File.Exists(filePath1))
-                File.Delete(filePath1);
-
-            if (File.Exists(filePath2))
-                File.Delete(filePath2);
-
-            if (!onlyVerifyMode) {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile are matching", 97);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle are matching", 97);
-            }
-            else {
-                if (comparisonObject == "CfgFile")
-                    StateUpdated("Verify State:\nCfgFile are matching", null);
-                else if (comparisonObject == "LogFile")
-                    StateUpdated("Verify State:\nLogFIle are matching", null);
-            }
-
-            return 0;
-        }
-
-        internal int _ComparisonRegisterForFinalCheck(string modelType, string RegisterFilePath, string comparisonObject, bool engineerMode)
-        {
-            string fileName1 = "UpdatedModuleRegisterFile"; // Module cfg file
-            string fileName2 = Path.GetFileName(RegisterFilePath); // Reference cfg file
-            string filePath1;
-            string filePath2 = RegisterFilePath; // Reference cfg file
-            string executableFileFolderPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            var masks = _GetMasks("FQC", comparisonObject);
-
-            StateUpdated("Verify State:\n " + comparisonObject + "check...", null);
-
-            // Export current module register file
-            if (_ExportModuleCfg(modelType, fileName1, comparisonObject) < 0)
-                return -1;
-
-            filePath1 = Path.Combine(executableFileFolderPath, fileName1 + ".csv");
-            _ReformatedCsvFileForFinalCheck(filePath1, 1, executableFileFolderPath, comparisonObject);
-            _ReformatedCsvFileForFinalCheck(filePath2, 2, executableFileFolderPath, comparisonObject);
-            filePath1 = Path.Combine(executableFileFolderPath, "temp1_" + fileName1 + ".csv");
-            filePath2 = Path.Combine(executableFileFolderPath, "temp2_" + fileName2);
-            DataTable dt1 = _ReadCsvToDataTable(filePath1);
-            DataTable dt2 = _ReadCsvToDataTable(filePath2);
-
-            _RemoveDoubleQuotes(dt1);//Module
-            _RemoveDoubleQuotes(dt2);//Cfg
-            _ApplyMask(new List<DataTable> { dt1, dt2 }, masks);
-
-            // Error alarm, if there are differences
-            if (!_CompareDataTables(dt1, dt2)) {
-                if (engineerMode)
-                    _DisplayDifferencesInGrid(dt1, dt2, masks); // EngineerCheck from DataGridView
-                else
-                MessageBox.Show("There are differences between the module CfgFile and the target CfgFile.",
-                                "Error alarm", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                StateUpdated("Verify State:\nVerify failed", null);
-                return 1;
-            }
-
-            // Delete the temp file, if there are no errors
-            if (File.Exists(filePath1))
-                File.Delete(filePath1);
-
-            if (File.Exists(filePath2))
-                File.Delete(filePath2);
-
-            
-            StateUpdated("Verify State:\n" + comparisonObject + "are matching", null);
-
-            return 0;
-        }
-
-        private List<(string page, int row, int[] columns)> _GetMasks (string products, string comparisonObject)
-        {
-            if (products == "SAS4" && comparisonObject == "CfgFile") {
-                return new List <(string page, int row, int[] columns)> {
-                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
-                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
-                };
-            }
-            else if (products == "SAS4" && comparisonObject == "LogFile") {
-                return new List<(string page, int row, int[] columns)> {
-                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
-                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15}),
-                    ("80h", 70, new[] {12, 13, 14, 15}),
-                    ("81h", 70, new[] {15})
-                };
-            }
-
-            if (products == "SAS3" && comparisonObject == "CfgFile") {
-                return new List<(string page, int row, int[] columns)> {
-                    ("Page 00", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Page 00", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15}),
-                    ("Page 00", 70, new[] {15})
-                };
-            }
-            else if (products == "SAS3" && comparisonObject == "LogFile") {
-                return new List<(string page, int row, int[] columns)> {
-                    ("Page 00", 70, new[] {15})
-                };
-            }
-
-            if (products == "FQC") {
-                if (comparisonObject == "Low Page") {
-                    return new List<(string page, int row, int[] columns)> {
-                    ("Low Page", 00, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 10, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 20, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
-                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                };
-                }
-
-                else if (comparisonObject == "UpPage00") {
-                    return new List<(string page, int row, int[] columns)>
-                    {
-                    ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
-                    };
-                }
-                else if (comparisonObject == "Page03") {
-                    return new List<(string page, int row, int[] columns)>
-                    {
-                    ("Up 03h", 70, new[] {14, 15}),
-                    };
-                }
-                else if (comparisonObject == "Page81") {
-                    return new List<(string page, int row, int[] columns)>
-                    {
-                    ("81h", 50, new[] {12, 13, 14, 15}),
-                    ("81h", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("81h", 70, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    };
-                }
-                else if (comparisonObject == "PageTx") {
-                    return new List<(string page, int row, int[] columns)>
-                    {
-                    ("Tx", 70, new[] {15}),
-                    };
-                }
-                else if (comparisonObject == "PageRx") {
-                    return new List<(string page, int row, int[] columns)>
-                    {
-                    ("Rx", 70, new[] {15}),
-                    };
-                }
-                else {
-                    return new List<(string page, int row, int[] columns)>
-                    {
-                    ("Up 00h", 70, new[] {15}),
-                    };
-                }
-            }
-
-            return new List<(string page, int row, int[] columns)> {
-                ("80h", 70, new[] {12, 13, 14, 15})
-            };
-        }
-
-        private void _ReformatedCsvFile(string FilePath, int fineNumber, string tempFilePath, string comparisonObject)
-        {
-            int NumberOfSearchRows;
-
-            switch (comparisonObject) {
-                case "CfgFile":
-                    NumberOfSearchRows = 24; // Low Page, Up00h, 03h 8*3 rows
-                    break;
-
-                case "LogFile":
-                    NumberOfSearchRows = 40; // Low Page, Up00h, 03h, 80h, 81h, 8x5=40 rows.
-                    break;
-
-                default:
-                    NumberOfSearchRows = 72; // Low Page, Up00h, 03h, 80h, 81h, 8x5=40 rows. with Rx/TxCfg (16x2)=40+32=72 rows.
-                    break;
-            }
-
-            if (fineNumber == 1)
-                tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
-            else if (fineNumber == 2)
-                tempFilePath = Path.Combine(tempFilePath, "temp2_" + Path.GetFileName(FilePath));
-            else
-                return;
-
-            if (File.Exists(tempFilePath))
-                File.Delete(tempFilePath);
-
-            using (StreamReader reader = new StreamReader(FilePath))
-            using (StreamWriter writer = new StreamWriter(tempFilePath)) {
-                string line;
-                bool isHeaderFound = false;
-                int rowCount = 0;
-
-                while ((line = reader.ReadLine()) != null) {
-                    if (!isHeaderFound && line.StartsWith("Page,Row")) {
-                        isHeaderFound = true;
-                        writer.WriteLine(line);
-                        break;
-                    }
-                }
-
-                while ((line = reader.ReadLine()) != null) {
-                    if (comparisonObject == "CfgFile") {
-                        if (line.Contains("\"Low Page\"") ||
-                            line.Contains("\"Up 00h\"") || 
-                            line.Contains("\"Up 03h\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else {
-                        if (line.Contains("\"Low Page\"") ||
-                            line.Contains("\"Up 00h\"") ||
-                            line.Contains("\"Up 03h\"") ||
-                            line.Contains("\"80h\"") ||
-                            line.Contains("\"81h\"") ||
-                            line.Contains("\"Rx\"") ||
-                            line.Contains("\"Tx\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-
-                    if (rowCount >= NumberOfSearchRows) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void _ReformatedCsvFileForSas3(string FilePath, int fineNumber, string tempFilePath, string comparisonObject, int ch)
-        {
-            int NumberOfSearchRows;
-
-            if (comparisonObject == "LogFile")
-                NumberOfSearchRows = 64; // Page 00, 03, 3A, 5D, 6C, 70, 73, 7B, -7E, -7F 8x10=80 rows.
-            else
-                NumberOfSearchRows = 48; // Page 00, 03, 3A, 6C, 70, 73 8x6 rows
-
-            if (fineNumber == 1) // for module file
-                tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
-            else if (fineNumber == 2) // for Cfg file
-                tempFilePath = Path.Combine(tempFilePath, "temp2_" + Path.GetFileName(FilePath));
-            else
-                return;
-
-            if (File.Exists(tempFilePath))
-                File.Delete(tempFilePath);
-
-            using (StreamReader reader = new StreamReader(FilePath))
-            using (StreamWriter writer = new StreamWriter(tempFilePath)) {
-                string line;
-                bool isHeaderFound = false;
-                int rowCount = 0;
-
-                while ((line = reader.ReadLine()) != null) {
-                    if (!isHeaderFound && line.StartsWith("Page,Row")) {
-                        isHeaderFound = true;
-                        writer.WriteLine(line);
-                        break;
-                    }
-                }
-
-                while ((line = reader.ReadLine()) != null) {
-                    string[] columns = line.Split(',');
-
-                    if (ch == 1) {
-                        if (columns.Length > 0) {
-                            columns[0] = columns[0].Replace("A_", "");
-                            line = string.Join(",", columns);
-                        }
-                    }
-                    if (ch == 2) {
-                        if (columns.Length > 0) {
-                            columns[0] = columns[0].Replace("B_", "");
-                            line = string.Join(",", columns);
-                        }
-                    }
-
-                    if (comparisonObject == "CfgFile") {
-                        if (line.Contains("\"Page 00\"") || line.Contains("\"Page 03\"") ||
-                            line.Contains("\"Page 3A\"") || line.Contains("\"Page 6C\"") ||
-                            line.Contains("\"Page 70\"") || line.Contains("\"Page 73\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else {
-                        if (line.Contains("\"Page 00\"") || line.Contains("\"Page 03\"") ||
-                            line.Contains("\"Page 3A\"") || line.Contains("\"Page 5D\"") ||
-                            line.Contains("\"Page 6C\"") || line.Contains("\"Page 70\"") ||
-                            line.Contains("\"Page 73\"") || line.Contains("\"Page 7B\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-
-                    if (rowCount >= NumberOfSearchRows) {
-                        break;
-                    }
-                }
-                if (DebugMode) {
-                    MessageBox.Show("Get data from: \n" + tempFilePath +
-                                "\n\n Task type: " + comparisonObject + 
-                                "\n Getdata rowCount: " + rowCount);
-                }
-            }
-        }
-
-        private void _ReformatedCsvFileForFinalCheck(string FilePath, int fineNumber, string tempFilePath, string comparisonObject)
-        {
-            int NumberOfSearchRows;
-
-            if (comparisonObject == "UpPage00" || comparisonObject == "Page03" ||
-                comparisonObject == "Page80" || comparisonObject == "Page81")
-                NumberOfSearchRows = 8; // Up00h, 03h, 80h, 81h
-            else
-                NumberOfSearchRows = 16; // Tx, Rx rows
-
-            if (fineNumber == 1)
-                tempFilePath = Path.Combine(tempFilePath, "temp1_" + Path.GetFileName(FilePath));
-            else if (fineNumber == 2)
-                tempFilePath = Path.Combine(tempFilePath, "temp2_" + Path.GetFileName(FilePath));
-            else
-                return;
-
-            if (File.Exists(tempFilePath))
-                File.Delete(tempFilePath);
-
-            using (StreamReader reader = new StreamReader(FilePath))
-            using (StreamWriter writer = new StreamWriter(tempFilePath)) {
-                string line;
-                bool isHeaderFound = false;
-                int rowCount = 0;
-
-                while ((line = reader.ReadLine()) != null) {
-                    if (!isHeaderFound && line.StartsWith("Page,Row")) {
-                        isHeaderFound = true;
-                        writer.WriteLine(line);
-                        break;
-                    }
-                }
-
-                while ((line = reader.ReadLine()) != null) {
-                    if (comparisonObject == "UpPage00") {
-                        if (line.Contains("\"Up 00h\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else if (comparisonObject == "Page03") {
-                        if (line.Contains("\"Up 03h\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else if (comparisonObject == "Page80") {
-                        if (line.Contains("\"80h\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else if (comparisonObject == "Page81") {
-                        if (line.Contains("\"81h\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else if (comparisonObject == "PageTx") {
-                        if (line.Contains("\"Tx\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else if (comparisonObject == "PageRx") {
-                        if (line.Contains("\"Rx\"")) {
-                            writer.WriteLine(line);
-                            rowCount++;
-                        }
-                    }
-                    else {
-                        MessageBox.Show("This page has not been defined yet\n" + "ComparisonObject: " + comparisonObject);
-                    }
-
-                    if (rowCount >= NumberOfSearchRows) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void _DisplayDifferencesInGrid(DataTable dt1, DataTable dt2, List<(string page, int row, int[] columns)> masks)
-        {
-            Form form = new Form {
-                Text = "Differences",
-                Width = 1300,
-                Height = 600,
-                Font = new Font("Times New Roman", 8)
-            };
-
-            DataGridView dgv = new DataGridView {
-                Dock = DockStyle.Fill,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
-                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
-                Font = new Font("Times New Roman", 8),
-                EnableHeadersVisualStyles = false
-            };
-
-            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
-            dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.Silver;
-
-            foreach (DataColumn col in dt1.Columns) {
-                DataGridViewColumn newCol;
-                if (col.ColumnName != "Page" && col.ColumnName != "Row") {
-                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName + "_dt1", "M" + col.ColumnName)];
-                    newCol.Width = 35;
-                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName + "_dt2", "F" + col.ColumnName)];
-                    newCol.Width = 35;
-                }
-                else if (col.ColumnName == "Row") {
-                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
-                    newCol.Width = 35;
-                    newCol.DefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
-                    newCol.DefaultCellStyle.BackColor = Color.Silver;
-                }
-                else if (col.ColumnName == "Page") {
-                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
-                    newCol.Width = 50;
-                    newCol.DefaultCellStyle.BackColor = Color.Gray;
-                }
-            }
-
-            for (int row = 0; row < dt1.Rows.Count; row++) {
-                dgv.Rows.Add();
-                for (int col = 0; col < dt1.Columns.Count; col++) {
-                    if (col == 0 || col == 1) {
-                        dgv.Rows[row].Cells[col].Value = dt1.Rows[row][col];
-                    }
-                    else {
-                        string dt1Value = dt1.Rows[row][col].ToString();
-                        string dt2Value = dt2.Rows[row][col].ToString();
-                        dgv.Rows[row].Cells[col * 2 - 2].Value = dt1Value;
-
-                        if (dt1Value == dt2Value) {
-                            dgv.Rows[row].Cells[col * 2 - 1].Value = "";
-                        }
-                        else {
-                            dgv.Rows[row].Cells[col * 2 - 1].Value = dt2Value;
-                            dgv.Rows[row].Cells[col * 2 - 2].Style.BackColor = Color.Red;
-                            dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Yellow;
-                        }
-
-                        // 對應Mask address著色...
-                        //if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value.ToString(), 16), col - 2, masks)) {
-                        if (IsMasked(dgv.Rows[row].Cells[0].Value.ToString(), Convert.ToInt32(dgv.Rows[row].Cells[1].Value), col - 2, masks)) {
-                            dgv.Rows[row].Cells[col * 2 - 2].Style.BackColor = Color.Black;
-                            dgv.Rows[row].Cells[col * 2 - 1].Style.BackColor = Color.Black;
-                        }
-                    }
-                }
-            }
-
-            form.Controls.Add(dgv);
-            form.ShowDialog();
-        }
-
-        private void _DisplayCurrentRegister(DataTable dt1, List<(string page, int row, int[] columns)> masks)
-        {
-            Form form = new Form {
-                Text = "Differences",
-                Width = 1000,
-                Height = 600,
-                Font = new Font("Times New Roman", 8)
-            };
-
-            DataGridView dgv = new DataGridView {
-                Dock = DockStyle.Fill,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None,
-                AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells,
-                Font = new Font("Times New Roman", 8),
-                EnableHeadersVisualStyles = false
-            };
-
-            dgv.ColumnHeadersDefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
-            dgv.ColumnHeadersDefaultCellStyle.BackColor = Color.Silver;
-
-            foreach (DataColumn col in dt1.Columns) {
-                DataGridViewColumn newCol;
-                if (col.ColumnName != "Page" && col.ColumnName != "Row") {
-                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
-                    newCol.Width = 50;
-                }
-                else if (col.ColumnName == "Row") {
-                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
-                    newCol.Width = 35;
-                    newCol.DefaultCellStyle.Font = new Font("Times New Roman", 8, FontStyle.Bold);
-                    newCol.DefaultCellStyle.BackColor = Color.Silver;
-                }
-                else if (col.ColumnName == "Page") {
-                    newCol = dgv.Columns[dgv.Columns.Add(col.ColumnName, col.ColumnName)];
-                    newCol.Width = 50;
-                    newCol.DefaultCellStyle.BackColor = Color.Gray;
-                }
-            }
-
-            for (int row = 0; row < dt1.Rows.Count; row++) {
-                dgv.Rows.Add();
-                for (int col = 0; col < dt1.Columns.Count; col++) {
-                    dgv.Rows[row].Cells[col].Value = dt1.Rows[row][col];
-
-                    // Mask邏輯著色
-                    if (col > 1) // 忽略 "Page" 和 "Row" 列
-                    {
-                        string pageValue = dgv.Rows[row].Cells[0].Value?.ToString();
-                        string rowValue = dgv.Rows[row].Cells[1].Value?.ToString();
-                        if (int.TryParse(rowValue, out int rowNumber)) {
-                            if (IsMasked(pageValue, rowNumber, col - 2, masks)) {
-                                dgv.Rows[row].Cells[col].Style.BackColor = Color.Black;
+                            TempFolderPath = ExtractZipToTemporaryFolder(selectedFilePath);
+                            SetHiddenAttribute(TempFolderPath);
+                            string xmlFilePath = Path.Combine(TempFolderPath, "Cfg.xml");
+
+                            if (File.Exists(xmlFilePath)) {
+                                _ParserXmlForProjectInformation(xmlFilePath);
+                                tbFilePath.Text = selectedFilePath;
+                            }
+                            else {
+                                MessageBox.Show("Cfg.xml not found in the zip file.");
                             }
                         }
-                        else {
-                            Debug.WriteLine($"無效的 Row 值: {rowValue}");
+                        catch (Exception ex) {
+                            MessageBox.Show("Failed to extract zip file: " + ex.Message);
                         }
+                    }
+                    
+                    tbFilePath.SelectionStart = tbFilePath.Text.Length;
+                }
+            }
+        }
+
+        private void _DirectDriveToLoadXmlFile()
+        {
+            MainFormPaths lastPath = _LoadLastPathsAndSetup();
+            tbLogFilePath.Text = lastPath.LogFilePath;
+            tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+            string inspectionFolder = Path.Combine(Application.StartupPath, "InspectionFiles");
+            string inspectionFile = GetUniqueZipFile(inspectionFolder);
+            if (inspectionFile != null) 
+                //MessageBox.Show($"ZIP file found: {inspectionFile}", "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            if (!string.IsNullOrEmpty(lastPath.RssiCriteria))
+                tbRssiCriteria.Text = lastPath.RssiCriteria;
+            else
+                tbRssiCriteria.Text = "200";
+            
+            try {
+                if (inspectionFile != null) {
+                    TempFolderPath = ExtractZipToTemporaryFolder(inspectionFile);
+                    SetHiddenAttribute(TempFolderPath);
+                    string xmlFilePath = Path.Combine(TempFolderPath, "Cfg.xml");
+
+                    if (File.Exists(xmlFilePath)) {
+                        _ParserXmlForProjectInformation(xmlFilePath);
+                        tbFilePath.Text = inspectionFile;
+                    }
+                    else {
+                        MessageBox.Show("Cfg.xml not found in the zip file.");
                     }
                 }
             }
+            catch (UnauthorizedAccessException uaEx) {
+                MessageBox.Show("Access denied to the specified path: " + uaEx.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex) {
+                MessageBox.Show("Failed to extract zip file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
-            form.Controls.Add(dgv);
-            form.ShowDialog();
+            tbFilePath.SelectionStart = tbFilePath.Text.Length;
+            _ResetSequence();
         }
 
-        private bool IsMasked(string page, int row, int col, List<(string page, int row, int[] columns)> masks)
+        private string GetUniqueZipFile(string folderPath)
         {
-            foreach (var mask in masks) {
-                if (mask.page == page && mask.row == row && mask.columns.Contains(col)) {
-                    return true;
+            if (!Directory.Exists(folderPath)) {
+                MessageBox.Show("The inspectionFiles folder does not exist.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+
+            string[] zipFiles = Directory.GetFiles(folderPath, "*.zip");
+
+            if (zipFiles.Length == 0) {
+                MessageBox.Show("No ZIP files found in the specified folder.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return null;
+            }
+            else if (zipFiles.Length > 1) {
+                MessageBox.Show("Multiple ZIP files found. Please ensure only one ZIP file exists.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return null;
+            }
+
+            return zipFiles[0];
+        }
+
+        private string ExtractZipToTemporaryFolder(string zipFilePath)
+        {
+            string tempPath = Path.Combine(Path.GetTempPath(), Path.GetFileNameWithoutExtension(zipFilePath));
+
+            using (ZipFile zip = ZipFile.Read(zipFilePath)) {
+                zip.Password = "2368";
+                zip.ExtractAll(tempPath, ExtractExistingFileAction.OverwriteSilently);
+            }
+
+            return tempPath;
+        }
+
+        private void SetHiddenAttribute(string folderPath)
+        {
+            DirectoryInfo dirInfo = new DirectoryInfo(folderPath);
+            dirInfo.Attributes |= FileAttributes.Hidden;
+        }
+
+        private void _SetLogFilePath()
+        {
+            string initialDirectory = Application.StartupPath;
+            string logFileFolderPath;
+
+            using (FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog()) {
+                folderBrowserDialog.Description = "Select a Folder";
+                folderBrowserDialog.SelectedPath = initialDirectory;
+
+                if (folderBrowserDialog.ShowDialog() == DialogResult.OK) {
+                    tbLogFilePath.Text = folderBrowserDialog.SelectedPath;
+                    tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+                    logFileFolderPath = folderBrowserDialog.SelectedPath;
+                    _StoreConfigurationPaths(null, logFileFolderPath, null);
                 }
             }
+        }
+
+        private void _ParserXmlForProjectInformation_original(string filePath)
+        {
+            lApName.Text = "_";
+            lDataName.Text = "_";
+
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.Load(filePath);
+            XmlNode permissionsNode = xmlDoc.SelectSingleNode("//Premissions");
+            string role = permissionsNode.Attributes["role"].Value;
+            XmlNode productNode = xmlDoc.SelectSingleNode("//Product");
+            string productName = productNode.Attributes["name"].Value;
+            XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
+            string APROMName = APROMNode.Attributes["name"].Value;
+            XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
+            string DARAROMName = DATAROMNode.Attributes["name"].Value;
+
+            lMode.Text = role;
+            lProduct.Text = productName;
+
+            if (!string.IsNullOrEmpty(APROMName))
+                lApName.Text = APROMName;
+            else
+                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+
+            if (!string.IsNullOrEmpty(DARAROMName))
+                lDataName.Text = DARAROMName;
+        }
+
+        private void _ParserXmlForProjectInformation_method2(XmlDocument xmlDoc)
+        {
+            lApName.Text = "_";
+            lDataName.Text = "_";
+
+            XmlNode permissionsNode = xmlDoc.SelectSingleNode("//Premissions");
+            string role = permissionsNode.Attributes["role"].Value;
+            XmlNode productNode = xmlDoc.SelectSingleNode("//Product");
+            string productName = productNode.Attributes["name"].Value;
+            XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
+            string APROMName = APROMNode.Attributes["name"].Value;
+            XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
+            string DARAROMName = DATAROMNode.Attributes["name"].Value;
+
+            lMode.Text = role;
+            lProduct.Text = productName;
+
+            if (!string.IsNullOrWhiteSpace(APROMName))
+                lApName.Text = APROMName;
+            else
+                MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
+            if (!string.IsNullOrWhiteSpace(DARAROMName))
+                lDataName.Text = DARAROMName;
+        }
+
+        private void _ParserXmlForProjectInformation(string filePath )
+        {
+            lApName.Text = "_";
+            lDataName.Text = "_";
+
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.Load(filePath);
+            XmlNode permissionsNode = xmlDoc.SelectSingleNode("//Premissions");
+            string role = permissionsNode.Attributes["role"].Value;
+            XmlNode productNode = xmlDoc.SelectSingleNode("//Product");
+            string productName = productNode.Attributes["name"].Value;
+
+            lMode.Text = role;
+            lProduct.Text = productName;
+            Sas3Module = (lProduct.Text == "SAS3.0");
+
+            if (Sas3Module)
+                engineerForm._SetSas3Password();
+
+            if (Sas3Module) {
+                XmlNode ASideNode = xmlDoc.SelectSingleNode("//ASIDE");
+                string ASideFileName = ASideNode.Attributes["name"].Value;
+                XmlNode BSideNode = xmlDoc.SelectSingleNode("//BSIDE");
+                string BSideFileName = BSideNode.Attributes["name"].Value;
+                lPathAP.Text = "A side:";
+                lPathData.Text = "B side:";
+
+                if (!string.IsNullOrWhiteSpace(ASideFileName)) {
+
+                    lApName.Location = new Point(66, 212);
+                    lApName.Text = ASideFileName;
+                }
+                else {
+                    MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+                if (!string.IsNullOrWhiteSpace(BSideFileName)) {
+                    lDataName.Location = new Point(66, 227);
+                    lDataName.Text = BSideFileName;
+                }
+            }
+            else {
+                XmlNode APROMNode = xmlDoc.SelectSingleNode("//APROM");
+                string APROMName = APROMNode.Attributes["name"].Value;
+                XmlNode DATAROMNode = xmlDoc.SelectSingleNode("//DATAROM");
+                string DARAROMName = DATAROMNode.Attributes["name"].Value;
+
+                if (!string.IsNullOrWhiteSpace(APROMName)) {
+                    lApName.Location = new Point(76, 212);
+                    lApName.Text = APROMName;
+                }
+                else {
+                    MessageBox.Show("The configuration file format is incorrect.\nAPROM path not specified.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+
+                if (!string.IsNullOrWhiteSpace(DARAROMName)) {
+                    lDataName.Location = new Point(91, 227);
+                    lDataName.Text = DARAROMName;
+                }
+            }
+
+            
+        }
+
+        private bool _PathCheck(Label lable)
+        {
+            string directoryPath = TempFolderPath;
+            string fileName = lable.Text;
+            string filePath = Path.Combine(directoryPath, fileName);
+
+            if (File.Exists(filePath)) {
+                if (Path.GetExtension(filePath).Equals(".bin", StringComparison.OrdinalIgnoreCase))
+                    return true;
+                else {
+                    MessageBox.Show("Please verify if there is an error in the format of the Config file.");
+                    return false;
+                }
+            }
+
             return false;
         }
 
-        private void _ApplyMask(List<DataTable> tables, List<(string page, int row, int[] columns)> masks)
+        private void raSingle_CheckedChanged(object sender, EventArgs e)
         {
-            foreach (var mask in masks) {
-                foreach (var table in tables) {
-                    foreach (DataRow row in table.Rows) {
-                        if (row["Page"].ToString() == mask.page && Convert.ToInt32(row["Row"]) == mask.row) {
-                            foreach (int columnIndex in mask.columns) {
-                                row[columnIndex + 2] = "FF";
-                            }
-                        }
-                    }
+            _SwitchOrNot();
+        }
+
+        private void rbBoth_CheckedChanged(object sender, EventArgs e)
+        {
+            _SwitchOrNot();
+        }
+
+        private void tbFilePath_MouseClick(object sender, MouseEventArgs e)
+        {
+            _ConfigFilePathChanges();
+        }
+
+        private void tbFilePath_Enter(object sender, EventArgs e)
+        {
+            _ConfigFilePathChanges();
+        }
+
+        private void _ConfigFilePathChanges()
+        {
+            bool customerMode = lMode.Text == "Customer";
+            int channelNumber = 1;
+
+            if (tbFilePath.Text == "Please click here, to import the Config file...") {
+                tbFilePath.Text = "";
+                tbFilePath.ForeColor = Color.MidnightBlue;
+            }
+
+            _CleanTempFolder(); // Before change zip file, Clean the tempFolder
+            _LoadXmlFile();
+
+            if (lMode.Text == "Customer") {
+                _AdjustGuiSizeAndCenter(550, 280);
+                //rbSingle.Enabled = true;
+                //rbBoth.Enabled = true;
+                cbSecurityLock.Visible = false;
+                gbOperatorMode.Visible = false;
+                bWriteSnDateCone.Visible = false;
+                tbOrignalSNCh1.Visible = false;
+                tbOrignalSNCh2.Visible = false;
+                tbReNewSNCh1.Visible = false;
+                tbReNewSNCh2.Visible = false;
+                lOriginalSN.Visible = false;
+                lReNewSn.Visible = false;
+                bCfgFileComparison.Visible = false;
+                bLogFileComparison.Visible = false;
+                bRenewRssi.Visible = false;
+                cbCfgCheckAfterFw.Visible = false;
+            }
+
+            else if (lMode.Text == "MP") {
+                _AdjustGuiSizeAndCenter(550, 550);
+                rbSingle.Select();
+                //rbSingle.Enabled = false;
+                //rbBoth.Enabled = false;
+                cbSecurityLock.Visible = true;
+                gbOperatorMode.Visible = true;
+                bWriteSnDateCone.Visible = true;
+                tbOrignalSNCh1.Visible = true;
+                tbOrignalSNCh2.Visible = true;
+                tbReNewSNCh1.Visible = true;
+                tbReNewSNCh2.Visible = true;
+                lOriginalSN.Visible = true;
+                lReNewSn.Visible = true;
+                bCfgFileComparison.Visible = true;
+                bLogFileComparison.Visible = true;
+                bRenewRssi.Visible = true;
+                cbCfgCheckAfterFw.Visible = true;
+
+                if (rbBoth.Checked) {
+                    tbOrignalSNCh2.Visible = true;
+                    tbReNewSNCh2.Visible = true;
+                }
+                else {
+                    tbOrignalSNCh2.Visible = false;
+                    tbReNewSNCh2.Visible = false;
                 }
             }
+
+            I2cConnected = !(engineerForm.ChannelSetApi(channelNumber) < 0);
         }
 
-        private void _RemoveDoubleQuotes(DataTable dataTable)
+        private void _AdjustGuiSizeAndCenter(int width, int height)
         {
-            foreach (DataRow row in dataTable.Rows) {
-                foreach (DataColumn column in dataTable.Columns) {
-                    if (row[column] is string) {
-                        row[column] = ((string)row[column]).Replace("\"", ""); // 替換雙引號
-                    }
-                }
+            this.Size = new Size(width, height);
+            Rectangle screenBounds = Screen.GetWorkingArea(this);
+            //int centerX = screenBounds.Left + (screenBounds.Width - this.Width) / 2;
+            int centerY = screenBounds.Top + (screenBounds.Height - this.Height) / 2;
+            //this.Location = new Point(centerX, centerY);
+            this.Location = new Point(this.Location.X, centerY);
+        }
+
+        private int _RxPowerUpdateWithoutThread()
+        {
+            int rssiCriteria;
+            int[] rxPowers = new int[4];
+            bool isParsed = int.TryParse(tbRssiCriteria.Text, out rssiCriteria);
+            if (!isParsed) {
+                MessageBox.Show("Please enter a valid integer value for the RSSI criteria.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return -1;
             }
-        }
-
-        private string DataTableToString(DataTable dt)
-        {
-            if (dt == null || dt.Rows.Count == 0)
-                return "Empty DataTable";
-
-            System.Text.StringBuilder sb = new System.Text.StringBuilder();
-
-            // Add column names
-            foreach (DataColumn column in dt.Columns) {
-                sb.Append(column.ColumnName).Append("\t");
-            }
-            sb.AppendLine();
-
-            // Add rows
-            foreach (DataRow row in dt.Rows) {
-                foreach (var item in row.ItemArray) {
-                    sb.Append(item.ToString()).Append("\t");
-                }
-                sb.AppendLine();
-            }
-            return sb.ToString();
-        }
-
-        private DataTable _ReadCsvToDataTable(string filePath)
-        {
-            DataTable dt = new DataTable();
-            using (StreamReader sr = new StreamReader(filePath)) {
-                string[] headers = sr.ReadLine().Split(',');
-                foreach (string header in headers) {
-                    dt.Columns.Add(header);
-                }
-                while (!sr.EndOfStream) {
-                    string[] rows = sr.ReadLine().Split(',');
-                    DataRow dr = dt.NewRow();
-                    for (int i = 0; i < headers.Length; i++) {
-                        dr[i] = rows[i];
-                    }
-                    dt.Rows.Add(dr);
-                }
-            }
-            return dt;
-        }
-
-        private bool _CompareDataTables(DataTable dt1, DataTable dt2)
-        {
-            if (dt1.Rows.Count != dt2.Rows.Count || dt1.Columns.Count != dt2.Columns.Count) {
-                return false;
-            }
-
-            for (int i = 0; i < dt1.Rows.Count; i++) {
-                for (int j = 0; j < dt1.Columns.Count; j++) {
-                    if (!dt1.Rows[i][j].Equals(dt2.Rows[i][j])) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        }
-
-        private void bGlobalWrite_Click(object sender, EventArgs e)
-        {
-            loadingForm.Show(this);
-            _DisableButtons();
-            _InitialStateBar();
-
-            _GlobalWriteFromUi(false);
-            StoreIntoFlashApi();
-            _EnableButtons();
-            loadingForm.Close();
-        }
-
-        private void bStoreIntoFlash_Click(object sender, EventArgs e)
-        {
-            _DisableButtons();
-            StoreIntoFlashApi();
-            _EnableButtons();
-        }
-
-        private void bSaveCfgFile_Click(object sender, EventArgs e)
-        {
-            loadingForm.Show(this);
-            string modelType = cbProductSelect.Text;
-            string LogFileName = "EngRegisterFile";
-            lastUsedDirectory = Path.Combine(Application.StartupPath, "RegisterFiles");
-            _DisableButtons();
-            // Save the file 
-            _GlobalWriteFromUi(false);
-            _InitialStateBar();
-
-            _ExportLogfile(modelType, LogFileName, false, false);
-            _EnableButtons();
-            loadingForm.Close();
-        }
-
-        private void bLoadAllFromCfgFile_Click(object sender, EventArgs e)
-        {
-            loadingForm.Show(this);
-            string DirectoryPath = Path.Combine(Application.StartupPath, "RegisterFiles");
-            string RegisterFileName = Path.Combine(DirectoryPath, "EngRegisterFile.csv");
-
-            _DisableButtons();
-
-            progressBar1.Value = 0;
-            _ConnectI2c();
-            Thread.Sleep(500);
-            _ConnectI2c();
-
-            //Write data from RegisterFile
-            progressBar1.Value = 5;
-            WriteRegisterPageApi("Up 00h", 10, RegisterFileName);
-            progressBar1.Value = 10;
-            WriteRegisterPageApi("Up 03h", 10, RegisterFileName);
-            progressBar1.Value = 20;
-            WriteRegisterPageApi("80h", 200, RegisterFileName);
-            progressBar1.Value = 30;
-            WriteRegisterPageApi("81h", 200, RegisterFileName);
-            progressBar1.Value = 40;
-            WriteRegisterPageApi("Rx", 1000, RegisterFileName);
-            progressBar1.Value = 50;
-            WriteRegisterPageApi("Tx", 1000, RegisterFileName);
-            progressBar1.Value = 60;
-
-            StoreIntoFlashApi();
-            progressBar1.Value = 80;
-
-            _ConnectI2c();
-            Thread.Sleep(500);
-            _ConnectI2c();
-
-            progressBar1.Value = 90;
-            _InitialStateBar();
-            _GlobalRead();
-
-            progressBar1.Value = 100;
-
-            _EnableButtons();
-            loadingForm.Close();
-        }
-
-        private void bReNew_Click(object sender, EventArgs e)
-        {
-            _DisableButtons();
-
-            dtWriteConfig.Clear();
             
-            _EnableButtons();
+            engineerForm.RxPowerReadApiFromDdmApi();
+            Thread.Sleep(1000);
+            if (engineerForm.RxPowerReadApiFromDdmApi() < 0) {
+                MessageBox.Show("Please check the module plugin status");
+                return -1;
+            }
+            Thread.Sleep(100);
+
+            /*
+            while (rxPowers[3] == 0) {
+                engineerForm.RxPowerReadApiFromDdmApi();
+                Thread.Sleep(100);
+                rxPowers[0] = _decimalRemove(engineerForm.GetTextBoxTextFromDdmApi("tbRxPower1"));
+            }
+
+            */
+            rxPowers[0] = _decimalRemove(engineerForm.GetTextBoxTextFromDdmApi("tbRxPower1"));
+            rxPowers[1] = _decimalRemove(engineerForm.GetTextBoxTextFromDdmApi("tbRxPower2"));
+            rxPowers[2] = _decimalRemove(engineerForm.GetTextBoxTextFromDdmApi("tbRxPower3"));
+            rxPowers[3] = _decimalRemove(engineerForm.GetTextBoxTextFromDdmApi("tbRxPower4"));
+
+            if (UpdateRssiDisplay(ProcessingChannel, rxPowers, rssiCriteria) > 0) {
+                MessageBox.Show("RSSI value exceeds the criteria ", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                return -2;
+            }
+
+            _StoreConfigurationPaths(null, null, tbRssiCriteria.Text);
+            return 0;
         }
 
-        private void bScanComponents_Click(object sender, EventArgs e)
+        private void _InitialRssiTextBox()
         {
-            if (bScanComponents.Enabled)
-                bScanComponents.Enabled = false;
-
-            _GenerateXmlFileFromUcComponents();
-            //_GenerateXmlFileForProject();
-            bScanComponents.Enabled = true;
-        }
-
-        private void cbProductSelect_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _EnableIcConfig();
-            _UpdateTabPageVisibility();
-        }
-
-        private void cbPermission_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            ConfigUiByXmlApi("settings.xml");
-        }
-
-        private void _MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            _I2cMasterDisconnect();
-
-            if (e.CloseReason == CloseReason.UserClosing)
+            System.Windows.Forms.TextBox[] textBoxes = new[]
             {
+                tbRxPowerCh1_0, tbRxPowerCh1_1, tbRxPowerCh1_2, tbRxPowerCh1_3,
+                tbRxPowerCh2_0, tbRxPowerCh2_1, tbRxPowerCh2_2, tbRxPowerCh2_3
+            };
+
+            foreach (var textBox in textBoxes) {
+                textBox.Text = "";
+                textBox.BackColor = SystemColors.Window; // Reset back color
+            }
+
+            Application.DoEvents();
+        }
+
+        private int UpdateRssiDisplay(int channel, int[] rxPowers, int rssiCriteria)
+        {
+            int errorCount = 0;
+
+            System.Windows.Forms.TextBox[] textBoxes = (channel == 1) ?
+                new[] { tbRxPowerCh1_0, tbRxPowerCh1_1, tbRxPowerCh1_2, tbRxPowerCh1_3 } :
+                new[] { tbRxPowerCh2_0, tbRxPowerCh2_1, tbRxPowerCh2_2, tbRxPowerCh2_3 };
+
+            for (int i = 0; i < rxPowers.Length; i++) {
+                if (rxPowers[i] < rssiCriteria) {
+                    textBoxes[i].BackColor = Color.HotPink;
+                    if (cbRxPowerNgInterrupt.Checked) errorCount++;
+                }
+
+                textBoxes[i].Text = rxPowers[i].ToString();
+            }
+
+            Application.DoEvents();
+
+            return errorCount;
+        }
+
+        private int _decimalRemove(string text)
+        {
+            if (text == "4.4" || text == "4")
+                return 0;
+
+            int decimalIndex = text.IndexOf('.');
+            if (decimalIndex != -1) {
+                text = text.Substring(0, decimalIndex);
+            }
+
+            return int.Parse(text);
+        }
+
+        private void tbFilePath_Leave(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(tbFilePath.Text)) {
+                tbFilePath.Text = "Please click here, to import the Config file...";
+                tbFilePath.ForeColor = Color.Silver;
+            }
+        }
+       
+        private void _FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing) {
+                I2cConnected = (engineerForm.I2cMasterDisconnectApi() < 0);
                 Application.Exit();
             }
+            _CleanTempFolder();
         }
 
-        private void rbCustomerMode_CheckedChanged(object sender, EventArgs e)
+        private void _CleanTempFolder()
         {
-            _GenerateCfgButtonState(1, false);
+            if (Directory.Exists(TempFolderPath)) {
+                try {
+                    Directory.Delete(TempFolderPath, true);
+                }
+                catch (Exception ex) {
+                    MessageBox.Show("Failed to delete temporary folder: " + ex.Message);
+                }
+            }
+        }
+        private void _DisableButtonsForBarcodeMode()
+        {
+            bStart.Enabled = false;
+            bWriteSnDateCone.Enabled = false;
+            bCfgFileComparison.Enabled = false;
+            bLogFileComparison.Enabled = false;
+            bRenewRssi.Enabled = false;
+            gbCodeEditor.Enabled = false;
+            tbLogFilePath.Enabled = false;
+            tbVenderSn.Enabled = true;
+            tbRssiCriteria.Enabled = false;
+            cbRxPowerNgInterrupt.Enabled = false;
+            bCheckSerialNumber.Enabled = false;
+            bCurrentRegister.Enabled = false;
+            bOpenLogFileFolder.Enabled = false;
+        }
+        private void _EnableButtonsForBarcodeMode()
+        {
+            bStart.Enabled = true;
+            bWriteSnDateCone.Enabled = true;
+            bCfgFileComparison.Enabled = true;
+            bLogFileComparison.Enabled = true;
+            bRenewRssi.Enabled = true;
+            gbCodeEditor.Enabled = true;
+            tbVenderSn.Enabled = false;
+            tbLogFilePath.Enabled = true;
+            tbFilePath.Enabled = true;
+            rbSingle.Enabled = true;
+            rbBoth.Enabled = true;
+            cbSecurityLock.Enabled = true;
+            cbI2cConnect.Enabled = true;
+            cbRegisterMapView.Enabled = true;
+            tbRssiCriteria.Enabled = true;
+            cbRxPowerNgInterrupt.Enabled = true;
+            bCheckSerialNumber.Enabled = true;
+            bCurrentRegister.Enabled = true;
+            bOpenLogFileFolder.Enabled = true;
         }
 
-        private void rbMpMode_CheckedChanged(object sender, EventArgs e)
+        private void _DisableButtons()
         {
-            _GenerateCfgButtonState(1, false);
-        }
-
-        private void bBackToMainForm_Click(object sender, EventArgs e)
-        {
-            Application.Restart();
-            var process = Process.GetCurrentProcess();
-            process.WaitForInputIdle();
-            SetForegroundWindow(process.MainWindowHandle);
+            loadingForm.Show(this);
+            tbLogFilePath.Enabled = false;
+            tbFilePath.Enabled = false;
+            bStart.Enabled = false;
+            rbSingle.Enabled = false;
+            rbBoth.Enabled = false;
+            cbSecurityLock.Enabled = false;
+            cbI2cConnect.Enabled = false;
+            //cbBypassW.Enabled = false;
+            cbRegisterMapView.Enabled = false;
+            //gbOperatorMode.Enabled = false;
+            bWriteFromFile.Enabled = false;
+            bWriteSnDateCone.Enabled = false;
+            bCfgFileComparison.Enabled = false;
+            bLogFileComparison.Enabled = false;
+            bRenewRssi.Enabled = false;
+            bCheckSerialNumber.Enabled = false;
+            gbOptionsControl.Enabled = false;
+            cbLogCheckAfterSn.Enabled = false;
+            cbCfgCheckAfterFw.Enabled = false;
+            bCurrentRegister.Enabled = false;
+            bOpenLogFileFolder.Enabled = false;
         }
         
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern bool SetForegroundWindow(IntPtr hWnd);
-        
-        private void cbContinuousMode_CheckedChanged(Object sender, EventArgs e)
+        private void _EnableButtons()
         {
-            MessageBox.Show("Function to be confirmed");
+            tbFilePath.Enabled = true;
+            bStart.Enabled = true;
+            rbSingle.Enabled = true;
+            rbBoth.Enabled = true;
+            cbSecurityLock.Enabled = true;
+            cbI2cConnect.Enabled = true;
+            //cbBypassW.Enabled = true;
+            cbRegisterMapView.Enabled = true;
+            //gbOperatorMode.Enabled = true;
+            bWriteFromFile.Enabled = true;
+            bWriteSnDateCone.Enabled = true;
+            bCfgFileComparison.Enabled = true;
+            bLogFileComparison.Enabled = true;
+            bRenewRssi.Enabled = true;
+            bCheckSerialNumber.Enabled = true;
+            gbOptionsControl.Enabled = true;
+            cbLogCheckAfterSn.Enabled = true;
+            cbCfgCheckAfterFw.Enabled = true;
+            bCurrentRegister.Enabled = true;
+            bOpenLogFileFolder.Enabled = true;
+            tbLogFilePath.Enabled = true;
+            loadingForm.Close();
+            this.BringToFront();
+            this.Activate();
         }
 
-        private void bGenerateCfg_Click(object sender, EventArgs e)
+        private int _ExportCurrentModuleRegisterToFile()
         {
-            _DisableButtons();
-            _GenerateXmlFileForProject();
-            _EnableButtons();
+            string backupFileName = "ReWriteRegister";
+            string modelType = lProduct.Text;
+            lCh1Message.Text = "";
+            Application.DoEvents();
+
+            tbOrignalTLSN.Text = engineerForm.GetSerialNumberApi();
+            engineerForm.ExportLogfileApi(modelType, backupFileName, true, false); //目標模組Cfg Backup
+            engineerForm.SetToChannle2Api(false);
+            tbVersionCodeCh1.Text = engineerForm.GetFirmwareVersionCodeApi();
+            lCh1Message.Text = "Exported Register.";
+                   
+            Application.DoEvents();
+            Thread.Sleep(100);
+
+            return 0;
         }
 
-        private void bSas3GenerateCfg_Click(object sender, EventArgs e)
+        private int _RemoteControl(bool customerMode)
         {
-            _DisableButtons();
-            _GenerateXmlFileForSas3();
-            _EnableButtons();
-        }
+            string modelType = lProduct.Text;
+            string directoryPath = TempFolderPath;
+            string registerFileName = "RegisterFile.csv";
+            string registerFilePath = Path.Combine(directoryPath, registerFileName); //Generate the CfgFilePath with config folder
+            string backupFileName = "ModuleRegisterFile";
+            int relinkCount = 0, startTime = 0, intervalTime = 0;
 
-        private void cbConnected_CheckedChanged(object sender, EventArgs e)
-        {
-            _DisableButtons();
-
-            if (FirstRound)
-            {
-                ProcessingChannel = 1;
-                FirstRound = false;
+            //Check module status
+            engineerForm.InformationReadApi();
+            if (string.IsNullOrEmpty(engineerForm.GetVendorSnFromDdmiApi())) {
+                MessageBox.Show("Please confirm the plug-in status of the module.", "Warning!!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return -1;
             }
 
-            _ConnectI2c();
-            _EnableButtons();
-        }
+            tbOrignalTLSN.Text = engineerForm.GetSerialNumberApi();
 
-        private void _ConnectI2c()
-        {
-            if (cbConnect.Checked == true) {
-                _I2cMasterConnect(ProcessingChannel);
-                _WriteModulePassword();
-                _ChannelSet(ProcessingChannel);
-                _UpdateButtonState();
-                gbChannelSwitcher.Enabled = true;
+            if (DebugMode) {
+                MessageBox.Show("directoryPath: \n" + directoryPath +
+                                "\nRegisterFilePath: \n" + registerFilePath);
+            }
+
+            if (!((_PathCheck(lApName)) || (_PathCheck(lDataName)))) {
+                MessageBox.Show("No file path specified. Please choose the file again.", "Config file", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return -1;
             }
             else {
-                _I2cMasterDisconnect();
-                gbChannelSwitcher.Enabled = false;
+                engineerForm.ExportLogfileApi(modelType, backupFileName, true, false); //目標模組Cfg Backup
+
+                if (ProcessingChannel == 1) {
+                    engineerForm.SetToChannle2Api(false);
+                    tbVersionCodeCh1.Text = engineerForm.GetFirmwareVersionCodeApi();
+                }
+                else if (ProcessingChannel == 2) {
+                    engineerForm.SetToChannle2Api(true);
+                    tbVersionCodeCh2.Text = engineerForm.GetFirmwareVersionCodeApi();
+                }
+
+                if (DebugMode) {
+                    MessageBox.Show("GlobalRead...Done");
+                    return -1;
+                }
+
+                //Set ICPTool Funciton
+                engineerForm.SetAutoReconnectApi(true); // An automatic connection to MCU will be initiated.
+                engineerForm.SetBypassEraseAllCheckModeApi(true); // Avoid the intervention of MessgaeBox
+
+                if (DebugMode) {
+                    MessageBox.Show("AutoReconnec mode: " + engineerForm.GetAutoReconnectApi()
+                                + "\nBypassEraseAll mode " + engineerForm.GetBypassEraseAllCheckModeApi()
+                                );
+                }
+
+                if (!string.IsNullOrEmpty(tbRelinkCount.Text) && int.TryParse(tbRelinkCount.Text, out int parsedRelinkCount))
+                    relinkCount = parsedRelinkCount;
+
+                if (!string.IsNullOrEmpty(tbStartTime.Text) && int.TryParse(tbStartTime.Text, out int parsedStartTime))
+                    startTime = parsedStartTime;
+
+                if (!string.IsNullOrEmpty(tbIntervalTime.Text) && int.TryParse(tbIntervalTime.Text, out int parsedIntervalTime))
+                    intervalTime = parsedIntervalTime;
+
+                engineerForm.ForceConnectApi(false, relinkCount, startTime, intervalTime); // Link DUT and EraseAPROM
+                //mainForm.ForceConnectApi(false,0,0,0); // Link DUT and EraseAPROM
+                Thread.Sleep(10);
+                engineerForm.StartFlashingApi(); // Firmware update
+                Thread.Sleep(10);
+                engineerForm._GlobalWriteFromRegisterFile(customerMode, registerFilePath, ProcessingChannel);
+                Thread.Sleep(10);
+                tbReNewTLSN.Text = engineerForm.GetSerialNumberApi();
+                _SnComparison();
+
+                /*
+                if (!customerMode)
+                    mainForm.ComparisonRegisterApi(RegisterFilePath, false , cbEngineerMode.Checked);
+                */
+
+                Thread.Sleep(10);
+
+                if (ProcessingChannel == 1) {
+                    lCh1Message.Text = "Update completed.";
+                    cProgressBar1.Value = 100;
+                    cProgressBar1.Text = "100%";
+                    tbVersionCodeReNewCh1.Text = engineerForm.GetFirmwareVersionCodeApi();
+                }
+                else if (ProcessingChannel == 2) {
+                    lCh2Message.Text = "Update completed.";
+                    cProgressBar2.Value = 100;
+                    cProgressBar2.Text = "100%";
+                    tbVersionCodeReNewCh2.Text = engineerForm.GetFirmwareVersionCodeApi();
+                }
+
+                Application.DoEvents();
+                Thread.Sleep(100);
+            }
+
+            return 0;
+        }
+
+        private void _SnComparison()
+        {
+            string a, b;
+
+            a = tbOrignalTLSN.Text;
+            b = tbReNewTLSN.Text;
+
+            if ( a != b)
+                tbReNewTLSN.BackColor = Color.HotPink;
+            else
+                tbReNewTLSN.BackColor = Color.White;
+        }
+
+        private int _RemoteControlForSas3(bool customerMode)
+        {
+            string dutCheck;
+            string directoryPath = TempFolderPath;
+            string registerFileName = "RegisterFile.csv";
+            string registerFilePath = Path.Combine(directoryPath, registerFileName); //Generate the CfgFilePath with config folder
+            int reWriteCount = 0;
+            const int maxRetryCount = 2;
+
+            do {
+                engineerForm._WriteFromRegisterFileForSas3(customerMode, registerFilePath, ProcessingChannel);
+                Thread.Sleep(10);
+
+                UpdateUIAfterWrite(ProcessingChannel);
+
+                Application.DoEvents();
+                Thread.Sleep(100);
+
+                engineerForm.InformationReadApi();
+                dutCheck = engineerForm.GetVenderPnApi();
+
+            } while (string.IsNullOrEmpty(dutCheck) && (++reWriteCount <= maxRetryCount));
+
+            return 0;
+        }
+
+        private void UpdateUIAfterWrite(int channel)
+        {
+            if (channel == 1) {
+                lCh1Message.Text = "Update completed.";
+                cProgressBar1.Value = 100;
+                cProgressBar1.Text = "100%";
+                tbVersionCodeReNewCh1.Text = engineerForm.GetFirmwareVersionCodeApi();
+            }
+            else if (channel == 2) {
+                lCh2Message.Text = "Update completed.";
+                cProgressBar2.Value = 100;
+                cProgressBar2.Text = "100%";
+                tbVersionCodeReNewCh2.Text = engineerForm.GetFirmwareVersionCodeApi();
             }
         }
 
-        private void bIcpConnect_Click(object sender, EventArgs e)
+        private int _WriteSnDatecode(int ch)
         {
-            //bIcpConnect.Enabled = false;
+            string modelType = lProduct.Text;
+            string venderSn = tbVenderSn.Text;
+            string dataCode = tbDateCode.Text;
+            string originalVenderSn, originalDateCode;
+            string logFileName;
+            int channelNumber;
 
-            ucNuvotonIcpTool.IcpConnectApi();
+            logFileName = venderSn + (ch == 1 ? "A" : "B");
 
-            //if (!bIcpConnect.Enabled)
-            bIcpConnect.Enabled = true;
+            channelNumber = (ch == 1
+                ? (lMode.Text == "Customer" || string.IsNullOrEmpty(lMode.Text)) ? 1 : 13
+                : (lMode.Text == "Customer" || string.IsNullOrEmpty(lMode.Text)) ? 2 : 23);
+
+            I2cConnected = !(engineerForm.ChannelSetApi(channelNumber) < 0);
+            Thread.Sleep(200);
+            _GetModuleVenderSn(true, ch);
+            originalDateCode = engineerForm.GetDateCodeFromDdmiApi();
+            originalVenderSn = ch == 1
+                ? tbOrignalSNCh1.Text
+                : tbOrignalSNCh2.Text;
+
+           
+
+            if (DebugMode)
+                ShowDebugInfo(originalVenderSn, originalDateCode);
+
+            if (Sas3Module) {
+                _UpdateMessage(ch, "Writing SN, DateCode");
+
+                if (engineerForm.WriteVendorSerialNumberApi(venderSn, dataCode) < 0)
+                    return -1;
+            }
+            else {
+                engineerForm.SetVendorSnToDdmiApi(venderSn);
+                engineerForm.SetDataCodeToDdmiApi(dataCode);
+                _UpdateMessage(ch, "Writing information");
+
+                if (engineerForm.InformationWriteApi() < 0)
+                    return -1;
+
+                Thread.Sleep(100);
+                _UpdateMessage(ch, "Store into flash");
+
+                if (engineerForm.InformationWriteApi() < 0)
+                    return -1;
+
+                Thread.Sleep(100);
+            }
+            
+            _UpdateMessage(ch, "StoreFlash..Done");
+            _GetModuleVenderSn(false, ch);
+            
+            if (_RxPowerUpdateWithoutThread() < 0) return -1;
+
+            if (Sas3Module) {
+                if (engineerForm.ExportLogfileForSas3Api(logFileName, true, true, ProcessingChannel) < 0)
+                    return -1; //Must be implement
+            }
+            else {
+                if (engineerForm.ExportLogfileApi(modelType, logFileName, true, true) < 0)
+                    return -1; //Must be implement
+            }
+            
+            Thread.Sleep(10);
+            _UpdateMessage(ch, "LogFile..exported");
+
+            return 0;
         }
 
-        private void cbAutoReconnect_CheckedChanged(object sender, EventArgs e)
+        private void ShowDebugInfo(string originalVenderSn, string originalDateCode)
         {
-            if (cbAutoReconnect.Checked)
-                _SetAutoReconnectControl(true);
-            else if (!cbAutoReconnect.Checked)
-                _SetAutoReconnectControl(false);
+            MessageBox.Show("Information check"
+                        + "\nBefore:\n"
+                        + "VenderSn: " + originalVenderSn
+                        + "\nDateCode: " + originalDateCode
+                        + "\n\nAfter:\n"
+                        + "VerderSn: " + engineerForm.GetVendorSnFromDdmiApi()
+                        + "\nDateCode:" + engineerForm.GetDateCodeFromDdmiApi()
+                        );
         }
 
-        private void bAutoReconnectStateCheck_Click(object sender, EventArgs e)
+        private void _UpdateMessage(int channel, string message)
         {
-            MessageBox.Show("ucNuvotonIcp\nAutoReconnectMode: " + _GetAutoReconnectControl());
+            string msgLabel = channel == 1 ? "lCh1Message" : "lCh2Message";
+            switch (msgLabel) {
+                case "lCh1Message":
+                    lCh1Message.Text = message;
+                    break;
+                case "lCh2Message":
+                    lCh2Message.Text = message;
+                    break;
+            }
+            Application.DoEvents();
         }
         
-        private void cbBypassEraseAllCheck_CheckedChanged(object sender, EventArgs e)
+        private int _Processor(bool customerMode) // True: Customer Mode, Flase: MP mode
         {
-            if (cbBypassEraseAllCheck.Checked)
-                _SetBypassEraseAllControl(true);
-            else if (!cbBypassEraseAllCheck.Checked)
-                _SetBypassEraseAllControl(false);
-        }
+            int tmp;
+            int channelNumber;
+            _StoreConfigurationPaths(tbFilePath.Text, null, null);
+            I2cConnected = (engineerForm.I2cMasterDisconnectApi() < 0);
+            //I2cConnected = !(mainForm.ChannelSetApi(channelNumber) < 0);
 
-        private void bBypassEraseAllStateCheck_Click(object sender, EventArgs e)
-        {
-            MessageBox.Show("ucNuvotonIcp\nBypassEraseAllMode: " + _GetBypassEraseAllControl());
-        }
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                switch (ProcessingChannel) {
+                    case 1:
+                        channelNumber = 1;
+                        break;
+                    case 2:
+                        channelNumber = 2;
+                        break;
+                    default:
+                        channelNumber = 0;
+                        return -1;
+                }
 
-        private void cbAPPath_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbAPPath.Checked) {
-                _LoadFilesPathForBin("APROM");
-                _GenerateCfgButtonState(1, false);
-            }
-            else if (!cbAPPath.Checked) {
-                APROMPath = "";
-                _GenerateCfgButtonState(1, false);
-            }
-        }
+                I2cConnected = !(engineerForm.ChannelSetApi(channelNumber) < 0);
+                Thread.Sleep(200);
 
-        private void cbDAPath_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbDAPath.Checked) {
-                _LoadFilesPathForBin("DATAROM");
-                _GenerateCfgButtonState(1, false);
-            }
-            else if (!cbDAPath.Checked) {
-                DATAROMPath = "";
-                _GenerateCfgButtonState(1, false);
-            }
-        }
+                if (_RemoteInitial(customerMode) < 0)
+                    return _CloseLoadingFormAndReturn(-1);
 
-        private void cbASidePath_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbASidePath.Checked) {
-                _LoadFilesPathForText("ASide");
-                _GenerateCfgButtonState(2, false);
+                if (Sas3Module) {
+                    if (_RemoteControlForSas3(customerMode) < 0)
+                        return _CloseLoadingFormAndReturn(-1);
+                }
+                else {
+                    tmp = _RemoteControl(customerMode);
+                    if (tmp == -2)
+                        return -2;
+                    else if (tmp < 0)
+                        return _CloseLoadingFormAndReturn(-1);
+                }
+                
+                FirstRound = false;
             }
-            else if (!cbASidePath.Checked) {
-                ASidePath = "";
-                _GenerateCfgButtonState(2, false);
-            }
-        }
-
-        private void cbBSidePath_CheckedChanged(object sender, EventArgs e)
-        {
-            if (cbBSidePath.Checked) {
-                _LoadFilesPathForText("BSide");
-                _GenerateCfgButtonState(2, true);
-            }
-            else if (!cbBSidePath.Checked) {
-                BSidePath = "";
-                _GenerateCfgButtonState(2, false);
-            }
-        }
-
-        private void bSas3Password_Click(object sender, EventArgs e)
-        {
-            _SetSas3Password();
-        }
-
-        public void _SetSas3Password()
-        {
-            string hexString = "1A, 58, 1A, 58";
-            string[] hexValues = hexString.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            byte[] bytes = new byte[hexValues.Length];
-
-            for (int i = 0; i < hexValues.Length; i++) {
-                bytes[i] = Convert.ToByte(hexValues[i], 16);
+            
+            if (DoubleSideMode) {
+                //mainForm.ChannelSwitchApi(customerMode, channelNumber); // return to ch1
+                _ReadRssiForBothSide();
             }
 
-            string result = Encoding.Default.GetString(bytes);
-            tbPassword.Text = result;
+            if (cbCfgCheckAfterFw.Checked)
+                _CfgFileComparison();
+            
+            return 0;
         }
 
-        private void bMini58Password_Click(object sender, EventArgs e)
+        private int ValidateVenderSn()
         {
-            tbPassword.Text = "3234";
+            string venderSn = tbVenderSn.Text;
+
+            if (venderSn.Length != 12) {
+                MessageBox.Show("The serial number must be 12 characters long.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int yy = int.Parse(venderSn.Substring(0, 2));
+            if (yy < 23 || yy > 30) {
+                MessageBox.Show("The first two digits(YY) must be between 23 and 30.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int mm = int.Parse(venderSn.Substring(2, 2));
+            if (mm < 1 || mm > 12) {
+                MessageBox.Show("The 3~4 digits(MM) must be between 01 and 12.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int dd = int.Parse(venderSn.Substring(4, 2));
+            if (dd < 1 || dd > 31) {
+                MessageBox.Show("The 5~6 digits(DD) must be between 01 and 31.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            int ssss = int.Parse(venderSn.Substring(8, 4));
+            if (ssss < 1 || ssss > 9999) {
+                MessageBox.Show("The 9~12 digits(SSSS) must be between 0001 and 9999.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return -1;
+            }
+
+            return 0;
         }
 
-        private void cbBothSupplyMode_CheckedChanged(object sender, EventArgs e)
+        private void bStart_Click(object sender, EventArgs e)
         {
-            BothSupplyMode = cbBothSupplyMode.Checked;
-            _ChannelSet(GetChannelControl(ProcessingChannel));
+            int tmp;
+            bool isCustomerMode = (lMode.Text == "Customer" || lMode.Text == "");
+
+            if (isCustomerMode || lMode.Text == "MP") {
+                _DisableButtons();
+                _InitialUi();
+                tmp = _Processor(isCustomerMode);
+
+                if (tmp == -2)
+                    return;
+                else if (tmp < 0){
+                    MessageBox.Show("There are some problems", "Error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+                    return;
+                }
+            }
+            _EnableButtons();
+            bStart.Select();
         }
 
-        private void cbCh1_CheckedChanged(object sender, EventArgs e)
+        private void I2cMasterConnect_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbCh1.Checked)
-                ChannelSetApi(1);
+            if (IsSwitching)
+                return;
+            IsSwitching = true;
+
+            int channelNumber;
+
+            if ((lMode.Text == "Customer") || (lMode.Text == "_"))
+                channelNumber = 1;
             else
-                ChannelSetApi(0);
+                channelNumber = 13;
+
+            if (cbI2cConnect.Checked) {
+                if (!(engineerForm.ChannelSetApi(channelNumber) < 0))
+                    I2cConnected = true;
+                else {
+                    MessageBox.Show("I2c master connection failed.\nPlease check if the hardware configuration or UI is activated.",
+                                    "I2c master connection failed", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    this.FormClosing -= _FormClosing;
+                    this.Close();
+                    Application.ExitThread();
+                    Environment.Exit(0);
+                }
+            }
+            else
+                I2cConnected = (engineerForm.I2cMasterDisconnectApi() < 0);
+
+            Thread.Sleep(100);
+            IsSwitching = false;
+            cbI2cConnect.Focus();
+            cbI2cConnect.Select();
         }
 
-        private void cbCh2_CheckedChanged(object sender, EventArgs e)
+        private void tbLogFilePath_Click(object sender, EventArgs e)
         {
-            if (cbCh2.Checked)
-                ChannelSetApi(2);
-            else
-                ChannelSetApi(0);
+            _SetLogFilePath();
+        }
+                       
+        private void bWriteFromFile_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            string modelType = lProduct.Text;
+            string directoryPath = Application.StartupPath;
+            string tempRegisterFilePath = Path.Combine(directoryPath, "LogFolder/TempRegister.csv");
+
+            engineerForm.WriteRegisterPageApi("Up 00h", 50, tempRegisterFilePath);
+            engineerForm.WriteRegisterPageApi("Up 03h", 50, tempRegisterFilePath);
+            engineerForm.WriteRegisterPageApi("80h", 200, tempRegisterFilePath);
+            engineerForm.WriteRegisterPageApi("81h", 200, tempRegisterFilePath);
+            engineerForm.WriteRegisterPageApi("Rx", 1000, tempRegisterFilePath);
+            engineerForm.WriteRegisterPageApi("Tx", 1000, tempRegisterFilePath);
+            engineerForm.StoreIntoFlashApi();
+            engineerForm._GlobalRead();
+            string LogFileName = "AfterFlasing";
+            engineerForm.ExportLogfileApi(modelType, LogFileName, true, true);
+
+            /*
+            string[] commands = { "Up 00h", "Up 03h", "80h", "81h", "Tx", "Rx" };
+            
+            foreach(var command in commands) {             
+                mainForm.WriteRegisterPageApi(command);
+                Thread.Sleep(500);
+            }
+            */
+
+            _EnableButtons();
         }
 
-        private void cbAllCh_CheckedChanged(object sender, EventArgs e)
+        private int _WriteSnDateCodeFlow()
         {
-            if (cbAllCh.Checked)
-                ChannelSetApi(13);
+            string RegisterFilePath = Path.Combine(TempFolderPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
+            //FirstRound = true;  //??
+           
+
+            if (_VenderSnInputFormatCheck() < 0)
+                return _CloseLoadingFormAndReturn(-1);
+
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                if (_WriteSnDatecode(ProcessingChannel) < 0) return -1; // Writing SN and DateCode, then export csv file.
+
+                _UpdateMessage(ProcessingChannel, "VenderSN writed");
+
+                if (!Sas3Module) {
+                    if (ProcessingChannel == 1)
+                        tbVersionCodeCh1.Text = engineerForm.GetFirmwareVersionCodeApi();
+                    else if (ProcessingChannel == 2)
+                        tbVersionCodeCh2.Text = engineerForm.GetFirmwareVersionCodeApi();
+                }
+
+                _MessageManagement(2, true);
+                Application.DoEvents();
+
+                Thread.Sleep(100);
+                if (!DoubleSideMode) {
+                    break;
+                }
+            }
+
+            if (cbLogCheckAfterSn.Checked)
+                _LogFileComparison();
+                
+
+            if (DoubleSideMode) {
+               if (engineerForm.ChannelSwitchApi() < 0)// return to ch1
+                    return _CloseLoadingFormAndReturn(-1);
+            }
+
+            SerialNumber = Convert.ToUInt16(_GetDomainUpDownValue("dudSsss"));
+            SerialNumber++;
+            _SetDomainUpDownValue("dudSsss", SerialNumber);
+            _UpdateSerialNumberTextBox();
+            return 0;
+        }
+
+        private int _CloseLoadingFormAndReturn(int returnValue)
+        {
+            this.BringToFront();
+            this.Activate();
+
+            if (!cbBarcodeMode.Checked) {
+                _EnableButtons();
+            }
+
+            loadingForm.Close();
+            return returnValue;
+        }
+
+        private int _VenderSnInputFormatCheck()
+        {
+            int serialNumber1;
+            string newSerialNumber1;
+            string venderSerialNumber = tbVenderSn.Text;
+
+            try {
+                if (cbSnNamingRule.SelectedIndex == 0 ) {
+                    if (venderSerialNumber.Length != 12) {
+                        MessageBox.Show("The SN must be exactly 12 characters long." +
+                                        "\nPlease enter a valid Vender SN (YYMMDDRRSSSS).");
+                        return -1;
+                    }
+                    CurrentDate = venderSerialNumber.Substring(0, 6).ToString(); // Get YYMMDD
+                    Revision = Convert.ToInt16(venderSerialNumber.Substring(6, 2)); // Get RR
+                    SerialNumber = Convert.ToInt16(venderSerialNumber.Substring(8, 4)); // Get SSSS
+                }
+                else if (cbSnNamingRule.SelectedIndex == 1) {
+                    if (venderSerialNumber.Length != 10) {
+                        MessageBox.Show("The SN must be exactly 10 characters long." +
+                                        "\nPlease enter a valid Vender SN (YYWWDLSSSS).");
+                        
+                        return -1;
+                    }
+                    CurrentDate = venderSerialNumber.Substring(0, 6).ToString(); // Get YYWWDL
+                    SerialNumber = Convert.ToInt16(venderSerialNumber.Substring(6, 4)); // Get SSSS
+                }
+                else {
+                    if (venderSerialNumber.Length != 10) {
+                        MessageBox.Show("The SN must be exactly 10 characters long." +
+                                        "\nPlease enter a valid Vender SN (YYMMDDSSSS).");
+
+                        return -1;
+                    }
+                    CurrentDate = venderSerialNumber.Substring(0, 6).ToString(); // Get YYMMDD
+                    SerialNumber = Convert.ToInt16(venderSerialNumber.Substring(6, 4)); // Get SSSS
+                }
+
+                serialNumber1 = SerialNumber;
+
+                if (serialNumber1 < MinSerialNumber || serialNumber1 > MaxSerialNumber) {
+                    MessageBox.Show("Invalid serial number in VenderSN" +
+                                    $"Serial number must be between {MinSerialNumber:D4} and {MaxSerialNumber:D4}.");
+                    return -1;
+                }
+              
+                newSerialNumber1 = serialNumber1.ToString("0000");
+
+                if (cbSnNamingRule.SelectedIndex == 0)
+                    tbVenderSn.Text = $"{CurrentDate}{Revision.ToString("D2")}{newSerialNumber1}";
+                else
+                    tbVenderSn.Text = $"{CurrentDate}{newSerialNumber1}";
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Error: {ex.Message}");
+                return -1;
+            }
+
+            return 0;
+        }
+
+        private void _PromptCorrect(bool detailMessageUpdate, int ch)
+        {
+            if (cbBarcodeMode.Checked && false) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.SpringGreen;
+                lStatus.Visible = true;
+                lStatus.Text = "Correct";
+            }
+
+            switch (ch) {
+                case 1:
+                    cProgressBar1.Text = "PASS";
+                    cProgressBar1.ForeColor = Color.SpringGreen;
+                    break;
+                case 2:
+                    cProgressBar2.Text = "PASS";
+                    cProgressBar2.ForeColor = Color.SpringGreen;
+                    break;
+            }
+
+            if (detailMessageUpdate)
+                _UpdateMessage(ProcessingChannel, "Verify State:\nComparison match");
+
+        }
+        private void _PromptWrong(int ch)
+        {
+            if (cbBarcodeMode.Checked) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.Violet;
+                lStatus.Visible = true;
+                lStatus.Text = "Wrong !!";
+            }
+
+            switch (ch) {
+                case 1:
+                    cProgressBar1.Text = "Wrong";
+                    cProgressBar1.ForeColor = Color.HotPink;
+                    break;
+                case 2:
+                    cProgressBar2.Text = "Wrong";
+                    cProgressBar2.ForeColor = Color.HotPink;
+                    break;
+            }
+
+            _UpdateMessage(ProcessingChannel, "Verify State:\nWrong !!");
+        }
+
+        private void _PromptError(bool detailMessageUpdate, int ch)
+        {
+            if (cbBarcodeMode.Checked) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.HotPink;
+                lStatus.Visible = true;
+                lStatus.Text = "Error !!";
+            }
+
+            switch (ch) {
+                case 1:
+                    cProgressBar1.Text = "Failed";
+                    cProgressBar1.ForeColor = Color.HotPink;
+                    break;
+                case 2:
+                    cProgressBar2.Text = "Failed";
+                    cProgressBar2.ForeColor = Color.HotPink;
+                    break;
+            }
+
+            if (detailMessageUpdate)
+                _UpdateMessage(ProcessingChannel, "Verify State:\nLogfile Mismatch!!");
+        }
+
+        private void _PromptCompleted(int ch, bool finishState)
+        {
+            if (cbBarcodeMode.Checked && finishState) {
+                gbPrompt.Visible = true;
+                gbPrompt.BackColor = Color.SpringGreen;
+                lStatus.Visible = true;
+                lStatus.Text = "Completed";
+            }
+
+            switch (ch) {
+                case 1:
+                    cProgressBar1.Text = "Done";
+                    cProgressBar1.ForeColor = Color.SpringGreen;
+                    break;
+                case 2:
+                    cProgressBar2.Text = "Done";
+                    cProgressBar2.ForeColor = Color.SpringGreen;
+                    break;
+            }
+
+            _UpdateMessage(ProcessingChannel, "Completed");
+        }
+
+        private void bWriteSnDateCode_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            _InitialUi();
+
+            _WriteSnDateCodeFlow();
+
+            _EnableButtons();
+            bWriteSnDateCone.Select();
+        }
+
+        private void bCfgFileComparison_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            _InitialUi();
+            
+            _CfgFileComparison();
+
+            _EnableButtons();
+            bCfgFileComparison.Select();
+        }
+
+        private int _CfgFileComparison()
+        {
+            int comparisonResults = 0;
+            string modelType = lProduct.Text;
+            string directoryPath = TempFolderPath;
+            string registerFilePath = Path.Combine(directoryPath, "RegisterFile.csv"); //Generate the CfgFilePath with config folder
+            //FirstRound = true;
+
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                I2cConnected = !(engineerForm.ChannelSetApi(ProcessingChannel) < 0);
+                Thread.Sleep(200);
+
+                if (Sas3Module) {
+                    engineerForm._KeyForSas3();
+                    comparisonResults = engineerForm.ComparisonRegisterForSas3Api(registerFilePath, true, "CfgFile", cbRegisterMapView.Checked, ProcessingChannel);
+                }
+                else {
+                    comparisonResults = engineerForm.ComparisonRegisterApi(modelType, registerFilePath, true, "CfgFile", cbRegisterMapView.Checked);
+                }
+                
+                if (comparisonResults < 0) 
+                    return _CloseLoadingFormAndReturn(-1);
+
+                Thread.Sleep(100);
+                _MessageManagement(comparisonResults, true);
+                
+                if (!DoubleSideMode)
+                    break;
+            }
+
+            if (DoubleSideMode)
+                if (engineerForm.ChannelSwitchApi() < 0) 
+                    return _CloseLoadingFormAndReturn(-1);
+
+            return 0;
+        }
+
+        private void _MessageManagement(int controlCode, bool detailMessageUpdate)
+        {
+            Label messageLabel = (ProcessingChannel == 1) ? lCh1Message : lCh2Message;
+            Color newColor;
+            if (ProcessingChannel == 1) {
+                cProgressBar1.Text = "A";
+                cProgressBar1.ForeColor = Color.FromArgb(85, 213, 219);
+            }
+            else {
+                cProgressBar2.Text = "B";
+                cProgressBar2.ForeColor = Color.FromArgb(85, 213, 219);
+            }
+
+            switch (controlCode) {
+                case 0: //PASS
+                    newColor = Color.White;
+                    _PromptCorrect(detailMessageUpdate, ProcessingChannel);
+                    break;
+                case 1: //Failed
+                    newColor = Color.DeepPink;
+                    _PromptError(detailMessageUpdate, ProcessingChannel);
+                    break;
+                case 2: //Completed
+                    newColor = Color.White;
+                    _PromptCompleted(ProcessingChannel, false);
+                    break;
+                case 3: //Wrong
+                    newColor = Color.DeepPink;
+                    _PromptWrong(ProcessingChannel);
+                    break;
+
+                default:
+                    newColor = Color.White;
+                    break;
+            }
+
+            messageLabel.ForeColor = newColor;
+            Application.DoEvents();
+        }
+
+        private void _EnterDefaultLogfilePath()
+        {
+            string initialDirectory = Application.StartupPath;
+            tbLogFilePath.Text = Path.Combine(initialDirectory, "LogFolder");
+            tbLogFilePath.SelectionStart = tbLogFilePath.Text.Length;
+        }
+
+        private void bLogFileComparison_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            _InitialUi();
+
+            _LogFileComparison();
+
+            _EnableButtons();
+            bLogFileComparison.Select();
+        }
+        
+        private void _LogFileComparison()
+        {
+            int comparisonResults = 0;
+            string modelType = lProduct.Text;
+            string directoryPath = tbLogFilePath.Text;
+            string objectFileName;
+            string registerFilePath;
+            string venderSn;
+
+            //mainForm.InformationReadApi();
+            //string OriginalVenderSn = mainForm.GetVendorSnFromDdmiA_pi();
+            //string OriginalDateCode = mainForm.GetDateCodeFromDdmiApi();
+            //FirstRound = true;
+
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                _GetModuleVenderSn(true, ProcessingChannel);
+                venderSn = ProcessingChannel == 1 ? tbOrignalSNCh1.Text : tbOrignalSNCh2.Text;
+                objectFileName = venderSn + (ProcessingChannel == 1 ? "A" : "B");
+                registerFilePath = Path.Combine(directoryPath, objectFileName + ".csv"); //Generate the CfgFilePath with config folder
+
+                if (!Directory.Exists(directoryPath)) {
+                    MessageBox.Show("Please check if the log file path has been correctly specified?");
+                    goto exit;
+                }
+
+                if (!File.Exists(registerFilePath)) {
+                    MessageBox.Show("Please check if the log file exists at the specified path?" +
+                                    "\n\nTarget path: " + directoryPath + "\\..." +
+                                    "\nModule SN: " + objectFileName + ".csv" + "   <<Missing file");
+                    goto exit;
+                }
+
+                I2cConnected = !(engineerForm.ChannelSetApi(ProcessingChannel) < 0);
+                Thread.Sleep(300);
+
+                if (Sas3Module) {
+                    engineerForm._KeyForSas3();
+                    comparisonResults = engineerForm.ComparisonRegisterForSas3Api(registerFilePath, true, "LogFile", cbRegisterMapView.Checked, ProcessingChannel);
+                }
+                else {
+                    comparisonResults = engineerForm.ComparisonRegisterApi(modelType, registerFilePath, true, "LogFile", cbRegisterMapView.Checked);
+                }
+
+                Thread.Sleep(100);
+                _MessageManagement(comparisonResults, true);
+                Application.DoEvents();
+
+                if (!DoubleSideMode) 
+                    break;
+            }
+
+        exit:
+            if (DoubleSideMode) 
+                if (engineerForm.ChannelSwitchApi() < 0) 
+                    _CloseLoadingFormAndReturn(-1);
+        }
+
+        private int _GetModuleVenderSn(bool currentVenderSn, int ch)
+        {
+            string venderSn;
+
+            if (Sas3Module)
+                engineerForm._SetSas3Password();
+
+            _UpdateMessage(ch, "CheckVendorSN");
+            if (engineerForm.InformationReadApi() < 0)
+                return -1;
+            venderSn = engineerForm.GetVendorSnFromDdmiApi();
+            venderSn = venderSn.Replace(" ", "");
+
+            if (currentVenderSn) {
+                if (ch == 1) {
+                    tbOrignalSNCh1.Text = venderSn;
+                    tbOrignalSNCh1.BackColor = Color.DarkBlue;
+                    tbOrignalSNCh1.ForeColor = Color.White;
+                }
+                else {
+                    tbOrignalSNCh2.Text = venderSn;
+                    tbOrignalSNCh2.BackColor = Color.DarkBlue;
+                    tbOrignalSNCh2.ForeColor = Color.White;
+                }
+            }
+            else {
+                if (ch == 1) {
+                    tbReNewSNCh1.Text = venderSn;
+                    tbReNewSNCh1.BackColor = Color.DarkBlue;
+                    tbReNewSNCh1.ForeColor = Color.White;
+                }
+
+                else {
+                    tbReNewSNCh2.Text = venderSn;
+                    tbReNewSNCh2.BackColor = Color.DarkBlue;
+                    tbReNewSNCh1.ForeColor = Color.White;
+                }
+            }
+
+            return 0;
+        }
+
+        private int _GetTruelightSn(bool currentVenderSn, int ch)
+        {
+            string truelightSn;
+            _UpdateMessage(ch, "CheckTLSN");
+            
+            truelightSn = engineerForm.GetSerialNumberApi();
+            truelightSn = truelightSn.Replace(" ", "");
+
+            if (currentVenderSn) {
+                if (ch == 1) {
+                    tbOrignalTLSN.Text = truelightSn;
+                    tbOrignalTLSN.BackColor = Color.DarkBlue;
+                    tbOrignalTLSN.ForeColor = Color.White;
+                }
+            }
+            else {
+                if (ch == 1) {
+                    tbReNewTLSN.Text = truelightSn;
+                    tbReNewTLSN.BackColor = Color.DarkBlue;
+                    tbReNewTLSN.ForeColor = Color.White;
+                }
+            }
+
+            return 0;
+        }
+
+        private void cbBarcodeMode_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbBarcodeMode.Checked) {
+                _DisableButtonsForBarcodeMode();
+                rbSingle.Enabled = false;
+                rbBoth.Enabled = false;
+                rbSingle.Checked = true;
+                rbFullMode.Visible = true;
+                rbOnlySN.Visible = true;
+                rbLogFileMode.Visible = true;
+                tbVenderSn.Text = "";
+                tbVenderSn.Select();
+                gbPrompt.Visible = true;
+                _InitializeUIForgbPrompt();
+            }
+            else {
+                rbSingle.Enabled = true;
+                rbBoth.Enabled = true;
+                rbFullMode.Visible = false;
+                rbOnlySN.Visible = false;
+                rbLogFileMode.Visible = false;
+                gbPrompt.Visible = false;
+                _UpdateSerialNumberTextBox();
+                _EnableButtonsForBarcodeMode();
+            }
+        }
+
+        private void tbHideKey_MouseEnter(object sender, EventArgs e)
+        {
+            IsListeningForHideKeys = true;
+        }
+
+        private void tbHideKey_MouseLeave(object sender, EventArgs e)
+        {
+            IsListeningForHideKeys = false;
+        }
+
+        private void ReRssi_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            _InitialUi();
+            //_InformationCheck(false);
+            _ReadRssiForBothSide();
+            
+            _EnableButtons();
+            bRenewRssi.Select();
+        }
+
+        private void _UIActionForReWriteSerialNumber(bool executing)
+        {
+            if (executing) {
+                bWriteTruelightSn.Enabled = false;
+                bCheckSerialNumber.Enabled = false;
+                bSearchNumber.Enabled = false;
+                cbAutoWirte.Enabled = false;
+                bExportRegister.Enabled = false;
+            }
+            else {
+                if (!cbAutoWirte.Checked)
+                    bWriteTruelightSn.Enabled = true;
+
+                bCheckSerialNumber.Enabled = true;
+                bSearchNumber.Enabled = false;
+                cbAutoWirte.Enabled = true;
+                bExportRegister.Enabled = true;
+            }
+            Application.DoEvents();
+        }
+
+        private void bWriteTruelightSn_Click(object sender, EventArgs e)
+        {
+            _InitializeUIForgbPrompt();
+            _UIActionForReWriteSerialNumber(true);
+
+            if (string.IsNullOrEmpty(tbTruelightSn.Text)) {
+                MessageBox.Show("Plz enter the serial number in the text box");
+                return;
+            }
+
+            _WriteTruelightSn(tbTruelightSn.Text);
+            tbTruelightSn.Text = "";
+            _GetSerialNumber();
+            _UIActionForReWriteSerialNumber(false);
+        }
+
+        private int _WriteTruelightSn(string serialNumber)
+        {
+            tbReNewTLSN.Text = "";
+
+            return engineerForm.SetSerialNumberApi(serialNumber);
+        }
+
+        private void bInfCheck_Click(object sender, EventArgs e)
+        {
+            _DisableButtons();
+            _InitialUi();
+
+            _InformationCheck(false);
+
+            _EnableButtons();
+            bCheckSerialNumber.Select();
+        }
+
+        private int _InformationCheck(bool deepCheck)
+        {
+            int errorCode = 0;
+            int errorCount = 0;
+            int channelNumber;
+            string modelType = lProduct.Text;
+            string tempRegisterFilePath = Path.Combine(TempFolderPath, "RegisterFile.csv"); //For UpPage00, Page03
+            string directoryPath = Application.StartupPath;
+            string reWriteRegister = Path.Combine(directoryPath, "RegisterFiles/ReWriteRegister.csv"); //For Page81,PageTx,PageRx
+
+            _UIActionForReWriteSerialNumber(true);
+
+            for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                switch (ProcessingChannel) {
+                    case 1:
+                        channelNumber = 1;
+                        break;
+                    case 2:
+                        channelNumber = 2;
+                        break;
+                    default:
+                        channelNumber = 0;
+                        return -1;
+                }
+
+                I2cConnected = !(engineerForm.ChannelSetApi(channelNumber) < 0);
+                Thread.Sleep(100);
+
+                _GetSerialNumber();
+                _GetFirmwareVersion(ProcessingChannel);
+                _GetCustomerSn(ProcessingChannel);
+            }
+               
+            if (DoubleSideMode) {
+                ProcessingChannel = 1;
+                engineerForm.ChannelSetApi(1);
+            }
+
+            _CheckTextBoxAndNotifyForSn();
+
+            if (deepCheck) {
+                if (!File.Exists(reWriteRegister)) {
+                    MessageBox.Show("Please check if the log file exists at the specified path?" +
+                                        "\n\nTarget path: " + reWriteRegister + "<<Missing file");
+                    return 0;
+                }
+
+                //Part A: 透過撈出的String 跟Database 進行比對...from CSN, check to SN.
+                _SerialNumberSerach();
+                errorCode = _CheckAllSerialNumber();
+
+                if (errorCode == -2) {
+                    _PromptError(false, ProcessingChannel);
+                    MessageBox.Show("ErrorCode: " + errorCode +
+                                    "\n Input CustomerSn doesn't match the module CSN.");
+                    return -1;
+                }
+                else if (errorCode == -3) {
+                    _PromptError(false, ProcessingChannel);
+                    MessageBox.Show("ErrorCode: " + errorCode +
+                                    "\n Input TruelightSn doesn't match the module TLSN.");
+                    return -1;
+                }
+
+                if (engineerForm.ComparisonRegisterForFinalCheckApi(modelType, reWriteRegister, "Low Page", true) != 0)
+                    errorCount++;
+
+                if (engineerForm.ComparisonRegisterForFinalCheckApi(modelType, reWriteRegister, "Page81", true) != 0)
+                    errorCount++;
+
+                if (engineerForm.ComparisonRegisterForFinalCheckApi(modelType, tempRegisterFilePath, "UpPage00", true) != 0)
+                    errorCount++;
+                
+                if (engineerForm.ComparisonRegisterForFinalCheckApi(modelType, tempRegisterFilePath, "Page03", true) !=0)
+                    errorCount++;
+
+                //    errorCount++;
+
+                //與ReWriteRegister.csv?? or LogFile 進行Tx參數比對.
+                //與ReWriteRegister.csv or LogFile 進行Rx參數比對.
+
+                if (errorCount == 0) {
+                    tbCustomerSn.Text = "";
+                    _PromptCorrect(false, ProcessingChannel);
+                }
+                else {
+                    lCh1Message.Text = "Error count: " + errorCount;
+                    _PromptError(false, ProcessingChannel);
+                }
+            }
+
+            _UIActionForReWriteSerialNumber(false);
+
+            if (tbCustomerSn.Enabled)
+                tbCustomerSn.Select();
+            else if (tbTruelightSn.Enabled)
+                tbTruelightSn.Select();
             else
-                ChannelSetApi(0);
+                bCheckSerialNumber.Select();
+
+            return 0;
+        }
+
+        private int _CheckAllSerialNumber()
+        {
+            if (tbCustomerSn.Text != tbOrignalSNCh1.Text)
+                return -2;
+
+            if (tbTruelightSn.Text != tbOrignalTLSN.Text)
+                return -3;
+
+            return 0;
+        }
+
+        private void _CompletionNotificationForInfCheck()
+        {
+            tbOrignalTLSN.BackColor = Color.DarkBlue;
+            tbVersionCodeCh1.BackColor = Color.DarkBlue;
+            tbOrignalSNCh1.BackColor = Color.DarkBlue;
+            Application.DoEvents();
+        }
+
+        private void _GetSerialNumber()
+        {
+            string sericalNumber = engineerForm.GetSerialNumberApi();
+
+            tbOrignalTLSN.Text = "...";
+            Application.DoEvents();
+            tbOrignalTLSN.Text = sericalNumber;
+            tbOrignalTLSN.BackColor = Color.DarkBlue;
+            tbOrignalTLSN.ForeColor = Color.White;
+            Application.DoEvents();
+        }
+
+        private void _GetFirmwareVersion(int ch)
+        {
+            string firmwareVersion = engineerForm.GetFirmwareVersionCodeApi();
+
+            if (ch == 1) {
+                tbVersionCodeCh1.Text = "...";
+                Application.DoEvents();
+                tbVersionCodeCh1.Text = firmwareVersion;
+                tbVersionCodeCh1.BackColor = Color.DarkBlue;
+                tbVersionCodeCh1.ForeColor = Color.White;
+                Application.DoEvents();
+            }
+            else if (ch == 2) {
+                tbVersionCodeCh2.Text = "...";
+                Application.DoEvents();
+                tbVersionCodeCh2.Text = firmwareVersion;
+                tbVersionCodeCh2.BackColor = Color.DarkBlue;
+                tbVersionCodeCh2.ForeColor = Color.White;
+                Application.DoEvents();
+            }
+            else
+                MessageBox.Show("The control channel has not been defined yet!!");
+        }
+
+        private void _GetCustomerSn(int ch)
+        {
+            string venderSn;
+
+            if (engineerForm.InformationReadApi() < 0)
+                return;
+
+            venderSn = engineerForm.GetVendorSnFromDdmiApi();
+            venderSn = venderSn.Replace(" ", "");
+
+            if (ch == 1) {
+                tbOrignalSNCh1.Text = "...";
+                Application.DoEvents();
+                tbOrignalSNCh1.Text = venderSn;
+                tbOrignalSNCh1.BackColor = Color.DarkBlue;
+                tbOrignalSNCh1.ForeColor = Color.White;
+                Application.DoEvents();
+            }
+            else if (ch == 2) {
+                tbOrignalSNCh2.Text = "...";
+                Application.DoEvents();
+                tbOrignalSNCh2.Text = venderSn;
+                tbOrignalSNCh2.BackColor = Color.DarkBlue;
+                tbOrignalSNCh2.ForeColor = Color.White;
+                Application.DoEvents();
+            }
+            else
+                MessageBox.Show("The control channel has not been defined yet!!");
+
+        }
+
+        private int _SerialNumberSerach()
+        {
+            string customerSn = tbCustomerSn.Text;
+
+            if (!string.IsNullOrEmpty(customerSn)) {
+                string result = GetTruelightSnFromDatabase(customerSn);
+                if (result != null) {
+                    tbTruelightSn.Text = result;
+                    tbTruelightSn.BackColor = Color.DarkBlue;
+                    tbTruelightSn.ForeColor = Color.White;
+                }
+                else {
+                    MessageBox.Show("No matching serial number found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return -1;
+                }
+            }
+
+            return 0;
+        }
+
+        private int _CheckTextBoxAndNotifyForSn()
+        {
+            var textBoxesToCheck = new List<System.Windows.Forms.TextBox>
+            {
+                tbOrignalTLSN,
+                //tbReNewTLSN,
+                tbOrignalSNCh1,
+                tbOrignalSNCh2,
+                tbVersionCodeCh1,
+                tbVersionCodeCh2
+            };
+
+            foreach (var textBox in textBoxesToCheck) {
+                if (string.IsNullOrEmpty(textBox.Text)) {
+                    textBox.BackColor = Color.HotPink;
+                }
+            }
+
+            return 0;
+        }
+
+        private int _SetParameterFromPage8081()
+        {
+            string directoryPath = Application.StartupPath;
+            string tempRegisterFilePath = Path.Combine(directoryPath, "RegisterFiles/ReWriteRegister.csv");
+
+            if (!File.Exists(tempRegisterFilePath)) {
+                MessageBox.Show("Loss the .../RegisterFiles/ReWriteRegister.csv");
+                return -2775;
+            }
+
+            if (engineerForm.WriteRegisterPageApi("80h", 200, tempRegisterFilePath) < 0)
+                return -2779;
+            if (engineerForm.WriteRegisterPageApi("81h", 200, tempRegisterFilePath) < 0)
+                return -2781;
+            if (engineerForm.StoreIntoFlashApi() < 0)
+                return -2783;
+
+            /*
+            LogFileName = "ReWriteRegister_CheckFile";
+            if (mainForm.ExportLogfileApi(LogFileName, true, true) < 0)
+                return -2762;
+            */
+
+            _GetModuleVenderSn(true, 1);
+            string SnA = tbCustomerSn.Text;
+            string SnB = tbOrignalSNCh1.Text;
+
+            if (SnA != SnB) {
+                MessageBox.Show("Wrong! Module SN has been cleared");
+                return -9999;
+            }
+
+            return 0;
+        }
+
+        private string GetTruelightSnFromDatabase(string customerSn)
+        {
+            string databaseFolderPath = Path.Combine(Application.StartupPath, "SNDatabase");
+            string[] datFiles = Directory.GetFiles(databaseFolderPath, "*.dat");
+
+            foreach (var datFile in datFiles) {
+                var lines = File.ReadAllLines(datFile);
+                foreach (var line in lines) {
+                    string[] columns = line.Split(new char[] { ',', '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (columns.Length >= 2 && columns[1].Trim() == customerSn) {
+                        string truelightSn = columns[0].Trim();
+                        truelightSn = truelightSn.Replace("-", "");
+
+                        return truelightSn;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private void _OpenLogfileExplorer(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) {
+                MessageBox.Show("The file path is empty. Please check your input.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!Directory.Exists(path) && !File.Exists(path)) {
+                MessageBox.Show("The specified path does not exist. Please verify it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            try {
+                // If the path is a file, get its directory
+                string folderPath = File.Exists(path) ? Path.GetDirectoryName(path) : path;
+                Process.Start("explorer.exe", folderPath);
+            }
+            catch (Exception ex) {
+                MessageBox.Show($"Failed to open File Explorer.\nError message: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void cbAutoWirte_CheckedChanged(object sender, EventArgs e)
+        {
+            _ReWriteSnCheckBoxChange();
+        }
+        private void cbReParameter_CheckedChanged(object sender, EventArgs e)
+        {
+            _ReWriteSnCheckBoxChange();
+        }
+
+        private void cbDeepCheck_Click(object sender, EventArgs e)
+        {
+            if (cbDeepCheck.Checked) {
+                tbCustomerSn.Select();
+            }
+            else
+                bCheckSerialNumber.Select();
+        }
+        private void _ReWriteSnCheckBoxChange()
+        {
+            _InitialUi();
+            tbTruelightSn.Text = "";
+
+            if (cbAutoWirte.Checked) {
+                tbCustomerSn.Enabled = true;
+                tbTruelightSn.Enabled = false;
+                bWriteTruelightSn.Enabled = false;
+                tbCustomerSn.Select();
+            }
+            else {
+                tbCustomerSn.Enabled = false;
+                tbTruelightSn.Enabled = true;
+                bWriteTruelightSn.Enabled = true;
+                tbTruelightSn.Select();
+            }
+        }
+
+        private void bTest_Click(object sender, EventArgs e)
+        {
+            bSearchNumber.Enabled = false;
+            _SerialNumberSerach();
+            bSearchNumber.Enabled = true;
+        }
+
+        private void bExportRegister_Click(object sender, EventArgs e)
+        {
+            bExportRegister.Enabled = false;
+            _ExportCurrentModuleRegisterToFile();
+            bExportRegister.Enabled = true;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            int tmp = Convert.ToUInt16( _GetDomainUpDownValue("dudSsss"));
+            MessageBox.Show("Step1\ndudSsss.Text_UInt16: " + _GetDomainUpDownValue("dudSsss"));
+            
+            SerialNumber = tmp;
+            SerialNumber++;
+            MessageBox.Show("Step2\nSerialNumber: " + SerialNumber.ToString("D4"));
+            
+            _SetDomainUpDownValue("dudSsss", SerialNumber);
+            tmp = Convert.ToUInt16(_GetDomainUpDownValue("dudSsss"));
+            MessageBox.Show("Step3\ndudSsss.Text_UInt16: " + tmp.ToString("D4"));
+
+            SerialNumber = 10003;
+            SerialNumber++;
+            MessageBox.Show("Step4\nSerialNumber: " + SerialNumber.ToString("D4"));
+
+            _SetDomainUpDownValue("dudSsss", SerialNumber);
+            tmp = Convert.ToUInt16(_GetDomainUpDownValue("dudSsss"));
+            MessageBox.Show("Step5\ndudSsss.Text_UInt16: " + tmp.ToString("D4"));
+        }
+
+        private void bHardwareValidation_Click(object sender, EventArgs e)
+        {
+            string ModelType = lProduct.Text;
+            if (engineerForm.GetChipIdApi(ModelType))
+                MessageBox.Show("Get it!!");
+
+            engineerForm.HardwareIdentificationValidationApi(ModelType, true);
+        }
+
+        private void bCurrentRegister_Click(object sender, EventArgs e)
+        {
+            string modelType = lProduct.Text;
+            _DisableButtons();
+
+            if (modelType == "SAS4.0" || modelType == "PCIe4.0") {
+                engineerForm.HardwareIdentificationValidationApi(modelType, false);
+                engineerForm.CurrentRegistersApi(modelType);
+            }
+            else {
+                MessageBox.Show("Crruent module is: " + modelType + "\nThe function only supports SAS4.0 or PCIe4.0");
+                _EnableButtons();
+                return;
+            }
+
+            _EnableButtons();
+        }
+
+        private void bOpenLogFileFolder_Click(object sender, EventArgs e)
+        {
+            string path = tbLogFilePath.Text;
+            _DisableButtons();
+            _OpenLogfileExplorer(path);
+            _EnableButtons();
+        }
+
+        private void _ReadRssiForBothSide()
+        {
+            engineerForm.ChannelSetApi(0);
+            ProcessingChannel = 1;
+            engineerForm.ChannelSetApi(13);
+            Thread.Sleep(500);
+            _RxPowerUpdateWithoutThread();
+            Thread.Sleep(200);
+
+            if (rbBoth.Checked) {
+                engineerForm.ChannelSetApi(23);
+                ProcessingChannel = 2;
+                Thread.Sleep(500);
+                _RxPowerUpdateWithoutThread();
+                Thread.Sleep(200);
+                engineerForm.ChannelSetApi(13);
+            }
+
+            ProcessingChannel = 1;
+            engineerForm.ChannelSetApi(1);
+        }
+
+        private void PerformLongRunningOperation()
+        {
+            System.Threading.Thread.Sleep(5000); // 模擬5秒
+        }
+
+        private void BarcodeMode_CheckedChanged(object sender, EventArgs e)
+        {
+            tbVenderSn.Select();
+        }
+
+        private void bRelinkTest_Click(object sender, EventArgs e)
+        {
+            int relinkCount = 0, startTime = 0, intervalTime = 0;
+            _DisableButtons();
+            engineerForm.SetAutoReconnectApi(true);
+            ForceConnectWithoutInvoke = true;
+
+            if (!string.IsNullOrEmpty(tbRelinkCount.Text) && int.TryParse(tbRelinkCount.Text, out int parsedRelinkCount))
+                relinkCount = parsedRelinkCount;
+
+            if (!string.IsNullOrEmpty(tbStartTime.Text) && int.TryParse(tbStartTime.Text, out int parsedStartTime))
+                startTime = parsedStartTime;
+
+            if (!string.IsNullOrEmpty(tbIntervalTime.Text) && int.TryParse(tbIntervalTime.Text, out int parsedIntervalTime))
+                intervalTime = parsedIntervalTime;
+
+            lCh1Message.Text = engineerForm.ForceConnectApi(true, relinkCount, startTime, intervalTime).ToString();
+            ForceConnectWithoutInvoke = false;
+            _EnableButtons();
+            bRelinkTest.Select();
+        }
+
+        private void cbRelinkCheck_CheckedChanged(object sender, EventArgs e)
+        {
+            if (cbRelinkCheck.Checked) {
+                tbRelinkCount.Visible = true;
+                tbStartTime.Visible = true;
+                tbIntervalTime.Visible = true;
+                bRelinkTest.Visible = true;
+            }
+            else {
+                tbRelinkCount.Visible = false;
+                tbStartTime.Visible = false;
+                tbIntervalTime.Visible = false;
+                bRelinkTest.Visible = false;
+            }
         }
     }
 
-    public class ComboBoxItem
+    public class MainFormPaths
     {
-        public string Text { get; set; }
-        public int Value { get; set; }
-        public override string ToString()
-        {
-            return Text;
-        }
-
+        public string ZipFolderPath { get; set; }
+        public string ZipFilePath { get; set; }
+        public string LogFilePath { get; set; }
+        public string RssiCriteria { get; set; }
+        public bool CfgFileCheckState { get; set; }
+        public bool LogFileCheckState { get; set; }
+        public bool RegisterMapViewState { get; set; }
     }
+
 }
+
