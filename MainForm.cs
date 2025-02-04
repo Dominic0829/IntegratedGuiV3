@@ -1334,8 +1334,8 @@ namespace IntegratedGuiV2
             string initialZipFile = lastPath.ZipFilePath;
             string logFilePath = lastPath.LogFilePath;
             string rssiCriteria = lastPath.RssiCriteria;
-            cbCfgCheckAfterFw.Checked = lastPath.CfgFileCheckState;
-            cbLogCheckAfterSn.Checked = lastPath.LogFileCheckState;
+            //cbCfgCheckAfterFw.Checked = lastPath.CfgFileCheckState;
+            //cbLogCheckAfterSn.Checked = lastPath.LogFileCheckState;
             cbRegisterMapView.Checked = lastPath.RegisterMapViewState;
 
             if (string.IsNullOrEmpty(logFilePath))
@@ -1917,8 +1917,8 @@ namespace IntegratedGuiV2
             bRenewRssi.Enabled = true;
             bCheckSerialNumber.Enabled = true;
             gbOptionsControl.Enabled = true;
-            cbLogCheckAfterSn.Enabled = true;
-            cbCfgCheckAfterFw.Enabled = true;
+            //cbLogCheckAfterSn.Enabled = true;
+            //cbCfgCheckAfterFw.Enabled = true;
             bCurrentRegister.Enabled = true;
             bOpenLogFileFolder.Enabled = true;
             tbLogFilePath.Enabled = true;

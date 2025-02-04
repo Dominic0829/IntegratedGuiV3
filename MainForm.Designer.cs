@@ -539,6 +539,9 @@ namespace IntegratedGuiV2
             // cbLogCheckAfterSn
             // 
             this.cbLogCheckAfterSn.AutoSize = true;
+            this.cbLogCheckAfterSn.Checked = true;
+            this.cbLogCheckAfterSn.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbLogCheckAfterSn.Enabled = false;
             this.cbLogCheckAfterSn.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbLogCheckAfterSn.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
             this.cbLogCheckAfterSn.Location = new System.Drawing.Point(7, 65);
@@ -1795,6 +1798,9 @@ namespace IntegratedGuiV2
             // cbCfgCheckAfterFw
             // 
             this.cbCfgCheckAfterFw.AutoSize = true;
+            this.cbCfgCheckAfterFw.Checked = true;
+            this.cbCfgCheckAfterFw.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbCfgCheckAfterFw.Enabled = false;
             this.cbCfgCheckAfterFw.Font = new System.Drawing.Font("Nirmala UI", 6F, System.Drawing.FontStyle.Bold);
             this.cbCfgCheckAfterFw.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
             this.cbCfgCheckAfterFw.Location = new System.Drawing.Point(20, 128);

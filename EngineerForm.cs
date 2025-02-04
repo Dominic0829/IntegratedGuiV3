@@ -409,12 +409,12 @@ namespace IntegratedGuiV2
                 return _WriteRegisterPage(targetPage, delayTime, registerFilePath);
         }
 
-        public int WriteRegisterPageForSas3Api(string targetPage, int delayTime, string registerFilePath, int processingChannel)
+        public int WriteRegisterPageForSas3Api(string targetPage, int delayTime, byte startAddr, int numberOfBytes, string registerFilePath, int processingChannel)
         {
             if (this.InvokeRequired)
-                return (int)this.Invoke(new Action(() => _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel)));
+                return (int)this.Invoke(new Action(() => _WriteRegisterPageForSas3(targetPage, delayTime, startAddr, numberOfBytes, registerFilePath, processingChannel)));
             else
-                return _WriteRegisterPageForSas3(targetPage, delayTime, registerFilePath, processingChannel);
+                return _WriteRegisterPageForSas3(targetPage, delayTime, startAddr, numberOfBytes, registerFilePath, processingChannel);
         }
 
         public void SetVarBoolStateToNuvotonIcpApi(string varName, bool value)
@@ -1096,8 +1096,13 @@ namespace IntegratedGuiV2
             return 0;
         }
 
-        private int _WriteRegisterPageForSas3(string targetPage, int delayTime, string registerFilePath, int processingChannel)
+        private int _WriteRegisterPageForSas3(string targetPage, int delayTime, byte startAddr, int numberOfBytes, string registerFilePath, int processingChannel)
         {
+            if (numberOfBytes <= 0 || numberOfBytes > 128) {
+                MessageBox.Show("Invalid number of bytes. Must be between 1 and 128.");
+                return -1;
+            }
+
             switch (targetPage) {
                 
                 case "Page 00":
@@ -1112,7 +1117,7 @@ namespace IntegratedGuiV2
                     else
                         targetPage = "A_" + targetPage;
 
-                    if (ucMemoryDump.WriteRegisterPageForSas3Api(targetPage, delayTime, registerFilePath) < 0)
+                    if (ucMemoryDump.WriteRegisterPageForSas3Api(targetPage, delayTime, startAddr, numberOfBytes, registerFilePath) < 0)
                         return -1;
 
                     break;
@@ -3165,19 +3170,21 @@ namespace IntegratedGuiV2
                 //StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
             else {
-                if (WriteRegisterPageForSas3Api("Page 00", 1500, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 00", 1000, 0x10, 80, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 00...Done", 30);
                 
-                if (WriteRegisterPageForSas3Api("Page 70", 1500, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 70", 100, 0x6D, 5, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 70...Done", 50);
 
-                if (WriteRegisterPageForSas3Api("Page 73", 1500, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 73", 100, 0x6E, 2, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 73...Done", 70);
 
-                if (WriteRegisterPageForSas3Api("Page 3A", 1500, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 3A", 100, 0x00, 9, CfgFilePath, processingChannel) < 0)
+                    return -1; //Write from Cfg.RegisterFile
+                if (WriteRegisterPageForSas3Api("Page 3A", 100, 0x4F, 11, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 3A...Done", 90);
 
