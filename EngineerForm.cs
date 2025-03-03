@@ -3174,7 +3174,7 @@ namespace IntegratedGuiV2
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 00...Done", 30);
                 
-                if (WriteRegisterPageForSas3Api("Page 70", 100, 0x6D, 5, CfgFilePath, processingChannel) < 0)
+                if (WriteRegisterPageForSas3Api("Page 70", 100, 0x6C, 6, CfgFilePath, processingChannel) < 0)
                     return -1; //Write from Cfg.RegisterFile
                 StateUpdated("Write State:\nPage 70...Done", 50);
 
