@@ -1189,7 +1189,7 @@ namespace IntegratedGuiV2
             this.bRelinkTest.FlatAppearance.BorderSize = 0;
             this.bRelinkTest.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.bRelinkTest.ForeColor = System.Drawing.Color.White;
-            this.bRelinkTest.Location = new System.Drawing.Point(106, 13);
+            this.bRelinkTest.Location = new System.Drawing.Point(99, 13);
             this.bRelinkTest.Name = "bRelinkTest";
             this.bRelinkTest.Size = new System.Drawing.Size(38, 31);
             this.bRelinkTest.TabIndex = 105;
@@ -1753,9 +1753,9 @@ namespace IntegratedGuiV2
             this.gbRelinkTest.Controls.Add(this.lCount);
             this.gbRelinkTest.Font = new System.Drawing.Font("Nirmala UI", 8.25F, System.Drawing.FontStyle.Bold);
             this.gbRelinkTest.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(34)))), ((int)(((byte)(72)))), ((int)(((byte)(91)))));
-            this.gbRelinkTest.Location = new System.Drawing.Point(20, 143);
+            this.gbRelinkTest.Location = new System.Drawing.Point(542, 313);
             this.gbRelinkTest.Name = "gbRelinkTest";
-            this.gbRelinkTest.Size = new System.Drawing.Size(150, 51);
+            this.gbRelinkTest.Size = new System.Drawing.Size(141, 51);
             this.gbRelinkTest.TabIndex = 119;
             this.gbRelinkTest.TabStop = false;
             this.gbRelinkTest.Text = "RelinkTest";

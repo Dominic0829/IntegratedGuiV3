@@ -2622,6 +2622,8 @@ namespace IntegratedGuiV2
             //FirstRound = true;
 
             for (ProcessingChannel = 1; ProcessingChannel <= (DoubleSideMode ? 2 : 1); ProcessingChannel++) {
+                //engineerForm.I2cMasterDisconnectApi();
+                //Thread.Sleep(500);
                 I2cConnected = !(engineerForm.ChannelSetApi(ProcessingChannel) < 0);
                 Thread.Sleep(200);
 
@@ -2967,8 +2969,10 @@ namespace IntegratedGuiV2
                 _GetSerialNumber();
                 _GetFirmwareVersion(ProcessingChannel);
                 _GetCustomerSn(ProcessingChannel);
+                _GetPropagationDelay(ProcessingChannel);
             }
-               
+
+
             if (DoubleSideMode) {
                 ProcessingChannel = 1;
                 engineerForm.ChannelSetApi(1);
@@ -3123,6 +3127,28 @@ namespace IntegratedGuiV2
             else
                 MessageBox.Show("The control channel has not been defined yet!!");
 
+        }
+
+        private void _GetPropagationDelay(int ch)
+        {
+            string propagationDelay = engineerForm.GetPropagationDelayApi();
+
+            if (ch == 1) {
+                lCh1Message.Text = "...";
+                Application.DoEvents();
+                lCh1Message.Text = "Propagation Delay:\n" + propagationDelay;
+                lCh1Message.ForeColor = Color.DarkBlue;
+                Application.DoEvents();
+            }
+            else if (ch == 2) {
+                lCh2Message.Text = "...";
+                Application.DoEvents();
+                lCh2Message.Text = "Propagation Delay:\n" + propagationDelay;
+                lCh2Message.ForeColor = Color.DarkBlue;
+                Application.DoEvents();
+            }
+            else
+                MessageBox.Show("The control channel has not been defined yet!!");
         }
 
         private int _SerialNumberSerach()

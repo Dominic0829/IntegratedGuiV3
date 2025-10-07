@@ -487,6 +487,11 @@ namespace IntegratedGuiV2
             return ucInformation.GetDateCodeApi();
         }
 
+        public string GetPropagationDelayApi()
+        {
+            return ucInformation.GetPropagationDelayApi();
+        }
+
         public void SetVarBoolStateToDdmApi(string varName, bool value)
         {
             ucDigitalDiagnosticsMonitoring.SetVarBoolState(varName, value);
@@ -3130,6 +3135,19 @@ namespace IntegratedGuiV2
 
             StateUpdated("Write State:\nPreparing resources...", 61);
 
+            if (WriteRegisterPageApi("80h", 200, BackupRegisterFilePath) < 0)
+                return -1; //Write from LogFile/TempRegister
+            StateUpdated("Write State:\nPage 0x80h...Done", 67);
+            if (WriteRegisterPageApi("81h", 200, BackupRegisterFilePath) < 0)
+                return -1;
+            StateUpdated("Write State:\nPage 0x81h...Done", 70);
+            if (WriteRegisterPageApi("Rx", 1000, BackupRegisterFilePath) < 0)
+                return -1;
+            StateUpdated("Write State:\nRxIcConfig...Done", 80);
+            if (WriteRegisterPageApi("Tx", 1000, BackupRegisterFilePath) < 0)
+                return -1;
+            StateUpdated("Write State:\nTxIcConfig...Done", 90);
+
             if (CustomerMode)
             {
                 if (WriteRegisterPageApi("Up 00h", 200, BackupRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
@@ -3146,15 +3164,6 @@ namespace IntegratedGuiV2
                 if (WriteRegisterPageApi("Up 03h", 200, CfgFilePath) < 0) return -1;
                 StateUpdated("Write State:\nUpPage 03h...Done", 65);
             }
-
-            if (WriteRegisterPageApi("80h", 200, BackupRegisterFilePath) < 0) return -1; //Write from LogFile/TempRegister
-            StateUpdated("Write State:\nPage 0x80h...Done", 67);
-            if (WriteRegisterPageApi("81h", 200, BackupRegisterFilePath) < 0) return -1;
-            StateUpdated("Write State:\nPage 0x81h...Done", 70);
-            if (WriteRegisterPageApi("Rx", 1000, BackupRegisterFilePath) < 0) return -1;
-            StateUpdated("Write State:\nRxIcConfig...Done", 80);
-            if (WriteRegisterPageApi("Tx", 1000, BackupRegisterFilePath) < 0) return -1;
-            StateUpdated("Write State:\nTxIcConfig...Done", 90);
 
             StoreIntoFlashApi();
             StateUpdated("Write State:\nStore into flash...Done", 95);
@@ -3669,8 +3678,8 @@ namespace IntegratedGuiV2
                     ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
-                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15}),
+                    ("Low Page", 70, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15})
                 };
@@ -3683,8 +3692,8 @@ namespace IntegratedGuiV2
                     ("Low Page", 30, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Low Page", 40, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Low Page", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
-                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}),
-                    ("Low Page", 70, new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                    ("Low Page", 60, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 15}),
+                    ("Low Page", 70, new[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Up 00h", 40, new[] {4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
                     ("Up 00h", 50, new[] {0, 1, 2, 3, 4, 5, 6, 7 ,8 ,9 ,10 ,11, 15}),
                     ("80h", 70, new[] {12, 13, 14, 15}),
